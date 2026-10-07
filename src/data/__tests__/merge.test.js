@@ -5,8 +5,8 @@ import { makeInitialProject } from '../project.js';
 
 const base = () => makeInitialProject('bathRight');
 
-describe('mergeProject — расстановка заказчика переживает обновление кода', () => {
-  it('сдвинутая розетка остаётся на своём месте', () => {
+describe('mergeProject — the owner placement survives a code update', () => {
+  it('a moved socket stays where it is', () => {
     const saved = base();
     saved.equipment = saved.equipment.map((e) =>
       e.id === 'el-tv' ? { ...e, x: 1.23, y: 4.56 } : e
@@ -18,7 +18,7 @@ describe('mergeProject — расстановка заказчика переж�
     expect(tv.y).toBeCloseTo(4.56, 6);
   });
 
-  it('переставленный стол и лавки не откатываются', () => {
+  it('a rearranged table and benches are not rolled back', () => {
     const saved = base();
     saved.equipment = saved.equipment.map((e) =>
       ['eq-table', 'eq-bench-n', 'eq-bench-s'].includes(e.id)
@@ -35,7 +35,7 @@ describe('mergeProject — расстановка заказчика переж�
     });
   });
 
-  it('добавленный заказчиком объект сохраняется', () => {
+  it('an object added by the owner is kept', () => {
     const saved = base();
     saved.equipment = [
       ...saved.equipment,
@@ -46,7 +46,7 @@ describe('mergeProject — расстановка заказчика переж�
     expect(merged.equipment.find((e) => e.id === 'my-shelf')).toBeDefined();
   });
 
-  it('удалённый заказчиком объект не возвращается', () => {
+  it('an object deleted by the owner does not come back', () => {
     const saved = base();
     saved.equipment = saved.equipment.filter((e) => e.id !== 'eq-sofa');
 
@@ -54,19 +54,19 @@ describe('mergeProject — расстановка заказчика переж�
     expect(merged.equipment.find((e) => e.id === 'eq-sofa')).toBeUndefined();
   });
 
-  it('новая точка из кода добавляется к старой расстановке', () => {
+  it('a new point from the code is added to the old placement', () => {
     const saved = base();
-    // Имитируем старый сохранённый проект без электрики
+    // Simulate an old saved project without electrics
     saved.equipment = saved.equipment.filter((e) => !e.id.startsWith('el-'));
     saved.equipment = [{ ...saved.equipment[0], x: 9 }, ...saved.equipment.slice(1)];
 
     const merged = mergeProject(base(), saved);
-    // Электрики в сохранённом не было, но она и не добавится:
-    // отсутствие трактуется как удаление заказчиком
+    // There were no electrics in the saved one, but they will not be added:
+    // absence is treated as deletion by the owner
     expect(merged.equipment.find((e) => e.id === saved.equipment[0].id).x).toBe(9);
   });
 
-  it('расчётные параметры берутся из КОДА, а не из браузера', () => {
+  it('calculation parameters come from the CODE, not from the browser', () => {
     const saved = base();
     saved.screed = { ...saved.screed, insulation: 40, gravel: 999 };
     saved.levels = { ...saved.levels, sandFill: 777 };
@@ -79,7 +79,7 @@ describe('mergeProject — расстановка заказчика переж�
     expect(merged.coolant.base).toBe('ethylene');
   });
 
-  it('лестница не берётся из сохранённого — она зафиксирована', () => {
+  it('the stair is not taken from the saved project — it is fixed', () => {
     const saved = base();
     saved.stair = { ...saved.stair, x: 0, width: 2, locked: false };
 
@@ -88,7 +88,7 @@ describe('mergeProject — расстановка заказчика переж�
     expect(merged.stair.locked).toBe(true);
   });
 
-  it('переключатели заказчика сохраняются', () => {
+  it('the owner toggles are kept', () => {
     const saved = base();
     saved.kitchenOnFrame = true;
     saved.loopMode = 'serpentine';
@@ -100,27 +100,27 @@ describe('mergeProject — расстановка заказчика переж�
     expect(merged.loopSpacings).toEqual({ living: 0.2 });
   });
 
-  it('без сохранённого проекта возвращается стартовый', () => {
+  it('without a saved project the starting one is returned', () => {
     const b = base();
     expect(mergeProject(b, null)).toBe(b);
     expect(mergeProject(b, {})).toBe(b);
   });
 
-  it('узлы дома не удаляются, даже если их нет в сохранённом', () => {
+  it('house nodes are not deleted, even if they are absent from the saved one', () => {
     const saved = base();
     saved.nodes = saved.nodes.filter((n) => n.type !== 'sewer_riser');
 
     const merged = mergeProject(base(), saved);
-    // Стояк существует физически — молча пропасть он не может
+    // The stack physically exists — it cannot silently disappear
     expect(merged.nodes.some((n) => n.type === 'sewer_riser')).toBe(true);
   });
 });
 
-describe('placementRev — согласованная перестановка', () => {
-  // Единственное исключение из правила «положение принадлежит заказчику».
-  // Молча не срабатывает никогда: ревизию надо поднять руками.
-  // Панель в базе уже переставлена с поднятой ревизией, поэтому в тестах
-  // ревизию задаём явно с обеих сторон — иначе проверяем не то.
+describe('placementRev — a coordinated rearrangement', () => {
+  // The single exception to the rule “position belongs to the owner”.
+  // It never fires silently: the revision has to be raised by hand.
+  // The panel in the base is already moved with a raised revision, so in the tests
+  // the revision is set explicitly on both sides — otherwise we check the wrong thing.
   const withSaved = (baseRev, savedRev) => {
     const set = (list, x, rev) => list.map((e) => {
       if (e.id !== 'eq-hob') return e;
@@ -135,20 +135,20 @@ describe('placementRev — согласованная перестановка',
     return mergeProject(b, s).equipment.find((e) => e.id === 'eq-hob');
   };
 
-  it('без ревизии положение заказчика побеждает, как и раньше', () => {
+  it('without a revision the owner position wins, as before', () => {
     expect(withSaved(null, null).x).toBe(1.11);
   });
 
-  it('поднятая ревизия переставляет прибор один раз', () => {
+  it('a raised revision moves the fixture once', () => {
     expect(withSaved(1, null).x).toBe(2.76);
   });
 
-  it('после сохранения новой ревизии заказчик снова хозяин', () => {
-    // Прибор уже переехал, ревизии сравнялись — дальше двигает только он
+  it('after the new revision is saved the owner is the master again', () => {
+    // The fixture has already moved, the revisions are equal — from now on only the owner moves it
     expect(withSaved(1, 1).x).toBe(1.11);
   });
 
-  it('старая ревизия в коде ничего не откатывает', () => {
+  it('an old revision in the code rolls nothing back', () => {
     expect(withSaved(1, 2).x).toBe(1.11);
   });
 });

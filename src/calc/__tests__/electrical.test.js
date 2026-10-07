@@ -18,20 +18,20 @@ const entry = project.nodes.find((n) => n.type === 'electrical_panel');
 const plan = electricalPlan({ equipment: project.equipment, entry });
 
 describe('electricalPoints', () => {
-  it('выбирает из расстановки только электрику', () => {
+  it('selects only the electrics from the placement', () => {
     const pts = electricalPoints(project.equipment);
     expect(pts.length).toBeGreaterThan(15);
     expect(pts.every((p) => p.id.startsWith('el-'))).toBe(true);
   });
 
-  it('у каждой точки есть группа и отметка', () => {
+  it('every point has a group and a level', () => {
     electricalPoints(project.equipment).forEach((p) => {
       expect(CIRCUITS[p.circuit]).toBeDefined();
       expect(p.mountHeight).toBeGreaterThan(0);
     });
   });
 
-  it('выключатели ниже светильников', () => {
+  it('switches are lower than luminaires', () => {
     const pts = electricalPoints(project.equipment);
     const sw = pts.find((p) => p.catalogId === 'switch1');
     const light = pts.find((p) => p.catalogId === 'light');
@@ -40,7 +40,7 @@ describe('electricalPoints', () => {
 });
 
 describe('cableRoutes', () => {
-  it('в трассах нет диагоналей', () => {
+  it('there are no diagonals in the routes', () => {
     plan.routes.forEach((r) => {
       for (let i = 1; i < r.points.length; i++) {
         const dx = Math.abs(r.points[i].x - r.points[i - 1].x);
@@ -50,21 +50,21 @@ describe('cableRoutes', () => {
     });
   });
 
-  it('каждая трасса идёт в своей полосе', () => {
+  it('every route runs in its own lane', () => {
     const lanes = plan.routes.map((r) => r.corridorX);
     expect(new Set(lanes).size).toBe(lanes.length);
   });
 
-  it('кабеля нужно больше, чем длина трассы по полу', () => {
+  it('more cable is needed than the route length along the floor', () => {
     plan.routes.forEach((r) => expect(r.cableM).toBeGreaterThan(r.runM));
   });
 
-  it('дальняя точка требует больше кабеля, чем ближняя', () => {
+  it('a far point needs more cable than a near one', () => {
     const sorted = [...plan.routes].sort((a, b) => a.runM - b.runM);
     expect(sorted[sorted.length - 1].cableM).toBeGreaterThan(sorted[0].cableM);
   });
 
-  it('перенос точки меняет трассу', () => {
+  it('moving a point changes the route', () => {
     const moved = project.equipment.map((e) =>
       e.id === 'el-tv' ? { ...e, x: 0.5, y: 0.5 } : e
     );
@@ -75,15 +75,15 @@ describe('cableRoutes', () => {
   });
 });
 
-describe('Электроточки и проёмы', () => {
-  it('ни одна точка не стоит в проёме', () => {
+describe('Electrical points and openings', () => {
+  it('no point stands in an opening', () => {
     const bad = runRules(project, CLEAR_HEIGHT).filter((w) => w.id.startsWith('el-in-opening'));
     expect(bad.map((w) => w.id)).toEqual([]);
   });
 
-  it('точку, задвинутую в дверь, правило ловит', () => {
+  it('a point pushed into a door is caught by the rule', () => {
     const p = makeInitialProject();
-    // Дверь прихожая→зал: проём 3300…4100 на перегородке x = 2.0
+    // Door hall→living room: opening 3300…4100 on the partition x = 2.0
     p.equipment = p.equipment.map((e) =>
       e.id === 'el-sw-living' ? { ...e, x: 2.02, y: 3.7 } : e
     );
@@ -92,10 +92,10 @@ describe('Электроточки и проёмы', () => {
     expect(bad[0].severity).toBe('error');
   });
 
-  it('розетка НИЖЕ подоконника проёмом не считается', () => {
+  it('a socket BELOW the sill does not count as being in the opening', () => {
     const p = makeInitialProject();
-    // Окно верхней стены 1000…2300, подоконник 960.
-    // Розетки холодильника и посудомойки стоят под ним, на отметке 150.
+    // Top wall window 1000…2300, sill 960.
+    // The refrigerator and dishwasher sockets stand under it, at level 150.
     const dw = p.equipment.find((e) => e.id === 'el-dishwasher');
     expect(dw.x).toBeGreaterThan(1.0);
     expect(dw.x).toBeLessThan(2.3);
@@ -103,7 +103,7 @@ describe('Электроточки и проёмы', () => {
     expect(bad).toHaveLength(0);
   });
 
-  it('но блок на 1100 в том же месте — уже конфликт', () => {
+  it('but a 1100 block in the same place is already a conflict', () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) =>
       e.id === 'el-kitchen-block' ? { ...e, x: 1.6 } : e
@@ -113,178 +113,178 @@ describe('Электроточки и проёмы', () => {
   });
 });
 
-describe('Перекрытие: проводка по дереву', () => {
-  it('межбалочное пространство пустое — доступ снизу', () => {
+describe('Floor slab: wiring in timber', () => {
+  it('the space between the joists is empty — access from below', () => {
     expect(project.ceiling.cavityFilled).toBe(false);
     expect(project.ceiling.subfloor).toBe(false);
   });
 
-  it('утеплитель между этажами нужен для ЗВУКА, а не тепла', () => {
-    // Мансарда отапливается — две спальни с радиаторами
+  it('insulation between the floors is needed for SOUND, not heat', () => {
+    // The attic is heated — two bedrooms with radiators
     expect(project.ceiling.insulationPurpose).toBe('acoustic');
   });
 
-  it('правило про металлорукав срабатывает', () => {
+  it('the metal hose rule fires', () => {
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'ceiling-wiring');
     expect(w).toBeDefined();
-    expect(w.detail).toContain('металлорукав');
+    expect(w.detail).toContain('metal hose');
   });
 
-  it('и напоминает, что окно доступа временное', () => {
+  it('and reminds that the access window is temporary', () => {
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'ceiling-access-window');
     expect(w).toBeDefined();
   });
 });
 
-describe('electricalPlan — группы', () => {
-  // Отдельная линия осталась одна — духовой шкаф: 3,5 кВт выбирают
-  // 3×2,5 на автомате 16 А целиком, делить её не с кем.
-  it('на отдельной линии остался только духовой шкаф', () => {
+describe('electricalPlan — groups', () => {
+  // Only one dedicated line is left — the oven: 3.5 kW takes
+  // 3×2.5 on a 16 A breaker entirely, there is nobody to share it with.
+  it('only the oven is left on a dedicated line', () => {
     const app = plan.byCircuit.find((g) => g.circuit === 'appliance');
     expect(app.lines).toBe(app.count);
     expect(app.count).toBe(1);
     expect(app.points[0].id).toBe('el-oven');
   });
 
-  it('холодильник и посудомойка объединены в одну группу', () => {
+  it('the refrigerator and dishwasher are combined into one group', () => {
     const g = plan.byCircuit.find((c) => c.circuit === 'kitchenApp');
     expect(g.count).toBe(2);
     expect(g.lines).toBe(1);
-    // 0,3 + 2,2 кВт против 3,5 кВт, которые несёт 3×2,5 на 16 А
+    // 0.3 + 2.2 kW against the 3.5 kW that 3×2.5 carries at 16 A
     expect(CIRCUITS.kitchenApp.load).toBeLessThan(3500);
   });
 
-  it('стиральная машина идёт группой санузла, а не своей линией', () => {
+  it('the washing machine goes on the bathroom group, not its own line', () => {
     const g = plan.byCircuit.find((c) => c.circuit === 'bath');
     expect(g.points.map((p) => p.id)).toContain('el-washer');
-    // мокрая зона — УЗО 10 мА, а не общие 30
+    // a wet zone — RCD 10 mA, not the common 30
     expect(CIRCUITS.bath.rcdMa).toBe(10);
   });
 
-  it('аварийная линия несёт ровно то, что решено, и ничего сверх', () => {
+  it('the emergency line carries exactly what is decided, and nothing more', () => {
     const g = plan.byCircuit.find((c) => c.circuit === 'boiler');
-    // Линия перестала быть «только котёл»: на ИБП сознательно добавлены
-    // роутер, свет котельной и одна розетка. Исходное возражение — чужая
-    // авария не должна гасить отопление — снято НЕ обещанием, а щитком
-    // после ИБП, где у каждой ветки свой аппарат. См. calc/emergencyPanel.js.
+    // The line stopped being “boiler only”: the router, the boiler-room light and one
+    // socket were deliberately added to the UPS. The original objection — someone else’s
+    // fault must not shut down the heating — is removed NOT by a promise but by the board
+    // after the UPS, where each branch has its own device. See calc/emergencyPanel.js.
     expect(g.points.map((p) => p.id).sort()).toEqual([
       'el-boiler', 'el-l-ups', 'el-panel-ups', 'el-router', 'el-soc-ups', 'el-sw-ups'
     ]);
     expect(g.breaker).toBe(6);
   });
 
-  it('на аварийной линии ровно одна розетка — остальное несъёмное', () => {
-    // Инвертор 400 Вт. Всё, что сюда попадает, должно быть заведомо мелким.
-    // Светильник и щиток мелкие по определению, котёл известен по паспорту,
-    // а вот РОЗЕТКА — единственный элемент, содержимое которого заранее
-    // неизвестно. Поэтому её должно быть ровно одна, и с автоматом
-    // по остатку инвертора (см. calc/emergencyPanel.js).
+  it('there is exactly one socket on the emergency line — the rest is non-removable', () => {
+    // The inverter is 400 W. Everything that lands here must be small beyond doubt.
+    // The luminaire and the board are small by definition, the boiler is known from the data sheet,
+    // but the SOCKET is the only element whose content is unknown
+    // in advance. So there must be exactly one, with a breaker
+    // set by what is left of the inverter (see calc/emergencyPanel.js).
     const g = plan.byCircuit.find((c) => c.circuit === 'boiler');
     const sockets = g.points.filter((p) => p.catalogId === 'socket_ups');
     expect(sockets).toHaveLength(1);
-    // Обычных розеток на этой линии быть не должно вовсе
+    // There must be no ordinary sockets on this line at all
     expect(g.points.some((p) => p.catalogId === 'socket2')).toBe(false);
   });
 
-  it('групп стало семь вместо девяти', () => {
+  it('there are now seven groups instead of nine', () => {
     expect(plan.breakers).toBe(7);
   });
 
-  it('кабели в полу разнесены достаточно, чтобы не снижать ток', () => {
-    // Просвет между соседними трассами не меньше двух диаметров —
-    // тогда снижающий коэффициент по ПУЭ не применяется
+  it('cables in the floor are spaced enough not to derate the current', () => {
+    // The clearance between adjacent routes is at least two diameters —
+    // then the derating factor of the electrical code does not apply
     expect(plan.bundle.clearanceMm).toBeGreaterThanOrEqual(2 * CABLE_OD_MM);
     expect(plan.bundle.derating).toBe(1);
   });
 
-  it('освещение тянется не по полу', () => {
+  it('lighting does not run along the floor', () => {
     expect(IN_FLOOR.has('light')).toBe(false);
     const light = plan.byCircuit.find((g) => g.circuit === 'light');
     expect(light.inFloor).toBe(false);
   });
 
-  it('розеточные группы идут по полу', () => {
+  it('socket groups run along the floor', () => {
     plan.byCircuit
       .filter((g) => g.circuit !== 'light' && !g.lowVoltage)
       .forEach((g) => expect(g.inFloor).toBe(true));
   });
 
-  it('слаботочка в стяжку не идёт вовсе', () => {
-    // Силовой кабель переживёт дом, а стандарты слаботочки — нет.
-    // Замуровать витую пару в бетон значит закопать её навсегда.
+  it('low-voltage does not go into the screed at all', () => {
+    // Power cable will outlive the house, low-voltage standards will not.
+    // Embedding twisted pair in concrete means burying it for good.
     expect(IN_FLOOR.has('data')).toBe(false);
     const data = plan.byCircuit.find((g) => g.circuit === 'data');
     expect(data.inFloor).toBe(false);
     expect(data.lowVoltage).toBe(true);
   });
 
-  it('в полу кабеля меньше, чем всего', () => {
+  it('there is less cable in the floor than in total', () => {
     expect(plan.inFloorM).toBeGreaterThan(0);
     expect(plan.inFloorM).toBeLessThan(plan.totalCableM);
   });
 
-  it('автоматов хватает на все силовые группы', () => {
-    // Слаботочка автомата не занимает и в силовой щит не идёт
+  it('there are enough breakers for all power groups', () => {
+    // Low-voltage takes no breaker and does not go to the power board
     const power = plan.byCircuit.filter((g) => !g.lowVoltage);
     expect(plan.breakers).toBeGreaterThanOrEqual(power.length);
   });
 
-  it('санузел на своей группе с УЗО', () => {
+  it('the bathroom is on its own group with an RCD', () => {
     expect(CIRCUITS.bath.rcd).toBe(true);
     expect(plan.byCircuit.some((g) => g.circuit === 'bath')).toBe(true);
   });
 
-  it('без точки ввода план пустой, но не падает', () => {
+  it('without an entry point the plan is empty but does not crash', () => {
     const empty = electricalPlan({ equipment: project.equipment, entry: null });
     expect(empty.routes).toEqual([]);
     expect(empty.totalCableM).toBe(0);
   });
 });
 
-describe('двухклавишные проходные на свет зала', () => {
+describe('two-gang two-way switches for the living-room light', () => {
   const p = makeInitialProject();
   const at = (id) => p.equipment.find((e) => e.id === id);
 
-  it('оба конца проходной схемы — проходные выключатели', () => {
-    // Раньше на входе стоял обычный одноклавишный: так проходная схема
-    // физически не работает, проходным должен быть КАЖДЫЙ из двух
+  it('both ends of the two-way circuit are two-way switches', () => {
+    // There used to be an ordinary single-gang one at the entrance: a two-way circuit
+    // physically does not work like that, EACH of the two must be a two-way switch
     expect(at('el-sw-living').catalogId).toBe('switch2_way');
     expect(at('el-sw-living-2').catalogId).toBe('switch2_way');
     expect(getFixture('switch2_way').twoWay).toBe(true);
     expect(getFixture('switch2_way').gangs).toBe(2);
   });
 
-  it('пара ссылается друг на друга в обе стороны', () => {
+  it('the pair refers to each other both ways', () => {
     expect(at('el-sw-living').pairWith).toBe('el-sw-living-2');
     expect(at('el-sw-living-2').pairWith).toBe('el-sw-living');
   });
 
-  it('клавиши совпадают у обоих концов — группа к группе', () => {
+  it('the gangs match at both ends — group to group', () => {
     expect(at('el-sw-living').groups).toEqual(at('el-sw-living-2').groups);
   });
 
-  it('свет зала разбит на две группы, ни одна лампа не потеряна', () => {
+  it('the living-room light is split into two groups, no lamp is lost', () => {
     const g = at('el-sw-living').groups;
     expect(g).toHaveLength(2);
     const all = g.flat().sort();
-    // Светильник с БАП — обычная лампа, просто с аккумулятором внутри:
-    // он висит на той же клавише, что и остальной свет зала, и в аварию
-    // зажигается сам. Отдельного управления ему не нужно.
+    // A luminaire with battery backup is an ordinary lamp, just with a battery inside:
+    // it hangs on the same gang as the rest of the living-room light, and in an emergency
+    // it comes on by itself. It needs no separate control.
     expect(all).toEqual(['el-bap-living', 'el-l1', 'el-l2', 'el-l3']);
   });
 
-  it('подсветка лестницы осталась отдельной парой с мансардой', () => {
+  it('the stair lighting stayed a separate pair with the attic', () => {
     const st = at('el-sw-stair');
     expect(st.catalogId).toBe('switch_way');
     expect(st.pairWith).toBe('MANSARD');
   });
 
-  it('все лампы по-прежнему кем-то управляются', () => {
+  it('all lamps are still controlled by something', () => {
     const cov = switchCoverage(p.equipment);
     expect(cov.orphanLights).toHaveLength(0);
   });
 
-  it('свет зала доступен из двух мест', () => {
+  it('the living-room light is reachable from two places', () => {
     const cov = switchCoverage(p.equipment);
     ['el-l1', 'el-l2', 'el-l3'].forEach((id) =>
       expect(cov.dualControlled).toContain(id)

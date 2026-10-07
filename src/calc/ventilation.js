@@ -6,12 +6,12 @@
 
 // Расчётные расходы вытяжки, м³/ч
 export const EXTRACT_FLOW = {
-  bathCombined: 50, // совмещённый санузел
+  bathCombined: 50, // combined bathroom
   wc: 25,
   bathroom: 25,
   kitchenElectric: 60,
-  kitchenGas: 90, // при газовой плите требуется больше
-  hoodBoost: 400 // кухонная вытяжка на максимуме
+  kitchenGas: 90, // more is required with a gas hob
+  hoodBoost: 400 // kitchen hood at maximum
 };
 
 // Рекомендуемая скорость в воздуховоде, м/с.
@@ -20,8 +20,8 @@ export const DUCT_VELOCITY = { quiet: 3, normal: 4, max: 5 };
 
 // Диаметр круглого канала под заданный расход
 export function ductDiameter(flowM3h, velocity = DUCT_VELOCITY.normal) {
-  const area = flowM3h / 3600 / velocity; // м²
-  return Math.sqrt((4 * area) / Math.PI); // м
+  const area = flowM3h / 3600 / velocity; // m²
+  return Math.sqrt((4 * area) / Math.PI); // m
 }
 
 // Ближайший стандартный диаметр из ряда
@@ -69,7 +69,7 @@ export function ventilationPlan({ bathArea, kitchenArea, height, gasHob }) {
 // Сколько влаги даёт сгорание газа.
 // При сгорании 1 м³ природного газа образуется около 1,6 кг водяного пара —
 // именно поэтому газовая плита без вытяжки резко поднимает влажность.
-export const WATER_PER_M3_GAS = 1.6; // кг
+export const WATER_PER_M3_GAS = 1.6; // kg
 
 export function cookingMoisture({ gasM3PerHour = 0.35, hours = 1 }) {
   return gasM3PerHour * hours * WATER_PER_M3_GAS;

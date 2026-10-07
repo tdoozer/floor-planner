@@ -57,7 +57,7 @@ export function sortBySeverity(list) {
 // специально загоняют низкие шкафы, и запрещать это было бы неверно.
 // Исключения — приборы, которыми пользуются стоя или сидя.
 const HEADROOM_OVERRIDE = {
-  wc: 1.3, // над унитазом сидят
+  wc: 1.3, // people sit over a toilet
   basin: 1.9,
   shower: 2.0,
   washer: 1.4,
@@ -105,13 +105,13 @@ export function runRules(project, clearHeight) {
               id: `drain-${c.id}`,
               severity: 'error',
               layer: 'plumbing',
-              title: `Слив «${spec.name}» не помещается в пирог пола`,
+              title: `Drain “${spec.name}” does not fit in the floor build-up`,
               detail:
-                `Трасса ${route.length.toFixed(2)} м при уклоне 2 см/м поднимает лоток до ` +
-                `${fit.invertMm.toFixed(0)} мм, верх трубы Ø${c.dia} — до ${fit.crownMm.toFixed(0)} мм ` +
-                `от чистого пола. Низ стяжки на ${fit.underScreedMm.toFixed(0)} мм. ` +
-                `Не хватает ${Math.abs(fit.marginMm).toFixed(0)} мм.`,
-              fix: 'Сдвинуть прибор ближе к стояку, уменьшить ЭППС/стяжку или опустить лоток стояка.',
+                `A ${route.length.toFixed(2)} m run at a 2 cm/m slope raises the invert to ` +
+                `${fit.invertMm.toFixed(0)} mm, the pipe crown Ø${c.dia} to ${fit.crownMm.toFixed(0)} mm ` +
+                `above the finished floor. The screed bottom is at ${fit.underScreedMm.toFixed(0)} mm. ` +
+                `Short by ${Math.abs(fit.marginMm).toFixed(0)} mm.`,
+              fix: 'Move the fixture closer to the stack, reduce the XPS/screed, or lower the stack invert.',
               at: { x: c.x, y: c.y }
             });
           } else if (fit.marginMm < 20) {
@@ -119,9 +119,9 @@ export function runRules(project, clearHeight) {
               id: `drain-tight-${c.id}`,
               severity: 'warn',
               layer: 'plumbing',
-              title: `Слив «${spec.name}» проходит впритык`,
-              detail: `Запас до низа стяжки всего ${fit.marginMm.toFixed(0)} мм при трассе ${route.length.toFixed(2)} м.`,
-              fix: 'Заложить запас — на объекте отметки всегда «плывут».',
+              title: `Drain “${spec.name}” is a tight fit`,
+              detail: `The margin to the screed bottom is only ${fit.marginMm.toFixed(0)} mm for a ${route.length.toFixed(2)} m run.`,
+              fix: 'Keep a reserve — on site the levels always drift.',
               at: { x: c.x, y: c.y }
             });
           }
@@ -131,8 +131,8 @@ export function runRules(project, clearHeight) {
               id: `drain-deep-${c.id}`,
               severity: 'info',
               layer: 'plumbing',
-              title: `«${spec.name}»: труба уходит ниже утеплителя`,
-              detail: 'Лоток опускается в подсыпку — это допустимо, но требует локального решения по опиранию и утеплению трубы.',
+              title: `“${spec.name}”: the pipe goes below the insulation`,
+              detail: 'The invert sinks into the fill — this is acceptable, but needs a local solution for supporting and insulating the pipe.',
               at: { x: c.x, y: c.y }
             });
           }
@@ -143,8 +143,8 @@ export function runRules(project, clearHeight) {
       id: 'no-riser',
       severity: 'warn',
       layer: 'plumbing',
-      title: 'Не задан стояк канализации',
-      detail: 'Без точки стояка невозможно проверить уклоны сливов.'
+      title: 'Sewer stack not set',
+      detail: 'Without a stack point the drain slopes cannot be checked.'
     });
   }
 
@@ -165,9 +165,9 @@ export function runRules(project, clearHeight) {
           id: `head-${item.id}`,
           severity: head < req - 0.3 ? 'error' : 'warn',
           layer: 'architecture',
-          title: `Под маршем мало высоты для «${spec.name}»`,
-          detail: `В центре прибора высота под лестницей ${head.toFixed(2)} м, требуется ${req.toFixed(2)} м.`,
-          fix: 'Переставить прибор в сторону высокой части марша либо сдвинуть лестницу.',
+          title: `Not enough headroom under the flight for “${spec.name}”`,
+          detail: `At the centre of the fixture the headroom under the stair is ${head.toFixed(2)} m, ${req.toFixed(2)} m is required.`,
+          fix: 'Move the fixture towards the high part of the flight or move the stair.',
           at: { x: cx, y: cy }
         });
       } else if (spec.workstation && head < WORKSTATION_HEADROOM) {
@@ -176,9 +176,9 @@ export function runRules(project, clearHeight) {
           id: `work-${item.id}`,
           severity: 'info',
           layer: 'equipment',
-          title: `За «${spec.name}» под маршем будет тесно`,
-          detail: `Высота над прибором ${head.toFixed(2)} м. Сам он помещается, но стоять и работать комфортно от ${WORKSTATION_HEADROOM.toFixed(2)} м.`,
-          fix: 'Рабочую зону — ближе к высокой части марша, под низкую убрать глухие шкафы.',
+          title: `It will be cramped behind “${spec.name}” under the flight`,
+          detail: `Headroom above the fixture is ${head.toFixed(2)} m. It fits, but standing and working is comfortable from ${WORKSTATION_HEADROOM.toFixed(2)} m.`,
+          fix: 'Put the work zone closer to the high part of the flight, and put blind cabinets under the low part.',
           at: { x: cx, y: cy }
         });
       }
@@ -191,9 +191,9 @@ export function runRules(project, clearHeight) {
         id: 'stair-run',
         severity: 'error',
         layer: 'architecture',
-        title: 'Марш не помещается в отведённую длину',
-        detail: `${stair.risers} подступенков по ${sc.risePerStep.toFixed(3)} м требуют проекции ${sc.requiredRun.toFixed(2)} м, отведено ${sc.actualRun.toFixed(2)} м.`,
-        fix: 'Увеличить длину марша, добавить забежные ступени или площадку.',
+        title: 'The flight does not fit in the allotted length',
+        detail: `${stair.risers} risers of ${sc.risePerStep.toFixed(3)} m need a projection of ${sc.requiredRun.toFixed(2)} m, ${sc.actualRun.toFixed(2)} m is allotted.`,
+        fix: 'Lengthen the flight, add winders or a landing.',
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -202,9 +202,9 @@ export function runRules(project, clearHeight) {
         id: 'stair-rise',
         severity: 'warn',
         layer: 'architecture',
-        title: 'Подступенок выше 200 мм',
-        detail: `Расчётный подъём ${(sc.risePerStep * 1000).toFixed(0)} мм.`,
-        fix: 'Добавить ступеней.',
+        title: 'Riser higher than 200 mm',
+        detail: `Calculated rise ${(sc.risePerStep * 1000).toFixed(0)} mm.`,
+        fix: 'Add steps.',
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -213,8 +213,8 @@ export function runRules(project, clearHeight) {
         id: 'stair-tread',
         severity: 'warn',
         layer: 'architecture',
-        title: 'Проступь меньше 230 мм',
-        detail: `Проступь ${(sc.tread * 1000).toFixed(0)} мм — на такой ступени неудобно спускаться.`,
+        title: 'Tread less than 230 mm',
+        detail: `Tread ${(sc.tread * 1000).toFixed(0)} mm — it is awkward to descend such a step.`,
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -223,8 +223,8 @@ export function runRules(project, clearHeight) {
         id: 'stair-blondel',
         severity: 'info',
         layer: 'architecture',
-        title: 'Формула удобства вне диапазона',
-        detail: `2h + b = ${sc.blondel.toFixed(3)} м, комфортный диапазон 0,60–0,65 м.`,
+        title: 'Comfort formula out of range',
+        detail: `2h + b = ${sc.blondel.toFixed(3)} m, the comfortable range is 0.60–0.65 m.`,
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -233,11 +233,11 @@ export function runRules(project, clearHeight) {
         id: 'stair-width',
         severity: 'info',
         layer: 'architecture',
-        title: `Ширина ступени ${(stair.width * 1000).toFixed(0)} мм — меньше ориентира 900`,
+        title: `Step width ${(stair.width * 1000).toFixed(0)} mm — below the 900 guideline`,
         detail:
-          `Сейчас ${(stair.existingWidth * 1000).toFixed(0)} мм, проектируется ` +
-          `${(stair.width * 1000).toFixed(0)} мм — заметно лучше, но до 900 не дотягивает. ` +
-          'Ориентир предположительный, сверьте с актуальным текстом СП.',
+          `Now ${(stair.existingWidth * 1000).toFixed(0)} mm, designed ` +
+          `${(stair.width * 1000).toFixed(0)} mm — noticeably better, but short of 900. ` +
+          'The guideline is an assumption, check it against the current text of the code.',
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -246,11 +246,11 @@ export function runRules(project, clearHeight) {
         id: 'stair-angle',
         severity: 'warn',
         layer: 'architecture',
-        title: `Угол наклона ${sc.angleDeg.toFixed(1)}° — круче ${STAIR_NORMS.maxAngleDeg}°`,
+        title: `Slope angle ${sc.angleDeg.toFixed(1)}° — steeper than ${STAIR_NORMS.maxAngleDeg}°`,
         detail:
-          `При высоте ступени ${(sc.risePerStep * 1000).toFixed(0)} и проступи ` +
-          `${(sc.tread * 1000).toFixed(0)} мм марш получается крутым.`,
-        fix: 'Увеличить проступь — это возможно только за счёт длины марша, то есть проёма.',
+          `With a riser of ${(sc.risePerStep * 1000).toFixed(0)} and a tread of ` +
+          `${(sc.tread * 1000).toFixed(0)} mm the flight turns out steep.`,
+        fix: 'Increase the tread — possible only at the expense of the flight length, i.e. the opening.',
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -259,10 +259,10 @@ export function runRules(project, clearHeight) {
         id: 'stair-comfort',
         severity: 'info',
         layer: 'architecture',
-        title: `Формула удобства h + s = ${(sc.comfort * 1000).toFixed(0)} мм вместо ~450`,
+        title: `Comfort formula h + s = ${(sc.comfort * 1000).toFixed(0)} mm instead of ~450`,
         detail:
-          `Высота ступени ${(sc.risePerStep * 1000).toFixed(0)} + проступь ` +
-          `${(sc.tread * 1000).toFixed(0)} мм. Ниже 450 — шаг получается мелким и частым.`,
+          `Riser ${(sc.risePerStep * 1000).toFixed(0)} + tread ` +
+          `${(sc.tread * 1000).toFixed(0)} mm. Below 450 the stride becomes short and frequent.`,
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -274,9 +274,9 @@ export function runRules(project, clearHeight) {
         id: 'stair-approach',
         severity: 'error',
         layer: 'architecture',
-        title: `Заход перед лестницей ${(approach * 1000).toFixed(0)} мм — меньше метра`,
-        detail: `Перед нижней ступенью нужно не менее ${(stair.minApproach * 1000).toFixed(0)} мм, чтобы на неё можно было выйти.`,
-        fix: 'Поднять низ марша обратно. Удлинять марш можно только вверх, за счёт проёма.',
+        title: `Approach in front of the stair ${(approach * 1000).toFixed(0)} mm — less than a metre`,
+        detail: `In front of the bottom step at least ${(stair.minApproach * 1000).toFixed(0)} mm is needed so that you can step onto it.`,
+        fix: 'Raise the bottom of the flight back. The flight can only be lengthened upwards, by means of the opening.',
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length }
       });
     }
@@ -285,11 +285,11 @@ export function runRules(project, clearHeight) {
         id: 'stair-landing',
         severity: 'error',
         layer: 'architecture',
-        title: `Площадка наверху ${(stair.y * 1000).toFixed(0)} мм — меньше метра`,
+        title: `Landing at the top ${(stair.y * 1000).toFixed(0)} mm — less than a metre`,
         detail:
-          `Над отрезком 0…${stair.y.toFixed(2)} м на втором этаже должна остаться площадка ` +
-          `не менее ${(stair.minLanding * 1000).toFixed(0)} мм, чтобы сойти с марша. Сейчас её не хватает.`,
-        fix: 'Опустить верх марша либо уменьшить проступь.',
+          `Over the section 0…${stair.y.toFixed(2)} m on the second floor a landing of ` +
+          `at least ${(stair.minLanding * 1000).toFixed(0)} mm must remain so that you can step off the flight. Right now it is short.`,
+        fix: 'Lower the top of the flight or reduce the tread.',
         at: { x: stair.x + stair.width / 2, y: stair.y }
       });
     }
@@ -305,17 +305,17 @@ export function runRules(project, clearHeight) {
         severity: 'info',
         layer: 'architecture',
         title: best.allOk
-          ? `Есть вариант, проходящий по всем критериям: ${best.risers} подступенков`
-          : `Лучше подходит ${best.risers} подступенков`,
+          ? `There is an option that passes every criterion: ${best.risers} risers`
+          : `${best.risers} risers fits best`,
         detail:
-          `При заходе ${(stair.minApproach * 1000).toFixed(0)} и площадке ` +
-          `${(stair.minLanding * 1000).toFixed(0)} мм на марш остаётся ${maxRun.toFixed(2)} м. ` +
-          `${best.risers} подступенков дают высоту ступени ${(best.risePerStep * 1000).toFixed(0)}, ` +
-          `проступь ${(best.tread * 1000).toFixed(0)} мм, угол ${best.angleDeg.toFixed(1)}°, ` +
-          `2h + s = ${(best.blondel * 1000).toFixed(0)}, h + s = ${(best.comfort * 1000).toFixed(0)} мм. ` +
-          `Сейчас ${stair.risers} подступенков: проступь ${(sc.tread * 1000).toFixed(0)} мм, ` +
+          `With an approach of ${(stair.minApproach * 1000).toFixed(0)} and a landing of ` +
+          `${(stair.minLanding * 1000).toFixed(0)} mm, ${maxRun.toFixed(2)} m is left for the flight. ` +
+          `${best.risers} risers give a riser height of ${(best.risePerStep * 1000).toFixed(0)}, ` +
+          `a tread of ${(best.tread * 1000).toFixed(0)} mm, an angle of ${best.angleDeg.toFixed(1)}°, ` +
+          `2h + s = ${(best.blondel * 1000).toFixed(0)}, h + s = ${(best.comfort * 1000).toFixed(0)} mm. ` +
+          `Now ${stair.risers} risers: tread ${(sc.tread * 1000).toFixed(0)} mm, ` +
           `2h + s = ${(sc.blondel * 1000).toFixed(0)}.`,
-        fix: `Поставить ${best.risers} подступенков и проекцию ${maxRun.toFixed(2)} м.`,
+        fix: `Set ${best.risers} risers and a projection of ${maxRun.toFixed(2)} m.`,
         at: { x: stair.x + stair.width / 2, y: stair.y + stair.length / 2 }
       });
     }
@@ -330,13 +330,13 @@ export function runRules(project, clearHeight) {
         id: 'stair-opening',
         severity: 'info',
         layer: 'architecture',
-        title: `Проём нужно сдвинуть на ${(shift * 1000).toFixed(0)} мм над санузлом`,
+        title: `The opening must be moved by ${(shift * 1000).toFixed(0)} mm over the bathroom`,
         detail:
-          `Существующий проём заканчивается на отметке ${stair.existingOpeningTopY.toFixed(2)} м: ` +
-          `при ${stair.risers} подступенках это проекция ${existingRun.toFixed(2)} м и проступь ` +
-          `всего ${(existingTread * 1000).toFixed(0)} мм — отсюда крутизна. Предлагаемый марш ` +
-          `${stair.length.toFixed(2)} м даёт проступь ${(sc.tread * 1000).toFixed(0)} мм.`,
-        fix: 'Разобрать участок перекрытия над санузлом. Проверить направление и шаг балок, опирание, ригель по кромке.',
+          `The existing opening ends at level ${stair.existingOpeningTopY.toFixed(2)} m: ` +
+          `with ${stair.risers} risers that is a projection of ${existingRun.toFixed(2)} m and a tread of ` +
+          `only ${(existingTread * 1000).toFixed(0)} mm — hence the steepness. The proposed flight of ` +
+          `${stair.length.toFixed(2)} m gives a tread of ${(sc.tread * 1000).toFixed(0)} mm.`,
+        fix: 'Remove a section of the slab over the bathroom. Check the direction and spacing of the joists, the bearing, the beam along the edge.',
         at: { x: stair.x + stair.width / 2, y: (stair.y + stair.existingOpeningTopY) / 2 }
       });
     }
@@ -361,9 +361,9 @@ export function runRules(project, clearHeight) {
         id: `gas-${item.id}`,
         severity: 'warn',
         layer: 'plumbing',
-        title: `«${spec.name}» далеко от ввода газа`,
-        detail: `До ближайшей точки газа ${nearest.d.toFixed(2)} м. Ввод существует и перенос — отдельная работа со службой газа.`,
-        fix: 'Держать панель в пределах ~1,5 м от существующего ввода.',
+        title: `“${spec.name}” is far from the gas inlet`,
+        detail: `It is ${nearest.d.toFixed(2)} m to the nearest gas point. The inlet exists and moving it is a separate job with the gas service.`,
+        fix: 'Keep the hob within ~1.5 m of the existing inlet.',
         at: { x: cx, y: cy }
       });
     }
@@ -388,8 +388,8 @@ export function runRules(project, clearHeight) {
         id: `bounds-${item.id}`,
         severity: 'warn',
         layer: 'equipment',
-        title: `«${spec.name}» пересекает стену или границу помещения`,
-        detail: 'Прибор частично выходит за пределы одного помещения.',
+        title: `“${spec.name}” crosses a wall or a room boundary`,
+        detail: 'The fixture partly extends beyond one room.',
         at: { x: bb.cx, y: bb.cy }
       });
     }
@@ -418,8 +418,8 @@ export function runRules(project, clearHeight) {
           id: `overlap-${solid[i].id}-${solid[j].id}`,
           severity: 'warn',
           layer: 'equipment',
-          title: `«${sa?.name}» и «${sb?.name}» накладываются`,
-          detail: `Перекрытие около ${(hit.depth * 1000).toFixed(0)} мм.`,
+          title: `“${sa?.name}” and “${sb?.name}” overlap`,
+          detail: `Overlap of about ${(hit.depth * 1000).toFixed(0)} mm.`,
           at: { x: (a.cx + b.cx) / 2, y: (a.cy + b.cy) / 2 }
         });
       }
@@ -445,12 +445,12 @@ export function runRules(project, clearHeight) {
       id: `opening-room-${o.id}`,
       severity: 'warn',
       layer: 'architecture',
-      title: `Проём «${o.id}» оказался не в том помещении`,
+      title: `Opening “${o.id}” ended up in the wrong room`,
       detail:
-        `По привязке он должен быть в помещении «${room.name}», а попал ` +
-        `${actual ? `в «${actual.name}»` : 'за пределы помещений'}. Привязка проёма замерена — ` +
-        'значит, мимо него уехала перегородка.',
-      fix: 'Вернуть перегородку либо перепроверить замер проёма.',
+        `By its reference it must be in the room “${room.name}”, but it landed ` +
+        `${actual ? `in “${actual.name}”` : 'outside the rooms'}. The opening position is measured — ` +
+        'so the partition has moved away from it.',
+      fix: 'Put the partition back or recheck the opening measurement.',
       at: probe
     });
   });
@@ -465,12 +465,12 @@ export function runRules(project, clearHeight) {
       id: 'fill-compaction',
       severity: lv.compactLayers > 1 ? 'warn' : 'info',
       layer: 'architecture',
-      title: `Засыпка ${levels.sandFill} мм — ${lv.compactLayers} ${lv.compactLayers === 1 ? 'слой' : 'слоя'} уплотнения`,
+      title: `Fill of ${levels.sandFill} mm — ${lv.compactLayers} compaction ${lv.compactLayers === 1 ? 'layer' : 'layers'}`,
       detail:
-        `Песок уплотняется слоями не толще ${levels.compactLayer} мм, каждый с проливкой ` +
-        'и виброплитой. Насыпать всё разом и утрамбовать сверху нельзя: низ останется рыхлым, ' +
-        'и стяжка с трубой ТП просядет и треснет. Это необратимо — трубу из бетона не достать.',
-      fix: 'Заложить в работы послойное уплотнение и контроль плотности перед заливкой.'
+        `Sand is compacted in layers no thicker than ${levels.compactLayer} mm, each watered ` +
+        'and vibrated. Dumping it all at once and tamping from the top is not an option: the bottom stays loose, ' +
+        'and the screed with the heating pipe will settle and crack. This is irreversible — you cannot get a pipe out of concrete.',
+      fix: 'Include layer-by-layer compaction and density control before the pour in the works.'
     });
 
     if (Math.abs(lv.floorDelta) > 5) {
@@ -479,12 +479,12 @@ export function runRules(project, clearHeight) {
         severity: 'info',
         layer: 'architecture',
         title: lv.floorDelta > 0
-          ? `Пол поднимется на ${lv.floorDelta.toFixed(0)} мм`
-          : `Пол опустится на ${Math.abs(lv.floorDelta).toFixed(0)} мм`,
+          ? `The floor will rise by ${lv.floorDelta.toFixed(0)} mm`
+          : `The floor will drop by ${Math.abs(lv.floorDelta).toFixed(0)} mm`,
         detail:
-          `Высота помещения станет ${lv.clearHeight.toFixed(0)} мм, ` +
-          `от пола до пола мансарды — ${lv.floorToFloor.toFixed(0)} мм. ` +
-          `Чтобы пол остался на месте, песка нужно ${lv.sandForNoChange.toFixed(0)} мм.`
+          `The room height will be ${lv.clearHeight.toFixed(0)} mm, ` +
+          `floor to attic floor — ${lv.floorToFloor.toFixed(0)} mm. ` +
+          `For the floor to stay in place, ${lv.sandForNoChange.toFixed(0)} mm of sand is needed.`
       });
     }
 
@@ -493,9 +493,9 @@ export function runRules(project, clearHeight) {
         id: 'clear-height',
         severity: 'warn',
         layer: 'architecture',
-        title: `Высота помещения ${lv.clearHeight.toFixed(0)} мм`,
-        detail: 'Подъём пола съедает высоту. Ниже 2500 мм комната начинает давить.',
-        fix: 'Уменьшить засыпку или толщину пирога.'
+        title: `Room height ${lv.clearHeight.toFixed(0)} mm`,
+        detail: 'Raising the floor eats height. Below 2500 mm the room starts to feel oppressive.',
+        fix: 'Reduce the fill or the thickness of the build-up.'
       });
     }
 
@@ -506,13 +506,13 @@ export function runRules(project, clearHeight) {
         id: 'edge-insulation',
         severity: 'error',
         layer: 'heating',
-        title: 'Не заложено утепление торца плиты по периметру',
+        title: 'No insulation of the slab edge around the perimeter',
         detail:
-          'Тёплый пол упирается краем в холодный фундамент: перепад там не 20, а 45–50 K, ' +
-          'и на погонный метр периметра теряется больше, чем на квадратный метр поля. ' +
-          'Снаружи цоколь закрыт отмосткой, но изнутри подполье пока открыто — ' +
-          'это единственная возможность приклеить ЭППС к внутренней грани фундамента.',
-        fix: 'Заложить ЭППС 50–100 мм по внутренней грани фундамента, вниз на 400–600 мм, ДО засыпки.'
+          'The heated floor abuts the cold foundation: the temperature drop there is not 20 but 45–50 K, ' +
+          'and per metre of perimeter more is lost than per square metre of the field. ' +
+          'Outside, the plinth is covered by the blind area, but inside the sub-floor is still open — ' +
+          'this is the only chance to glue XPS to the inner face of the foundation.',
+        fix: 'Fit XPS 50–100 mm on the inner face of the foundation, 400–600 mm down, BEFORE the fill.'
       });
     } else {
       // Утеплитель должен доходить ДО ЧИСТОГО ПОЛА, а не до низа стяжки:
@@ -524,12 +524,12 @@ export function runRules(project, clearHeight) {
           id: 'edge-top',
           severity: 'error',
           layer: 'heating',
-          title: `Торцевой утеплитель не доходит до чистого пола на ${levels.edgeTop.toFixed(0)} мм`,
+          title: `The edge insulation stops ${levels.edgeTop.toFixed(0)} mm short of the finished floor`,
           detail:
-            `${uncovered.toFixed(0)} мм стяжки касаются фундамента напрямую. Труба ТП лежит ` +
-            'именно в стяжке, поэтому здесь самая высокая температура и самый большой поток ' +
-            'наружу — утеплять только нижние слои бессмысленно.',
-          fix: 'Довести разрыв до уровня чистого пола: ЭППС до низа стяжки, выше — демпферная лента.'
+            `${uncovered.toFixed(0)} mm of screed touch the foundation directly. The heating pipe lies ` +
+            'precisely in the screed, so this is where the temperature is highest and the outward flux ' +
+            'is largest — insulating only the lower layers makes no sense.',
+          fix: 'Bring the break up to the finished floor level: XPS up to the screed bottom, damper strip above.'
         });
       }
       // Разрыв на уровне САМОЙ стяжки. Толстую плиту сюда не поставить —
@@ -540,14 +540,14 @@ export function runRules(project, clearHeight) {
           id: 'edge-strip',
           severity: 'error',
           layer: 'heating',
-          title: 'Край стяжки упирается в стену без разрыва',
+          title: 'The screed edge butts against the wall without a gap',
           detail:
-            'Торцевой ЭППС кончается низом стяжки, а сама стяжка доходит до стены. ' +
-            'Без ленты она, во-первых, отдаёт тепло в стену самой горячей своей частью, ' +
-            'во-вторых, при нагреве упирается в стену и трескается: 5,5 м бетона ' +
-            'от 10 до 28 °C удлиняются примерно на 1 мм.',
-          fix: 'Демпферная лента 8–10 мм по периметру и вдоль перегородок, ' +
-            'подрезать после укладки керамогранита.'
+            'The edge XPS ends at the screed bottom, while the screed itself reaches the wall. ' +
+            'Without a strip it, firstly, gives heat to the wall with its hottest part, ' +
+            'and secondly, on heating it pushes against the wall and cracks: 5.5 m of concrete ' +
+            'lengthens by about 1 mm from 10 to 28 °C.',
+          fix: 'A damper strip of 8–10 mm along the perimeter and along the partitions, ' +
+            'trimmed after laying the porcelain tile.'
         });
       }
       if (levels.edgeInsulationDepth < 300) {
@@ -555,11 +555,11 @@ export function runRules(project, clearHeight) {
           id: 'edge-depth',
           severity: 'warn',
           layer: 'heating',
-          title: `Торцевой утеплитель заглублён всего на ${levels.edgeInsulationDepth.toFixed(0)} мм`,
+          title: `The edge insulation goes down only ${levels.edgeInsulationDepth.toFixed(0)} mm`,
           detail:
-            'Тепло обходит короткий утеплитель по фундаменту снизу. Рабочая глубина — ' +
-            '400–600 мм от чистого пола вниз по внутренней грани.',
-          fix: 'Увеличить заглубление до 400–600 мм — пока подполье открыто, это дёшево.'
+            'Heat bypasses a short insulation under it along the foundation. The working depth is ' +
+            '400–600 mm from the finished floor down the inner face.',
+          fix: 'Increase the depth to 400–600 mm — while the sub-floor is open, this is cheap.'
         });
       }
     }
@@ -574,12 +574,12 @@ export function runRules(project, clearHeight) {
       id: 'stackup-total',
       severity: 'info',
       layer: 'architecture',
-      title: `Полная толщина пирога: ${aboveGround} мм`,
+      title: `Total build-up thickness: ${aboveGround} mm`,
       detail:
-        `Щебень ${screed.gravel} + ЭППС ${screed.insulation} + стяжка ${screed.screedTotal} + ` +
-        `покрытие ${screed.finishThickness} мм. Отметка чистого пола поднимется на эту величину ` +
-        'от верха вскрытого основания — сверить с порогом входной двери и низом окон.',
-      fix: 'Внести фактическую отметку порога, чтобы правило стало проверяемым.'
+        `Crushed stone ${screed.gravel} + XPS ${screed.insulation} + screed ${screed.screedTotal} + ` +
+        `finish ${screed.finishThickness} mm. The finished floor level will rise by this amount ` +
+        'from the top of the exposed base — check against the entrance door threshold and the window sills.',
+      fix: 'Enter the actual threshold level so that the rule becomes verifiable.'
     });
   }
 
@@ -619,21 +619,21 @@ export function runRules(project, clearHeight) {
         id: 'pitch-vs-mesh',
         severity: 'info',
         layer: 'heating',
-        title: `Шаг трубы ${spacings.join(' / ')} мм по сетке 100 × 100`,
+        title: `Pipe pitch ${spacings.join(' / ')} mm on a 100 × 100 mesh`,
         detail:
-          'Шаг — это расстояние между СОСЕДНИМИ трубами, а рядом всегда лежат ' +
-          'подача и обратка встречной укладки. Отдельной «обратки посередине» нет: ' +
-          'при шаге 200 прямой ход идёт через 400, обратный заполняет промежутки, ' +
-          'и труба в итоге ложится через прут. Совпадать с ячейкой не обязано — ' +
-          'вяжут к поперечным прутьям, они пересекают трубу каждые 100 мм ' +
-          'при любом шаге.' +
+          'Pitch is the distance between ADJACENT pipes, and the supply and return of ' +
+          'counterflow laying always lie side by side. There is no separate “return in the middle”: ' +
+          'at a pitch of 200 the forward run goes every 400, the return fills the gaps, ' +
+          'and the pipe ends up lying on a bar. It need not coincide with the cell — ' +
+          'it is tied to the cross bars, which cross the pipe every 100 mm ' +
+          'at any pitch.' +
           (offGrid.length
-            ? ` Шаг ${offGrid.join(', ')} мм на прутья не попадает — это нормально, ` +
-              'размечается рулеткой по демпферной ленте.'
+            ? ` A pitch of ${offGrid.join(', ')} mm does not land on the bars — that is normal, ` +
+              'it is marked out with a tape measure along the damper strip.'
             : ''),
         fix:
-          'Разметить шаг маркером по ленте до раскатки трубы, вязать хомутом ' +
-          'через каждый третий прут на прямой и через каждый — на повороте.'
+          'Mark the pitch with a marker on the strip before unrolling the pipe, tie it with clips ' +
+          'to every third bar on the straight and to every bar on the bend.',
       });
     }
 
@@ -645,15 +645,15 @@ export function runRules(project, clearHeight) {
         id: `floor-deficit-${r.id}`,
         severity: 'warn',
         layer: 'heating',
-        title: `«${r.name}»: пола не хватает, нужен догрев ${shortfall.toFixed(0)} Вт`,
+        title: `“${r.name}”: the floor is not enough, supplementary heating of ${shortfall.toFixed(0)} W needed`,
         detail:
-          `Мебель и техника занимают ${r.excludedArea.toFixed(2)} из ${r.area.toFixed(2)} м². ` +
-          `Нагрузку ${r.roomLoadW.toFixed(0)} Вт должны отдать оставшиеся ${r.effectiveArea.toFixed(2)} м², ` +
-          `это ${r.requiredWm2.toFixed(0)} Вт/м². При ограничении поверхности ${r.maxFloorTemp} °C ` +
-          `пол даёт максимум ${best.toFixed(0)} Вт/м².`,
+          `Furniture and appliances occupy ${r.excludedArea.toFixed(2)} of ${r.area.toFixed(2)} m². ` +
+          `The load of ${r.roomLoadW.toFixed(0)} W must be delivered by the remaining ${r.effectiveArea.toFixed(2)} m², ` +
+          `that is ${r.requiredWm2.toFixed(0)} W/m². With the surface limited to ${r.maxFloorTemp} °C ` +
+          `the floor gives at most ${best.toFixed(0)} W/m².`,
         fix: r.id === 'bath'
-          ? 'Полотенцесушитель закрывает разницу целиком — это штатное решение для санузла.'
-          : 'Радиатор под окном, либо снять исключение с мебели на ножках, либо уточнить кратность воздухообмена.'
+          ? 'The towel radiator covers the whole difference — this is the standard solution for a bathroom.'
+          : 'A radiator under the window, or lift the exclusion for furniture on legs, or refine the air change rate.'
       });
     });
 
@@ -672,17 +672,17 @@ export function runRules(project, clearHeight) {
         id: `edge-furniture-${item.id}`,
         severity: 'info',
         layer: 'heating',
-        title: `«${spec.name}» стоит над краевой зоной`,
+        title: `“${spec.name}” stands over the edge zone`,
         detail:
-          `Там шаг трубы ${(EDGE_ZONE.spacing * 1000).toFixed(0)} мм вместо ` +
-          `${(lp.byRoom[0]?.spacing * 1000 || 150).toFixed(0)} и температура поверхности выше. ` +
-          `Сама по себе она мебели не вредит — вредит запертое тепло: без продува ` +
-          `под глухим предметом температура уходит к температуре теплоносителя. ` +
-          `Нужен продуваемый зазор от ${(MIN_FURNITURE_GAP * 1000).toFixed(0)} мм.`,
+          `The pipe pitch there is ${(EDGE_ZONE.spacing * 1000).toFixed(0)} mm instead of ` +
+          `${(lp.byRoom[0]?.spacing * 1000 || 150).toFixed(0)} and the surface temperature is higher. ` +
+          `It does no harm to furniture by itself — trapped heat does: without ventilation ` +
+          `under a solid object the temperature goes towards the coolant temperature. ` +
+          `A ventilated gap of ${(MIN_FURNITURE_GAP * 1000).toFixed(0)} mm or more is needed.`,
         fix:
-          'Кухонным шкафам — цоколь с вентиляционными решётками. Мягкой мебели — ' +
-          'ножки и отступ от стены 100–150 мм, иначе краевая полоса греет под диван, ' +
-          'а не перехватывает холод от окна.',
+          'For kitchen cabinets — a plinth with ventilation grilles. For upholstered furniture — ' +
+          'legs and a 100–150 mm offset from the wall, otherwise the edge strip heats under the sofa ' +
+          'instead of intercepting the cold from the window.',
         at: { x: bb.cx, y: bb.cy }
       });
     });
@@ -698,13 +698,13 @@ export function runRules(project, clearHeight) {
         id: `loop-borderline-${r.id}`,
         severity: 'info',
         layer: 'heating',
-        title: `«${r.name}»: ${r.loops} контура вместо ${r.loops - 1} из-за ${(r.totalPipe - r.limit * (r.loops - 1)).toFixed(0)} м`,
+        title: `“${r.name}”: ${r.loops} loops instead of ${r.loops - 1} because of ${(r.totalPipe - r.limit * (r.loops - 1)).toFixed(0)} m`,
         detail:
-          `Трубы ${r.totalPipe.toFixed(0)} м при пределе ${r.limit.toFixed(0)} м на петлю. ` +
-          `Разделив на ${r.loops - 1}, получим ${oneFewer.toFixed(0)} м — превышение всего ` +
-          `${(oneFewer - r.limit).toFixed(0)} м. Предел ${r.limit.toFixed(0)} м — упрощённое ` +
-          'правило по потерям давления, а расчёт гидравлики показал запас напора почти вдвое.',
-        fix: `Проверить по графику насоса: ${r.loops - 1} контура по ${oneFewer.toFixed(0)} м, скорее всего, проходят.`,
+          `${r.totalPipe.toFixed(0)} m of pipe with a limit of ${r.limit.toFixed(0)} m per loop. ` +
+          `Divided into ${r.loops - 1}, that gives ${oneFewer.toFixed(0)} m — over by just ` +
+          `${(oneFewer - r.limit).toFixed(0)} m. The ${r.limit.toFixed(0)} m limit is a simplified ` +
+          'pressure-drop rule, and the hydraulic calculation showed a head margin of almost double.',
+        fix: `Check against the pump curve: ${r.loops - 1} loops of ${oneFewer.toFixed(0)} m most likely pass.`,
         at: { x: r.exclusions[0]?.x ?? 2, y: 2 }
       });
     });
@@ -714,10 +714,10 @@ export function runRules(project, clearHeight) {
         id: 'loops-summary',
         severity: 'info',
         layer: 'heating',
-        title: `Раскладка: ${lp.totalLoops} контуров, ${lp.totalPipe.toFixed(0)} м трубы`,
+        title: `Layout: ${lp.totalLoops} loops, ${lp.totalPipe.toFixed(0)} m of pipe`,
         detail:
-          lp.byRoom.map((r) => `${r.name}: ${r.loops} × ${r.perLoop.toFixed(0)} м, шаг ${(r.spacing * 1000).toFixed(0)}`).join('; ') +
-          `. Разбаланс ${(lp.imbalance * 100).toFixed(0)} % — балансировочные клапаны на коллекторе обязательны.`
+          lp.byRoom.map((r) => `${r.name}: ${r.loops} × ${r.perLoop.toFixed(0)} m, pitch ${(r.spacing * 1000).toFixed(0)}`).join('; ') +
+          `. Imbalance ${(lp.imbalance * 100).toFixed(0)} % — balancing valves on the manifold are mandatory.`
       });
     }
   }
@@ -731,13 +731,13 @@ export function runRules(project, clearHeight) {
         id: 'reused-strength',
         severity: 'warn',
         layer: 'heating',
-        title: `Марка старого утеплителя ${screed.insulationReused} мм не подтверждена`,
+        title: `Grade of the old insulation ${screed.insulationReused} mm not confirmed`,
         detail:
-          'Он лежал на досках под линолеумом, то есть без нагрузки. Под стяжкой с трубой ТП ' +
-          'на утеплитель давит около 155 кг/м² постоянно, и нужна прочность на сжатие ' +
-          'от 250 кПа. Тонкие подложечные плиты часто слабее, а обычный пенопласт даёт ' +
-          'ползучесть — стяжка просядет уже после заливки.',
-        fix: 'Найти маркировку на плитах. Нет маркировки или следы вмятин — не закладывать под стяжку.'
+          'It lay on the boards under the linoleum, i.e. without load. Under a screed with a heating pipe ' +
+          'the insulation carries about 155 kg/m² permanently, and a compressive strength ' +
+          'of 250 kPa or more is needed. Thin underlay boards are often weaker, and ordinary polystyrene ' +
+          'creeps — the screed will settle after the pour.',
+        fix: 'Find the marking on the boards. No marking or dents — do not put it under the screed.'
       });
     }
 
@@ -746,13 +746,13 @@ export function runRules(project, clearHeight) {
         id: 'reused-position',
         severity: 'info',
         layer: 'heating',
-        title: `Старые ${screed.insulationReused} мм — вторым слоем, со смещением швов`,
+        title: `Old ${screed.insulationReused} mm — as the second layer, with staggered joints`,
         detail:
-          `Новые ${fresh} мм кладутся первыми: плита такой толщины жёсткая и перекрывает ` +
-          'мелкие неровности основания. Тонкие старые плиты сверху, швы вразбежку — ' +
-          `так меньше мостиков по стыкам. Но ${screed.insulationReused} мм мало для ` +
-          'гарпун-скоб, трубу крепить к сетке хомутами.',
-        fix: 'Перед укладкой проверить старые плиты на вмятины и остатки клея от линолеума.'
+          `The new ${fresh} mm go first: a board of that thickness is rigid and bridges ` +
+          'small irregularities of the base. Thin old boards on top, joints staggered — ' +
+          `so there are fewer bridges at the joints. But ${screed.insulationReused} mm is too little for ` +
+          'harpoon staples, so fix the pipe to the mesh with clips.',
+        fix: 'Before laying, check the old boards for dents and linoleum glue residue.'
       });
     }
 
@@ -761,9 +761,9 @@ export function runRules(project, clearHeight) {
         id: 'reused-only',
         severity: 'error',
         layer: 'heating',
-        title: 'Утепление пола — только из старых плит',
-        detail: `Заложено ${screed.insulation} мм, из них ${screed.insulationReused} мм — бывшие в работе. Нового утеплителя нет.`,
-        fix: 'Добавить новый слой: старые 25 мм сами по себе не утепление, а подложка.'
+        title: 'Floor insulation only from old boards',
+        detail: `${screed.insulation} mm provided, of which ${screed.insulationReused} mm are used. There is no new insulation.`,
+        fix: 'Add a new layer: the old 25 mm is not insulation by itself, but an underlay.'
       });
     }
   }
@@ -796,17 +796,17 @@ export function runRules(project, clearHeight) {
         id: 'boiler-cycling',
         severity: bc.best ? 'warn' : 'error',
         layer: 'heating',
-        title: `Котёл на минимуме даёт ${bc.minPowerKw} кВт при нагрузке ${hl.totalKw.toFixed(2)} кВт`,
+        title: `At minimum the boiler gives ${bc.minPowerKw} kW against a load of ${hl.totalKw.toFixed(2)} kW`,
         detail:
-          `Превышение в ${bc.ratio.toFixed(1)} раза: модулироваться ниже котёл не умеет, ` +
-          `поэтому будет тактовать. Через смесительный узел цикл горелки ` +
-          `${separated.cycleMinutes.toFixed(1)} мин — это износ и перерасход газа. ` +
-          `При прямом низкотемпературном подключении котёл связан с массой стяжки ` +
-          `(${bc.screedMass.massKg.toFixed(0)} кг бетона ≈ ${bc.screedMass.waterEquivalentL.toFixed(0)} л воды), ` +
-          `и цикл растягивается до ${direct.cycleMinutes.toFixed(0)} мин.`,
+          `An excess of ${bc.ratio.toFixed(1)} times: the boiler cannot modulate lower, ` +
+          `so it will short-cycle. Through a mixing unit the burner cycle is ` +
+          `${separated.cycleMinutes.toFixed(1)} min — that means wear and wasted gas. ` +
+          `With a direct low-temperature connection the boiler is coupled to the screed mass ` +
+          `(${bc.screedMass.massKg.toFixed(0)} kg of concrete ≈ ${bc.screedMass.waterEquivalentL.toFixed(0)} l of water), ` +
+          `and the cycle stretches to ${direct.cycleMinutes.toFixed(0)} min.`,
         fix: bc.best
-          ? `Схема «${bc.best.name}» решает задачу без буферной ёмкости — место в прихожей не тратится.`
-          : `Нужен объём теплоносителя не менее ${bc.requiredVolumeL.toFixed(0)} л.`
+          ? `The “${bc.best.name}” scheme solves the problem without a buffer tank — no space is spent in the hall.`
+          : `A coolant volume of at least ${bc.requiredVolumeL.toFixed(0)} l is needed.`
       });
     }
 
@@ -848,16 +848,16 @@ export function runRules(project, clearHeight) {
       id: 'screed-single-protection',
       severity: 'warn',
       layer: 'heating',
-      title: 'Стяжку от перегрева защищает только настройка котла',
+      title: 'The screed is protected from overheating only by the boiler setting',
       detail:
-        `Прямое подключение выбрано ради буфера из ${bc.screedMass.massKg.toFixed(0)} кг бетона, ` +
-        'и это правильно. Но смесительного узла в схеме нет, значит между котлом ' +
-        `и трубой в стяжке стоит один параметр ${project.boiler.lowTempParam.code} = ` +
-        `${project.boiler.lowTempParam.value}. Сброс к заводским, замена платы или ошибка ` +
-        `датчика — и в стяжку уйдёт до ${project.boiler.heatingRange[1]} °C.`,
+        `The direct connection was chosen for the sake of a ${bc.screedMass.massKg.toFixed(0)} kg concrete buffer, ` +
+        'and that is right. But there is no mixing unit in the scheme, so between the boiler ' +
+        `and the pipe in the screed there is one parameter ${project.boiler.lowTempParam.code} = ` +
+        `${project.boiler.lowTempParam.value}. A factory reset, a board replacement or a sensor ` +
+        `fault — and up to ${project.boiler.heatingRange[1]} °C goes into the screed.`,
       fix:
-        'Накладной аварийный термостат на подаче, уставка 55 °C, в разрыв цепи ' +
-        'запроса тепла. Стоит около 2 тыс и работает без электроники котла.'
+        'A strap-on emergency thermostat on the supply, set to 55 °C, in series with the ' +
+        'heat demand circuit. Costs about 2 k and works without the boiler electronics.'
     });
 
     // 2. Погодозависимая кривая требует уличного датчика
@@ -867,13 +867,13 @@ export function runRules(project, clearHeight) {
         id: 'outdoor-sensor',
         severity: 'warn',
         layer: 'heating',
-        title: `Кривая ${wc.param} ≈ ${wc.recommended} заложена в расчёт — нужен наружный датчик`,
+        title: `The ${wc.param} ≈ ${wc.recommended} curve is built into the calculation — an outdoor sensor is needed`,
         detail:
-          'Без наружного датчика котёл держит фиксированную температуру подачи, ' +
-          'а вся логика низкотемпературного режима строится на том, что подача ' +
-          'падает вслед за потеплением. Именно погодозависимость и растягивает ' +
-          'цикл горелки в межсезонье, когда тактование самое злое.',
-        fix: 'Датчик наружной температуры на СЕВЕРНУЮ стену, вне потока от дымохода.'
+          'Without an outdoor sensor the boiler holds a fixed supply temperature, ' +
+          'while the whole logic of the low-temperature mode rests on the supply ' +
+          'falling as the weather warms. It is weather compensation that stretches ' +
+          'the burner cycle in the shoulder season, when short-cycling is at its worst.',
+        fix: 'Outdoor temperature sensor on the NORTH wall, out of the flue plume.'
       });
     }
 
@@ -883,15 +883,15 @@ export function runRules(project, clearHeight) {
         id: 'makeup-toxic',
         severity: 'error',
         layer: 'heating',
-        title: 'Подпитка от водопровода при ядовитом теплоносителе недопустима',
+        title: 'Make-up from the mains with a toxic coolant is unacceptable',
         detail:
-          'В котле есть встроенный кран подпитки от контура ГВС — одна арматура ' +
-          'между питьевой водой и этиленгликолем. Плюс любая подпитка водой ' +
-          'разбавляет состав: доливать нечем, кроме готовой смеси.',
+          'The boiler has a built-in make-up valve from the DHW circuit — a single valve ' +
+          'between drinking water and ethylene glycol. Besides, any make-up with water ' +
+          'dilutes the mixture: there is nothing to top up with except ready-mixed fluid.',
         fix:
-          'Встроенный кран подпитки заглушить и опломбировать. Подпитка — ручным ' +
-          'опрессовочным насосом из бака с готовой смесью, физически отсоединяемым ' +
-          'от системы. Давление контролировать по манометру котла.'
+          'Plug and seal the built-in make-up valve. Make-up by a manual ' +
+          'test pump from a tank of ready-mixed fluid, physically disconnectable ' +
+          'from the system. Monitor the pressure on the boiler gauge.'
       });
     }
 
@@ -902,17 +902,17 @@ export function runRules(project, clearHeight) {
       severity: exp.ok ? 'info' : 'error',
       layer: 'heating',
       title: exp.ok
-        ? `Встроенного бака ${exp.vesselL} л хватает: нужно ${exp.requiredL.toFixed(1)} л, запас ×${exp.margin.toFixed(1)}`
-        : `Бака ${exp.vesselL} л мало: нужно ${exp.requiredL.toFixed(1)} л`,
+        ? `The built-in ${exp.vesselL} l vessel is enough: ${exp.requiredL.toFixed(1)} l needed, margin ×${exp.margin.toFixed(1)}`
+        : `A ${exp.vesselL} l vessel is too small: ${exp.requiredL.toFixed(1)} l needed`,
       detail:
-        `Система первого этажа ${brPlan.volume.totalL.toFixed(0)} л ` +
-        `(петли ${brPlan.volume.loopsL.toFixed(0)}, котёл ${brPlan.volume.boilerL}, ` +
-        `коллектор ${brPlan.volume.manifoldL}). Гликоль расширяется на ` +
-        `${(exp.ratio * 100).toFixed(1)} % против 1,2 % у воды — это единственное место, ` +
-        'где антифриз играет против нас. Мансардный контур в объём НЕ ВХОДИТ ' +
-        'и добавится сверху.',
-      fix: `Предварительное давление бака выставить ${exp.prechargeBar} бар ДО заполнения, ` +
-        'иначе паспортная ёмкость не работает.'
+        `The ground-floor system is ${brPlan.volume.totalL.toFixed(0)} l ` +
+        `(loops ${brPlan.volume.loopsL.toFixed(0)}, boiler ${brPlan.volume.boilerL}, ` +
+        `manifold ${brPlan.volume.manifoldL}). Glycol expands by ` +
+        `${(exp.ratio * 100).toFixed(1)} % against 1.2 % for water — this is the only place ` +
+        'where antifreeze works against us. The attic circuit is NOT included in the volume ' +
+        'and will be added on top.',
+      fix: `Set the vessel precharge to ${exp.prechargeBar} bar BEFORE filling, ` +
+        'otherwise the rated capacity does not work.'
     });
 
     // --- Вентиляция кухни с газовой плитой ---
@@ -942,14 +942,14 @@ export function runRules(project, clearHeight) {
           id: 'kitchen-extract',
           severity: 'warn',
           layer: 'plumbing',
-          title: 'На кухне с газовой плитой нет вытяжного канала',
+          title: 'There is no extract duct in the kitchen with a gas hob',
           detail:
-            `При сгорании газа образуется около ${WATER_PER_M3_GAS} кг водяного пара на кубометр: ` +
-            `два часа готовки дают примерно ${moisture.toFixed(1)} кг влаги в воздух. ` +
-            `Конденсат на окнах начинается уже при ${worst?.criticalRh.toFixed(0)} % влажности, ` +
-            'а проветривание форточкой работает урывками и выстуживает комнату. ' +
-            'Для газифицированных кухонь вытяжной канал обычно обязателен — сверьте с СП 402.1325800.',
-          fix: `Канал Ø${(vp.kitchen.diameter * 1000).toFixed(0)} на постоянную вытяжку ${vp.kitchen.flow} м³/ч.`
+            `Burning gas produces about ${WATER_PER_M3_GAS} kg of water vapour per cubic metre: ` +
+            `two hours of cooking put about ${moisture.toFixed(1)} kg of moisture into the air. ` +
+            `Condensation on the windows starts already at ${worst?.criticalRh.toFixed(0)} % humidity, ` +
+            'while airing through a window works in fits and starts and chills the room. ' +
+            'For gasified kitchens an extract duct is usually mandatory — check against SP 402.1325800.',
+          fix: `A duct Ø${(vp.kitchen.diameter * 1000).toFixed(0)} for constant extraction of ${vp.kitchen.flow} m³/h.`
         });
       } else {
         // Общеобменный канал и зонт над плитой решают РАЗНЫЕ задачи
@@ -962,31 +962,31 @@ export function runRules(project, clearHeight) {
           id: 'kitchen-vent-vs-hood',
           severity: 'info',
           layer: 'plumbing',
-          title: `Канал кухни в ${dist.toFixed(1)} м от плиты — это нормально`,
+          title: `The kitchen duct is ${dist.toFixed(1)} m from the hob — this is fine`,
           detail:
-            'Общеобменный канал убирает воздух из объёма помещения, поэтому его место ' +
-            'в плане свободно: угол за холодильником подходит. Критична высота — ' +
-            `под потолком (заложено ${kitchenVent.mountHeight} м), продукты сгорания и влажный ` +
-            'воздух поднимаются вверх. Но зонт над плитой он НЕ заменяет: зонт ловит ' +
-            'плюм у источника, в углу он бесполезен.',
+            'The general-extract duct removes air from the room volume, so its position ' +
+            'on the plan is free: the corner behind the fridge works. What matters is the height — ' +
+            `under the ceiling (${kitchenVent.mountHeight} m assumed), combustion products and humid ` +
+            'air rise. But it does NOT replace the hood over the hob: the hood catches ' +
+            'the plume at its source, and in a corner it is useless.',
           fix:
-            `Канал Ø${kitchenVent.duct} на ${kitchenVent.flow} м³/ч в углу — плюс отдельно решить ` +
-            'по зонту: воздуховод в свой канал либо рециркуляция с угольным фильтром. ' +
-            'Рециркуляция не убирает влагу и продукты сгорания, поэтому общеобменный канал нужен в любом случае.'
+            `A duct Ø${kitchenVent.duct} for ${kitchenVent.flow} m³/h in the corner — plus decide separately ` +
+            'about the hood: ducting into its own channel or recirculation with a carbon filter. ' +
+            'Recirculation does not remove moisture and combustion products, so the general-extract duct is needed in any case.'
         });
 
         out.push({
           id: 'kitchen-vent-makeup',
           severity: 'warn',
           layer: 'plumbing',
-          title: 'Вытяжке кухни нужен приток и защита от промерзания',
+          title: 'The kitchen extract needs make-up air and frost protection',
           detail:
-            `${kitchenVent.flow} м³/ч не уйдут, если воздуху неоткуда взяться: в плотном доме ` +
-            'канал просто не потянет. Плюс вывод идёт через наружную стену — при −27 °C ' +
-            'влажный воздух конденсируется в канале и обмерзает.',
+            `${kitchenVent.flow} m³/h will not go anywhere if there is nowhere for the air to come from: in a tight house ` +
+            'the duct simply will not pull. Besides, the outlet goes through an outer wall — at −27 °C ' +
+            'humid air condenses in the duct and ices up.',
           fix:
-            'Приточные клапаны в окнах или стене. Канал утеплить, поставить обратный клапан ' +
-            'и дать уклон наружу. Кухонный канал НЕ объединять с каналом санузла.'
+            'Supply vents in the windows or wall. Insulate the duct, fit a non-return valve ' +
+            'and slope it outwards. Do NOT combine the kitchen duct with the bathroom one.'
         });
       }
     }
@@ -998,18 +998,18 @@ export function runRules(project, clearHeight) {
         id: 'embeds-before-pour',
         severity: 'warn',
         layer: 'architecture',
-        title: `${embeds.length} закладных под столешницу — ставить ДО заливки`,
+        title: `${embeds.length} embeds for the worktop — fit BEFORE the pour`,
         detail:
-          'В стяжку с трубой тёплого пола потом не просверлить: анкер попадёт ' +
-          'в трубу, а найти её без тепловизора нельзя. Пластина 100 × 100 × 5 ' +
-          'кладётся заподлицо с чистовой стяжкой, анкеры вяжутся к армирующей ' +
-          'сетке — они короткие и до трубы не достают. ' +
-          'Стойка встаёт на стык двух секций, где и так идёт боковина шкафа, ' +
-          'и прячется за фасадом. Закладные заложены С ИЗБЫТКОМ, через 600: ' +
-          'лишняя под цоколем не видна, а недостающую потом не добавить.',
+          'You cannot drill into a screed with a heating pipe afterwards: the anchor will hit ' +
+          'the pipe, and without a thermal imager you cannot find it. A 100 × 100 × 5 plate ' +
+          'is laid flush with the finished screed, the anchors are tied to the reinforcing ' +
+          'mesh — they are short and do not reach the pipe. ' +
+          'A post stands on the joint of two sections, where the cabinet side panel runs anyway, ' +
+          'and is hidden behind the front. The embeds are laid with a SURPLUS, every 600: ' +
+          'a spare one under the plinth is not visible, but a missing one cannot be added later.',
         fix:
-          'Разметить по плану после укладки трубы, зафиксировать к сетке ' +
-          'и СФОТОГРАФИРОВАТЬ С РУЛЕТКОЙ до бетона — иначе не найти.',
+          'Mark out on the plan after laying the pipe, fix to the mesh ' +
+          'and PHOTOGRAPH WITH A TAPE MEASURE before the concrete — otherwise you will not find them.',
         at: { x: embeds[0].x, y: embeds[0].y }
       });
     }
@@ -1042,13 +1042,13 @@ export function runRules(project, clearHeight) {
             id: `el-in-opening-${item.id}-${op.id}`,
             severity: 'error',
             layer: 'electrical',
-            title: `«${spec.name}» попадает в проём`,
+            title: `“${spec.name}” falls in an opening`,
             detail:
-              `Точка стоит в проёме «${op.id}» или ближе ${(TRIM * 1000).toFixed(0)} мм к его краю. ` +
-              'В проёме коробку ставить некуда — там четверть и косяк, а наличник ' +
-              'съедает ещё 70–100 мм. Выключатель должен отстоять от края проёма ' +
-              'минимум на ширину наличника плюс запас.',
-            fix: 'Отодвинуть вдоль стены не менее чем на 150 мм от края проёма.',
+              `The point is in the opening “${op.id}” or closer than ${(TRIM * 1000).toFixed(0)} mm to its edge. ` +
+              'There is nowhere to put a box in an opening — there is the rebate and the jamb, and the casing ' +
+              'takes another 70–100 mm. A switch must stand off the edge of the opening ' +
+              'by at least the casing width plus a margin.',
+            fix: 'Move it along the wall by at least 150 mm from the edge of the opening.',
             at: { x: bb.cx, y: bb.cy }
           });
         }
@@ -1061,7 +1061,7 @@ export function runRules(project, clearHeight) {
     if (bathDoor && stairCfg) {
       const bathX = INNER_W - 1.8;
       const leafX = bathDoor.hinge === 'b'
-        ? bathX + bathDoor.start + bathDoor.len // петли справа — полотно уходит к лестнице
+        ? bathX + bathDoor.start + bathDoor.len // hinges on the right — the leaf swings towards the stair
         : bathX + bathDoor.start;
       const boxingX = stairCfg.x;
       const gap = boxingX - leafX;
@@ -1071,16 +1071,16 @@ export function runRules(project, clearHeight) {
           id: 'bath-door-vs-understair',
           severity: 'warn',
           layer: 'architecture',
-          title: `Открытая дверь санузла встаёт перед кладовой: зазор ${(gap * 1000).toFixed(0)} мм`,
+          title: `The open bathroom door stands in front of the pantry: gap ${(gap * 1000).toFixed(0)} mm`,
           detail:
-            `Петли справа, полотно уходит к лестнице и в открытом положении стоит ` +
-            `на отметке x=${leafX.toFixed(2)}, а зашивка марша начинается на ` +
-            `x=${boxingX.toFixed(2)}. Полотно перекрывает первые ${(bathDoor.len * 1000).toFixed(0)} мм ` +
-            'фронта кладовой — и это самая высокая её часть, где стоит стиральная машина.',
+            `Hinges on the right, the leaf swings towards the stair and when open stands ` +
+            `at x=${leafX.toFixed(2)}, while the flight boxing starts at ` +
+            `x=${boxingX.toFixed(2)}. The leaf blocks the first ${(bathDoor.len * 1000).toFixed(0)} mm ` +
+            'of the pantry front — and that is its tallest part, where the washing machine stands.',
           fix:
-            'Перевесить петли на левый откос: полотно пойдёт в сторону кухни, ' +
-            'где на этой высоте ничего нет, и фронт кладовой освободится целиком. ' +
-            'Либо раздвижная дверь санузла — она заодно вернёт площадь в помещении 3,24 м².',
+            'Re-hang the hinges to the left jamb: the leaf will swing towards the kitchen, ' +
+            'where there is nothing at that height, and the pantry front is freed entirely. ' +
+            'Or a sliding bathroom door — it will also give back 3.24 m² of area inside the room.',
           at: { x: leafX, y: 1.8 + bathDoor.len / 2 }
         });
       }
@@ -1097,19 +1097,19 @@ export function runRules(project, clearHeight) {
         id: 'ceiling-wiring',
         severity: 'warn',
         layer: 'electrical',
-        title: `Свет идёт по деревянному перекрытию — ${lightPoints} точек`,
+        title: `Lighting runs along a wooden floor — ${lightPoints} points`,
         detail:
-          'Перекрытие балочное, межбалочное пространство пустое, снизу ПВХ. ' +
-          'Ключевое: СКРЫТАЯ проводка в сгораемых конструкциях требует ' +
-          'металлической трубы или металлорукава — пластиковая гофра для этого ' +
-          'не годится. ОТКРЫТАЯ проводка такого требования не имеет и вдобавок ' +
-          'остаётся доступной для осмотра. Сверьтесь с действующей редакцией ПУЭ.',
+          'The floor is joisted, the space between the joists is empty, PVC below. ' +
+          'The key point: CONCEALED wiring in combustible structures requires ' +
+          'a metal pipe or metal hose — plastic corrugated conduit is not ' +
+          'suitable. OPEN wiring has no such requirement and in addition ' +
+          'remains accessible for inspection. Check against the current edition of the electrical code.',
         fix:
           ceil.cavityFilled
-            ? 'Скрытая трасса — в металлорукаве.'
-            : 'Если зашиваете листом — кабель в металлорукаве. Если оставляете ' +
-              'балки открытыми — вести открыто по боковой грани балки в верхнем ' +
-              'углу: снизу почти не видно, и требования проще.'
+            ? 'A concealed route — in metal hose.'
+            : 'If you cover it with a sheet — cable in metal hose. If you leave the ' +
+              'joists open — run it openly along the side face of the joist in the upper ' +
+              'corner: it is barely visible from below, and the requirements are simpler.'
       });
 
       if (!ceil.cavityFilled) {
@@ -1117,15 +1117,15 @@ export function runRules(project, clearHeight) {
           id: 'ceiling-access-window',
           severity: 'info',
           layer: 'electrical',
-          title: 'Пока ПВХ снят — доступ ко всему перекрытию открыт',
+          title: 'While the PVC is off — access to the whole floor is open',
           detail:
-            'Ни чернового пола, ни засыпки: сняв панели, вы получаете пустое ' +
-            'межбалочное пространство по всей площади. Поднимать доски мансарды ' +
-            'не нужно. Мансарда отапливается, поэтому утеплитель между этажами ' +
-            'нужен НЕ для тепла, а только против шума шагов сверху.',
+            'No subfloor and no fill: once the panels are off you get an empty ' +
+            'space between the joists over the whole area. There is no need to lift ' +
+            'the attic boards. The attic is heated, so insulation between the floors ' +
+            'is needed NOT for heat, only against the noise of footsteps from above.',
           fix:
-            'Решить одновременно: трассы света, минвата для звука и щели между ' +
-            'досками. Второй раз этот доступ откроется только с новым демонтажом.'
+            'Decide everything at once: lighting routes, mineral wool for sound and gaps between ' +
+            'the boards. This access will open a second time only with a new demolition.'
         });
       }
     }
@@ -1161,26 +1161,26 @@ export function runRules(project, clearHeight) {
           id: 'cable-bundle',
           severity: 'warn',
           layer: 'electrical',
-          title: `Кабели в стяжке идут через ${(ROUTE.pitch * 1000).toFixed(0)} мм — просвет ${clearance.toFixed(0)} мм`,
+          title: `Cables in the screed run every ${(ROUTE.pitch * 1000).toFixed(0)} mm — clearance ${clearance.toFixed(0)} mm`,
           detail:
-            `Для ВВГнг-LS 3×2,5 (габарит ${CABLE_OD_MM} мм) свободного охлаждения ` +
-            `требуется просвет не меньше ${2 * CABLE_OD_MM} мм. Плотнее — кабели ` +
-            'греют друг друга, и допустимый ток падает примерно на треть.',
-          fix: `Развести трассы шагом от ${(2 * CABLE_OD_MM + CABLE_OD_MM).toFixed(0)} мм ` +
-            'либо пустить часть групп вдоль другой стены.'
+            `For VVGng-LS 3×2.5 (diameter ${CABLE_OD_MM} mm) free cooling ` +
+            `needs a clearance of at least ${2 * CABLE_OD_MM} mm. Closer — the cables ` +
+            'heat each other, and the permissible current drops by about a third.',
+          fix: `Space the routes at a pitch of at least ${(2 * CABLE_OD_MM + CABLE_OD_MM).toFixed(0)} mm ` +
+            'or run some of the groups along another wall.'
         });
       } else {
         out.push({
           id: 'cable-bundle-ok',
           severity: 'info',
           layer: 'electrical',
-          title: `${lineCount} силовых групп в полу, просвет между кабелями ${clearance.toFixed(0)} мм`,
+          title: `${lineCount} power groups in the floor, clearance between cables ${clearance.toFixed(0)} mm`,
           detail:
-            `Шаг ${(ROUTE.pitch * 1000).toFixed(0)} мм даёт просвет больше двух диаметров, ` +
-            'поэтому снижающий коэффициент по ПУЭ не применяется и 2,5 мм² честно ' +
-            'держит свои 16 А. Число линий на плотность пучка при таком шаге не влияет — ' +
-            'объединять группы имеет смысл ради простоты щита, а не ради нагрева.',
-          fix: 'Сохранять шаг при разметке: кабели не собирать в жгут и не стягивать хомутами.'
+            `A pitch of ${(ROUTE.pitch * 1000).toFixed(0)} mm gives a clearance of more than two diameters, ` +
+            'so the derating factor of the electrical code does not apply and 2.5 mm² honestly ' +
+            'carries its 16 A. The number of lines does not affect bundle density at this pitch — ' +
+            'combining groups makes sense for the simplicity of the panel, not because of heating.',
+          fix: 'Keep the pitch when marking out: do not gather the cables into a bundle or pull them together with clips.'
         });
       }
     }
@@ -1198,18 +1198,18 @@ export function runRules(project, clearHeight) {
           id: 'worktop-clearance',
           severity: 'warn',
           layer: 'equipment',
-          title: `Под столешницей ${((wt.top - wt.thickness) * 1000).toFixed(0)} мм — «${worst.name}» не проходит на ${(-worst.margin * 1000).toFixed(0)} мм`,
+          title: `Under the worktop ${((wt.top - wt.thickness) * 1000).toFixed(0)} mm — “${worst.name}” does not fit by ${(-worst.margin * 1000).toFixed(0)} mm`,
           detail:
-            `Верх плиты ${(wt.top * 1000).toFixed(0)}, бетон ${(wt.thickness * 1000).toFixed(0)} мм, ` +
-            `значит низ на ${((wt.top - wt.thickness) * 1000).toFixed(0)}. ` +
-            `Прибор в модели ${(worst.height * 1000).toFixed(0)} мм. ` +
-            'Встроенная техника обычно регулируется ножками в диапазоне 815–870, ' +
-            'поэтому это скорее всего решается на месте — но проверять надо ' +
-            'по паспорту конкретной модели, а не по модели в планировщике.',
+            `Top of the slab ${(wt.top * 1000).toFixed(0)}, concrete ${(wt.thickness * 1000).toFixed(0)} mm, ` +
+            `so the underside is at ${((wt.top - wt.thickness) * 1000).toFixed(0)}. ` +
+            `The fixture in the model is ${(worst.height * 1000).toFixed(0)} mm. ` +
+            'Built-in appliances are usually adjustable on feet within 815–870, ' +
+            'so this is most likely solved on site — but it must be checked ' +
+            'against the data sheet of the specific model, not against the model in the planner.',
           fix:
-            `Поднять верх плиты до ${((worst.height + wt.thickness) * 1000).toFixed(0)} мм ` +
-            'либо утоньшить бетон до 40 мм. Каркас на закладных позволяет и то и другое — ' +
-            'но решать надо ДО заливки столешницы.',
+            `Raise the top of the slab to ${((worst.height + wt.thickness) * 1000).toFixed(0)} mm ` +
+            'or thin the concrete to 40 mm. The frame on embeds allows either — ' +
+            'but it must be decided BEFORE pouring the worktop.',
           at: { x: wt.polygon[0].x + 0.3, y: wt.depth / 2 }
         });
       }
@@ -1218,15 +1218,15 @@ export function runRules(project, clearHeight) {
         id: 'worktop-front',
         severity: 'info',
         layer: 'equipment',
-        title: `Столешница ${wt.runM.toFixed(2)} м фронта, ${wt.area.toFixed(2)} м² бетона`,
+        title: `Worktop ${wt.runM.toFixed(2)} m of front, ${wt.area.toFixed(2)} m² of concrete`,
         detail:
-          `Идёт от «${wt.tall[0]?.name ?? 'начала фронта'}» вдоль верхней стены ` +
-          `и вниз по перегородке санузла. Врезаются в неё ${wt.cutouts.length} прибора: ` +
+          `It runs from “${wt.tall[0]?.name ?? 'the start of the front'}” along the top wall ` +
+          `and down the bathroom partition. ${wt.cutouts.length} appliances are set into it: ` +
           `${wt.cutouts.map((c) => c.name.toLowerCase()).join(', ')}. ` +
-          `Остальное стоит под ней. При толщине ${(wt.thickness * 1000).toFixed(0)} мм ` +
-          `плита весит около ${(wt.area * wt.thickness * 2400).toFixed(0)} кг — ` +
-          'это нагрузка на стойки и закладные, а не только на шкафы.',
-        fix: 'Опоры ставятся по поперечным граням секций и зашиваются ЛДСП заподлицо с фасадом.'
+          `The rest stands under it. At a thickness of ${(wt.thickness * 1000).toFixed(0)} mm ` +
+          `the slab weighs about ${(wt.area * wt.thickness * 2400).toFixed(0)} kg — ` +
+          'this is a load on the posts and embeds, not only on the cabinets.',
+        fix: 'Supports are placed at the cross faces of the sections and clad in chipboard flush with the front.'
       });
     }
 
@@ -1271,17 +1271,17 @@ export function runRules(project, clearHeight) {
           id: 'kitchen-aisle',
           severity: 'error',
           layer: 'equipment',
-          title: `Перед кухонным фронтом ${(tight.gap * 1000).toFixed(0)} мм — стоять негде`,
+          title: `${(tight.gap * 1000).toFixed(0)} mm in front of the kitchen front — nowhere to stand`,
           detail:
-            `Напротив «${tight.b.name}» стоит «${tight.near.name}», и между кромкой ` +
-            `столешницы и ним остаётся ${(tight.gap * 1000).toFixed(0)} мм. ` +
-            `Человеку у рабочей поверхности нужно ${WORK_AISLE.comfort * 1000} мм, ` +
-            `в притирку — ${WORK_AISLE.min * 1000}. Наложения предметов при этом НЕТ, ` +
-            'поэтому обычная проверка габаритов молчит.',
+            `Opposite “${tight.b.name}” stands “${tight.near.name}”, and between the worktop ` +
+            `edge and it ${(tight.gap * 1000).toFixed(0)} mm remains. ` +
+            `A person at the work surface needs ${WORK_AISLE.comfort * 1000} mm, ` +
+            `squeezing past — ${WORK_AISLE.min * 1000}. There is NO overlap of objects, ` +
+            'so the ordinary footprint check stays silent.',
           fix:
-            `Отодвинуть обеденную группу на ${((WORK_AISLE.comfort - tight.gap) * 1000).toFixed(0)} мм ` +
-            'от кухни. Это расстановка, а не конструктив: правится мышкой и ни на что ' +
-            'в стяжке не влияет.',
+            `Move the dining group ${((WORK_AISLE.comfort - tight.gap) * 1000).toFixed(0)} mm ` +
+            'away from the kitchen. This is placement, not structure: fixed with the mouse and affects nothing ' +
+            'in the screed.',
           at: { x: tight.b.cx, y: wt.depth + tight.gap / 2 }
         });
       } else if (tight) {
@@ -1289,10 +1289,10 @@ export function runRules(project, clearHeight) {
           id: 'kitchen-aisle-ok',
           severity: tight.gap < WORK_AISLE.comfort ? 'warn' : 'info',
           layer: 'equipment',
-          title: `Рабочий проход у кухни ${(tight.gap * 1000).toFixed(0)} мм`,
-          detail: `Самое узкое место — против «${tight.b.name}». ` +
-            `Комфорт ${WORK_AISLE.comfort * 1000}, минимум ${WORK_AISLE.min * 1000}.`,
-          fix: 'Держать этот габарит при расстановке мебели.'
+          title: `Work aisle at the kitchen ${(tight.gap * 1000).toFixed(0)} mm`,
+          detail: `The narrowest spot is opposite “${tight.b.name}”. ` +
+            `Comfortable ${WORK_AISLE.comfort * 1000}, minimum ${WORK_AISLE.min * 1000}.`,
+          fix: 'Keep this clearance when placing furniture.'
         });
       }
 
@@ -1311,13 +1311,13 @@ export function runRules(project, clearHeight) {
           id: `door-swing-${id}`,
           severity: 'warn',
           layer: 'equipment',
-          title: `Дверца «${b.name}» упирается в «${hit[0].name}»`,
+          title: `The door of “${b.name}” hits “${hit[0].name}”`,
           detail:
-            `Откинутая дверца выходит на ${(depth * 1000).toFixed(0)} мм вперёд, ` +
-            `до отметки ${((front + depth) * 1000).toFixed(0)}, а «${hit[0].name}» ` +
-            `начинается на ${(hit[0].y * 1000).toFixed(0)}. Прибор не откроется полностью, ` +
-            'а у духовки это ещё и значит, что противень не вынуть.',
-          fix: 'Отодвинуть мешающий предмет или перенести технику по фронту.',
+            `The open door extends ${(depth * 1000).toFixed(0)} mm forward, ` +
+            `to the mark ${((front + depth) * 1000).toFixed(0)}, while “${hit[0].name}” ` +
+            `starts at ${(hit[0].y * 1000).toFixed(0)}. The appliance will not open fully, ` +
+            'and for an oven that also means the tray cannot be pulled out.',
+          fix: 'Move the obstructing object or relocate the appliance along the front.',
           at: { x: b.cx, y: front + depth / 2 }
         });
       });
@@ -1332,21 +1332,21 @@ export function runRules(project, clearHeight) {
         id: 'slab-thickness',
         severity: 'info',
         layer: 'equipment',
-        title: `Плита ${cur.t} мм: ${cur.massKg.toFixed(0)} кг, просвет под ней ${cur.underMm} мм`,
+        title: `Slab ${cur.t} mm: ${cur.massKg.toFixed(0)} kg, clearance under it ${cur.underMm} mm`,
         detail:
-          `Поле плиты пролётом 500 между продольными уголками даёт ` +
-          `${cur.fieldMPa.toFixed(2)} МПа при пределе ${cur.allowMPa.toFixed(2)} — ` +
-          'толщину решает не оно. Решают перемычки у вырезов: полоса 75 мм ' +
-          `без опоры дала бы ${cur.stripFreeMPa.toFixed(1)} МПа и сломалась бы, ` +
-          'но продольный уголок идёт в 50 мм от кромки — прямо под ней, ' +
-          `и остаётся ${cur.stripFramedMPa.toFixed(2)} МПа. ` +
-          `На арматуру после защитного слоя остаётся ${cur.barMm} мм: Ø4 влезает, ` +
-          `Ø6 нет. При ${thin ? thin.t : 30} мм не остаётся ничего.`,
+          `The slab field spanning 500 between the longitudinal angles gives ` +
+          `${cur.fieldMPa.toFixed(2)} MPa against a limit of ${cur.allowMPa.toFixed(2)} — ` +
+          'it does not decide the thickness. The bridges at the cut-outs decide: a 75 mm strip ' +
+          `without support would give ${cur.stripFreeMPa.toFixed(1)} MPa and break, ` +
+          'but the longitudinal angle runs 50 mm from the edge — right under it, ' +
+          `leaving ${cur.stripFramedMPa.toFixed(2)} MPa. ` +
+          `${cur.barMm} mm remains for the reinforcement after the cover: Ø4 fits, ` +
+          `Ø6 does not. At ${thin ? thin.t : 30} mm nothing remains.`,
         fix:
-          'Уголки каркаса обязаны идти ПОД перемычками вырезов — если вырез ' +
-          'делается больше расчётного, проверить заново. Заполнитель мелкий ' +
-          '(до 5–8 мм), фибра против усадки, укрытие плёнкой на 7 суток. ' +
-          'Во внутренний угол буквы Г — диагональный стержень: там концентратор.'
+          'The frame angles must run UNDER the cut-out bridges — if a cut-out ' +
+          'is made larger than calculated, recheck. Fine aggregate ' +
+          '(up to 5–8 mm), fibre against shrinkage, cover with film for 7 days. ' +
+          'At the inside corner of the L — a diagonal bar: there is a stress concentrator.'
       });
     }
 
@@ -1358,7 +1358,7 @@ export function runRules(project, clearHeight) {
     const sinkBox = equipment
       .map((e) => {
         const sp = getFixture(e.catalogId);
-        if (!sp || !sp.builtInTop || !/мойк/i.test(sp.name)) return null;
+        if (!sp || !sp.builtInTop || !/sink/i.test(sp.name)) return null;
         return { id: e.id, name: sp.name, ...boundingBox(e) };
       })
       .find(Boolean);
@@ -1383,26 +1383,26 @@ export function runRules(project, clearHeight) {
           severity: tapUnderBlind === false ? 'warn' : 'info',
           layer: 'equipment',
           title: tapUnderBlind === false
-            ? 'Кран мойки под ОТКРЫВАЮЩЕЙСЯ створкой — она его снесёт'
-            : `Мойка под окном, кран под глухой створкой (до подоконника ${gap.toFixed(0)} мм)`,
+            ? 'The sink tap is under an OPENING sash — it will knock it off'
+            : `Sink under the window, tap under the fixed sash (${gap.toFixed(0)} mm to the sill)`,
           detail:
-            `Мойка смещена от центра окна на ${Math.abs(centreOffset).toFixed(0)} мм. ` +
-            `Подоконник ${(overWin.sill * 1000).toFixed(0)}, верх столешницы ` +
-            `${(wt.top * 1000).toFixed(0)} — между ними ${gap.toFixed(0)} мм, ` +
-            'фартука за мойкой фактически нет. ' +
+            `The sink is offset from the window centre by ${Math.abs(centreOffset).toFixed(0)} mm. ` +
+            `Sill ${(overWin.sill * 1000).toFixed(0)}, top of the worktop ` +
+            `${(wt.top * 1000).toFixed(0)} — between them ${gap.toFixed(0)} mm, ` +
+            'so effectively there is no backsplash behind the sink. ' +
             (tapUnderBlind === true
-              ? 'Кран приходится на ГЛУХУЮ половину: сносить его нечем, ' +
-                'обычный смеситель встаёт нормально и просто стоит перед стеклом. ' +
-                'Складной не нужен.'
+              ? 'The tap falls on the FIXED half: there is nothing to knock it off, ' +
+                'an ordinary mixer sits fine and simply stands in front of the glass. ' +
+                'A folding one is not needed.'
               : tapUnderBlind === false
-                ? 'Створка поворотно-откидная и при полном открывании идёт внутрь ' +
-                  'на всю свою ширину — сметёт и кран, и всё, что стоит на столешнице.'
-                : 'Как открывается створка — не уточнено.'),
+                ? 'The sash is tilt-and-turn and, opened fully, swings inward ' +
+                  'by its whole width — it will sweep away the tap and everything on the worktop.'
+                : 'How the sash opens has not been specified.'),
           fix: tapUnderBlind === false
-            ? 'Сдвинуть мойку под глухую половину окна либо взять складной смеситель.'
-            : 'Подоконник из влагостойкого материала, стык с фартуком на герметик. ' +
-              'Под открывающейся створкой на столешнице ничего постоянного не держать: ' +
-              'при полном открывании она пройдёт над ней.',
+            ? 'Move the sink under the fixed half of the window or take a folding mixer.'
+            : 'A moisture-resistant sill, sealant at the joint with the backsplash. ' +
+              'Keep nothing permanent on the worktop under the opening sash: ' +
+              'when fully open it will pass over it.',
           at: { x: sinkBox.cx, y: 0.3 }
         });
       }
@@ -1421,19 +1421,19 @@ export function runRules(project, clearHeight) {
         id: 'worktop-back-support',
         severity: 'info',
         layer: 'equipment',
-        title: `Задняя опора: ${sparse.posts} стоек шагом ${sparse.pitch} против ${bs.frontPosts} спереди`,
+        title: `Rear support: ${sparse.posts} posts at a pitch of ${sparse.pitch} against ${bs.frontPosts} at the front`,
         detail:
-          `Считать надо не уголок, а СВЯЗКУ уголка с плитой. Сам по себе ` +
-          `40 × 40 на пролёте ${sparse.pitch} прогнулся бы на ${sparse.deflAngleMm.toFixed(1)} мм, ` +
-          `но вместе с бетоном 60 мм — на ${sparse.deflCombinedMm.toFixed(2)} мм: плита несёт себя сама, ` +
-          `уголок ей направляющая. Напряжение ${sparse.sigmaMPa.toFixed(0)} МПа при пределе 160. ` +
-          `Альтернатива — пристенный уголок вместо задних стоек: держит, запас ` +
-          `×${ledger.ledger.safety.toFixed(1)} на дюбель шагом ${ledger.ledger.pitchMm}, ` +
-          'но только по газобетону — вдоль перегородки санузла гипсокартон, ' +
-          'и там стойки остаются в любом случае.',
+          `What has to be calculated is not the angle but the ASSEMBLY of angle and slab. By itself ` +
+          `40 × 40 over a span of ${sparse.pitch} would deflect by ${sparse.deflAngleMm.toFixed(1)} mm, ` +
+          `but together with 60 mm of concrete — by ${sparse.deflCombinedMm.toFixed(2)} mm: the slab carries itself, ` +
+          `the angle is its guide. Stress ${sparse.sigmaMPa.toFixed(0)} MPa against a limit of 160. ` +
+          `An alternative is a wall angle instead of the rear posts: it holds, margin ` +
+          `×${ledger.ledger.safety.toFixed(1)} per dowel at a pitch of ${ledger.ledger.pitchMm}, ` +
+          'but only on aerated concrete — along the bathroom partition there is plasterboard, ' +
+          'and the posts stay there in any case.',
         fix:
-          'Закладные всё равно ставятся ДО ЗАЛИВКИ и стоят 275 ₽ — заложить 16 ' +
-          'по обеим линиям, а чем именно держать заднюю кромку, решить потом.'
+          'The embeds are placed BEFORE THE POUR anyway and cost 275 ₽ — lay 16 ' +
+          'on both lines, and decide later what holds the rear edge.'
       });
     }
 
@@ -1443,7 +1443,7 @@ export function runRules(project, clearHeight) {
     // Стена в этом месте локально тоньше, поверхность холоднее — вопрос,
     // не окажется ли она ниже точки росы.
     if (project.envelope?.wall) {
-      const NEAR = 0.16; // считаем «у наружной стены», м
+      const NEAR = 0.16; // counted as “at the outer wall”, m
       const onOuter = equipment.filter((e) => {
         const s = getFixture(e.catalogId);
         if (s?.category !== 'electrical' || s.circuit === 'light') return false;
@@ -1467,25 +1467,25 @@ export function runRules(project, clearHeight) {
           severity: bx.condenses ? 'error' : 'info',
           layer: 'electrical',
           title: bx.condenses
-            ? `За розетками в наружной стене выпадет конденсат: ${bx.tAtBox.toFixed(1)} °C при точке росы ${bx.dewPoint.toFixed(1)}`
-            : `${onOuter.length} подрозетников в наружной стене — запас по конденсату ${bx.margin.toFixed(1)} K`,
+            ? `Condensation will fall behind the sockets in the outer wall: ${bx.tAtBox.toFixed(1)} °C at a dew point of ${bx.dewPoint.toFixed(1)}`
+            : `${onOuter.length} back boxes in the outer wall — condensation margin ${bx.margin.toFixed(1)} K`,
           detail:
-            `Коронка ${BACK_BOX.crown} мм на глубину ${BACK_BOX.depth} оставляет ` +
-            `${bx.remainingMm.toFixed(0)} мм блока из ${wallMm}. Поверхность за коробкой ` +
-            `${bx.tAtBox.toFixed(1)} °C против ${bx.tSolid.toFixed(1)} по целому сечению — ` +
-            `утапливание стоит ${bx.penalty.toFixed(1)} K. Конденсат начнётся ` +
-            `с ${bx.criticalRh.toFixed(0)} % влажности, то есть не начнётся. ` +
-            'Настоящий риск здесь не тепловой, а воздушный: коробка — дыра ' +
-            'в штукатурке, а именно штукатурка работает воздушным барьером.' +
+            `A ${BACK_BOX.crown} mm crown cut to a depth of ${BACK_BOX.depth} leaves ` +
+            `${bx.remainingMm.toFixed(0)} mm of block out of ${wallMm}. The surface behind the box is ` +
+            `${bx.tAtBox.toFixed(1)} °C against ${bx.tSolid.toFixed(1)} through the whole section — ` +
+            `recessing costs ${bx.penalty.toFixed(1)} K. Condensation starts ` +
+            `at ${bx.criticalRh.toFixed(0)} % humidity, i.e. it will not start. ` +
+            'The real risk here is not thermal but air: the box is a hole ' +
+            'in the plaster, and it is the plaster that works as the air barrier.' +
             (bx.assumed
-              ? ` Толщина блока ${wallMm} мм и наружный ЭППС НЕ ЗАМЕРЕНЫ — цифры ориентировочные.`
+              ? ` The block thickness ${wallMm} mm and the outer XPS are NOT MEASURED — the figures are indicative.`
               : ''),
           fix:
-            'Коронка БЕЗ удара — в ударном режиме газобетон вокруг отверстия ' +
-            'крошится, и коробка не держится. Подрозетник для сплошных стен, ' +
-            'сажать на гипсовую штукатурку, ею же заполнить пазуху вокруг: ' +
-            'это и крепление, и восстановление воздушного барьера. ' +
-            'Штробы вести вертикально от пола к коробке, глубина 20–25 мм.'
+            'Crown WITHOUT hammer action — in hammer mode the aerated concrete around the hole ' +
+            'crumbles and the box does not hold. A back box for solid walls, ' +
+            'set it into gypsum plaster and fill the gap around it with the same: ' +
+            'this is both the fixing and the restoration of the air barrier. ' +
+            'Run chases vertically from the floor to the box, 20–25 mm deep.'
         });
       }
     }
@@ -1505,24 +1505,24 @@ export function runRules(project, clearHeight) {
         severity: ep.socket.fits ? 'info' : 'error',
         layer: 'electrical',
         title: ep.socket.fits
-          ? `Аварийный щиток: 4 ветки, розетка через автомат B${ep.socket.rating} А — пик ${ep.socket.peakW} Вт из ${inverterW}`
-          : `Аварийная линия не влезает в инвертор: ${ep.socket.peakW} Вт из ${inverterW}`,
+          ? `Emergency board: 4 branches, socket through breaker B${ep.socket.rating} A — peak ${ep.socket.peakW} W of ${inverterW}`
+          : `The emergency line does not fit the inverter: ${ep.socket.peakW} W of ${inverterW}`,
         detail:
-          `Постоянные потребители ${ep.baseW} Вт, свободно ${ep.socket.spareW} Вт = ` +
-          `${ep.socket.spareA.toFixed(2)} А. Линия котла перестала быть «только котёл», ` +
-          'и исходное возражение — чужая авария не должна гасить отопление — ' +
-          'снимается щитком, а не обещанием: у каждой ветки свой аппарат. ' +
-          'КЗ в свете или розетке выбивает ЕЁ автомат, до котла не доходит. ' +
-          'Светильник класса II заземляемых частей не имеет, поэтому утечку ' +
-          'на землю создать не может в принципе. Розетка идёт через свой ' +
-          `дифавтомат ${ep.panel.socketRcdMa} мА — он чувствительнее общих 30 и ближе к нагрузке. ` +
-          `Модулей занято ${ep.modulesUsed} из ${ep.panel.modules}.`,
+          `Constant loads ${ep.baseW} W, ${ep.socket.spareW} W free = ` +
+          `${ep.socket.spareA.toFixed(2)} A. The boiler line has stopped being “boiler only”, ` +
+          'and the original objection — someone else’s fault must not shut down the heating — ' +
+          'is removed by the board, not by a promise: each branch has its own device. ' +
+          'A short circuit in the light or the socket trips ITS breaker and does not reach the boiler. ' +
+          'A class II luminaire has no earthed parts, so it cannot produce ' +
+          'an earth leakage in principle. The socket goes through its own ' +
+          `RCBO ${ep.panel.socketRcdMa} mA — more sensitive than the common 30 and closer to the load. ` +
+          `Modules used ${ep.modulesUsed} of ${ep.panel.modules}.`,
         fix:
-          `Автомат розетки — характеристика B, номинал ${ep.socket.rating} А. ` +
-          'Не C: чайник 2 кВт это 9 номиналов, на B это гарантированный ' +
-          'мгновенный расцеп, а на C — нижний край магнитной зоны, ' +
-          'то есть возможны секунды перегруза, за которые ИБП уйдёт в защиту ' +
-          'и утащит за собой котёл.'
+          `The socket breaker — characteristic B, rating ${ep.socket.rating} A. ` +
+          'Not C: a 2 kW kettle is 9 ratings, on B it is a guaranteed ' +
+          'instantaneous trip, while on C it is the lower edge of the magnetic zone, ' +
+          'i.e. seconds of overload are possible, during which the UPS goes into protection ' +
+          'and takes the boiler down with it.'
       });
 
       if (upsSockets.length > 1 || plainSockets.length) {
@@ -1530,12 +1530,12 @@ export function runRules(project, clearHeight) {
           id: 'ups-socket-count',
           severity: 'error',
           layer: 'electrical',
-          title: `На аварийной линии ${upsSockets.length + plainSockets.length} розеток вместо одной`,
+          title: `${upsSockets.length + plainSockets.length} sockets on the emergency line instead of one`,
           detail:
-            'Розетка — единственный элемент линии, содержимое которого заранее ' +
-            'неизвестно. Каждая следующая умножает шанс, что в отключение ' +
-            'в неё воткнут то, что уронит инвертор вместе с котлом.',
-          fix: 'Оставить одну аварийную розетку, помеченную цветом и надписью.'
+            'The socket is the only element of the line whose content is unknown ' +
+            'in advance. Each further one multiplies the chance that during an outage ' +
+            'something will be plugged in that brings down the inverter together with the boiler.',
+          fix: 'Keep one emergency socket, marked with colour and a label.'
         });
       }
 
@@ -1549,12 +1549,12 @@ export function runRules(project, clearHeight) {
           id: 'ups-light-class',
           severity: 'error',
           layer: 'electrical',
-          title: 'Светильник на ИБП не класса II',
+          title: 'The luminaire on the UPS is not class II',
           detail:
-            'Обычный светильник с заземляемым корпусом может дать утечку ' +
-            'на землю, а УЗО у него общее с котлом. Класс II этот путь убирает: ' +
-            'заземляемых частей просто нет.',
-          fix: 'Заменить на светильник класса II (знак «квадрат в квадрате»).'
+            'An ordinary luminaire with an earthed body can produce an earth ' +
+            'leakage, and its RCD is shared with the boiler. Class II removes this path: ' +
+            'there are simply no earthed parts.',
+          fix: 'Replace with a class II luminaire (the “square in a square” mark).'
         });
       }
     }
@@ -1568,22 +1568,22 @@ export function runRules(project, clearHeight) {
         severity: 'warn',
         layer: 'electrical',
         title:
-          `Слаботочка — ${lvPlan.utpM.toFixed(0)} м витой пары на ${lvPlan.utpLinks} линии ` +
-          `и ${lvPlan.conduitM.toFixed(0)} м гофры, ПО ПЕРЕКРЫТИЮ, а не в стяжке`,
+          `Low-voltage — ${lvPlan.utpM.toFixed(0)} m of twisted pair for ${lvPlan.utpLinks} links ` +
+          `and ${lvPlan.conduitM.toFixed(0)} m of conduit, ALONG THE FLOOR SLAB, not in the screed`,
         detail:
-          'Силовой кабель кладём в пол потому, что он переживёт дом. Со слаботочкой ' +
-          'наоборот: за срок жизни стяжки сменится два поколения стандартов, ' +
-          'и замуровать витую пару в бетон значит закопать её насовсем. ' +
-          'Перекрытие вскрыто прямо сейчас — это доступ ко всему этажу разом, ' +
-          'и второй раз он откроется только с новым демонтажом. ' +
+          'Power cable goes into the floor because it will outlive the house. With low-voltage ' +
+          'it is the opposite: over the life of a screed two generations of standards will change, ' +
+          'and embedding twisted pair in concrete means burying it for good. ' +
+          'The slab is open right now — this is access to the whole floor at once, ' +
+          'and it will open a second time only with a new demolition. ' +
           lvPlan.routes
-            .map((r) => `${r.name} — ${r.cableM.toFixed(1)} м`)
+            .map((r) => `${r.name} — ${r.cableM.toFixed(1)} m`)
             .join('; ') + '.',
         fix:
-          'Гофра Ø20 с протяжкой на КАЖДУЮ трассу — в отличие от света, ' +
-          'который идёт открыто: свет менять не будут, а слаботочку будут. ' +
-          'Кабель ТОЛЬКО медный: омеднённый алюминий не тянет PoE ' +
-          'и ломается на изгибе в клемме. Обе пары к телевизору — в одну гофру.'
+          'Conduit Ø20 with a pull cord on EVERY route — unlike lighting, ' +
+          'which is run openly: lighting will not be changed, low-voltage will. ' +
+          'ONLY copper cable: copper-clad aluminium does not carry PoE ' +
+          'and breaks at a bend in the terminal. Both pairs to the TV go in one conduit.'
       });
 
       // Питание роутера идёт рядом с газовой трубой — это уже нормируется
@@ -1598,17 +1598,17 @@ export function runRules(project, clearHeight) {
             severity: ok ? 'info' : 'error',
             layer: 'electrical',
             title: ok
-              ? `Роутер в ${gapMm.toFixed(0)} мм от ввода газа — норматив ${LV.gasClearanceMm} выдержан`
-              : `Роутер в ${gapMm.toFixed(0)} мм от ввода газа: ближе ${LV.gasClearanceMm} нельзя`,
+              ? `The router is ${gapMm.toFixed(0)} mm from the gas inlet — the ${LV.gasClearanceMm} clearance is met`
+              : `The router is ${gapMm.toFixed(0)} mm from the gas inlet: closer than ${LV.gasClearanceMm} is not allowed`,
             detail:
-              'Оптика заходит в дом В ОДНОМ ПРОСТЕНКЕ с газовой трубой, ' +
-              'в промежутке 700 мм между глухим окном и котлом. Сама оптика ' +
-              'не проводник и под норму сближения не подпадает, а вот розетка ' +
-              'питания роутера — подпадает: параллельно газопроводу электрику ' +
-              `ведут не ближе ${LV.gasClearanceMm} мм.`,
+              'The fibre enters the house IN THE SAME PIER as the gas pipe, ' +
+              'in the 700 mm gap between the fixed window and the boiler. The fibre itself ' +
+              'is not a conductor and is not subject to the proximity rule, but the router ' +
+              'power socket is: electrics run parallel to a gas pipe ' +
+              `no closer than ${LV.gasClearanceMm} mm.`,
             fix: ok
-              ? 'Роутер прижат к верхнему краю простенка, у окна. Не сдвигать его вниз, к котлу.'
-              : 'Сдвинуть роутер к окну, вверх простенка, или вынести розетку в зал.'
+              ? 'The router is pushed to the top edge of the pier, by the window. Do not move it down, towards the boiler.'
+              : 'Move the router towards the window, to the top of the pier, or take the socket out into the living room.'
           });
         }
       }
@@ -1623,32 +1623,32 @@ export function runRules(project, clearHeight) {
         id: 'crawl-profile',
         severity: 'warn',
         layer: 'architecture',
-        title: `Подпол ${lv.crawlMeasuredToBoards ?? lv.crawlDepth} мм — это СРЕДНЕЕ, а пирог ${pie} мм должен влезть в самом мелком месте`,
+        title: `Sub-floor ${lv.crawlMeasuredToBoards ?? lv.crawlDepth} mm is an AVERAGE, while the ${pie} mm build-up must fit at the shallowest point`,
         detail:
-          `От песка до верха досок ≈${available} мм, пирог ${pie} мм — в среднем сходится ` +
-          `с запасом ${available - pie} мм. Но песок неровный, и там, где он выше среднего, ` +
-          'запаса не будет. Уровень пола задаётся САМОЙ ВЫСОКОЙ точкой грунта, ' +
-          'а не средней: иначе в одном углу пирог не поместится, и придётся ' +
-          'либо резать утеплитель, либо поднимать весь пол.',
+          `From the sand to the top of the boards ≈${available} mm, build-up ${pie} mm — on average it works ` +
+          `with a margin of ${available - pie} mm. But the sand is uneven, and where it is above average ` +
+          'there will be no margin. The floor level is set by the HIGHEST point of the ground, ' +
+          'not the average: otherwise in one corner the build-up will not fit, and you will have to ' +
+          'either cut the insulation or raise the whole floor.',
         fix:
-          'Снять профиль подпола по сетке 1 × 1 м от общей отметки — 36 точек на этаж. ' +
-          'Высокие места срезать в низкие, а не досыпать поверх всего.'
+          'Survey the sub-floor profile on a 1 × 1 m grid from a common datum — 36 points per floor. ' +
+          'Cut the high spots down to the low ones, do not add fill on top of everything.'
       });
 
       out.push({
         id: 'crawl-compaction',
         severity: 'error',
         layer: 'architecture',
-        title: 'Песок в подполе не уплотнён — стяжка ляжет на рыхлое основание',
+        title: 'The sand in the sub-floor is not compacted — the screed will lie on a loose base',
         detail:
-          'Досыпки почти нет, значит стяжка встанет прямо на существующий песок. ' +
-          'Рыхлый песок под нагрузкой садится на 5–10 % своей толщины. Просадка ' +
-          'под стяжкой с замурованной трубой — это трещина, которую не исправить.',
+          'There is almost no extra fill, so the screed will sit directly on the existing sand. ' +
+          'Loose sand under load settles by 5–10 % of its thickness. Settlement ' +
+          'under a screed with an embedded pipe is a crack that cannot be fixed.',
         fix:
-          'Песок уплотняется хорошо, но только влажным и вибрацией: пролить водой ' +
-          `и пройти виброплитой в несколько проходов слоями до ${lv.compactLayer} мм. ` +
-          'Контроль простой: на уплотнённом песке не остаётся следа от каблука. ' +
-          'Щебень сверху уплотнить отдельно — он же работает распределяющим слоем.'
+          'Sand compacts well, but only when wet and with vibration: water it ' +
+          `and go over it with a plate compactor in several passes in layers of up to ${lv.compactLayer} mm. ` +
+          'A simple check: compacted sand does not keep a heel print. ' +
+          'Compact the crushed stone on top separately — it also works as a distribution layer.'
       });
     }
 
@@ -1659,18 +1659,18 @@ export function runRules(project, clearHeight) {
         id: 'coolant-expired',
         severity: 'error',
         layer: 'heating',
-        title: `Составу ${age.years.toFixed(0)} лет при сроке службы ${age.shelfLifeYears}`,
+        title: `The fluid is ${age.years.toFixed(0)} years old with a service life of ${age.shelfLifeYears}`,
         detail:
-          `«${project.coolant.brand}» изготовлен ${project.coolant.manufactured}, заявленный ` +
-          `гарантийный срок эксплуатации ${age.shelfLifeYears} лет — просрочен на ` +
-          `${age.overdueYears.toFixed(0)}. Ингибиторы коррозии выработались. Без них ` +
-          'этиленгликоль при перегреве разлагается до гликолевой и щавелевой кислот: ' +
-          'pH падает, начинается коррозия. Паспорт котла требует pH 6,5…8,5, а повреждения ' +
-          'от накипи и коррозии из гарантии исключены.',
+          `“${project.coolant.brand}” was manufactured ${project.coolant.manufactured}, the declared ` +
+          `warranty service life is ${age.shelfLifeYears} years — expired by ` +
+          `${age.overdueYears.toFixed(0)}. The corrosion inhibitors are used up. Without them ` +
+          'ethylene glycol decomposes on overheating into glycolic and oxalic acids: ' +
+          'the pH falls and corrosion begins. The boiler data sheet requires pH 6.5…8.5, and damage ' +
+          'from scale and corrosion is excluded from the warranty.',
         fix:
-          'Менять при заливке тёплого пола — систему всё равно вскрываете, и это ' +
-          'единственный момент, когда замена ничего не стоит сверх самого состава. ' +
-          'Промыть, залить свежий. Заодно уйдёт вопрос с неизвестной концентрацией.'
+          'Replace it when filling the underfloor heating — you are opening the system anyway, and this ' +
+          'is the only moment when replacement costs nothing beyond the fluid itself. ' +
+          'Flush, fill with fresh. It also settles the question of the unknown concentration.'
       });
     }
 
@@ -1683,14 +1683,14 @@ export function runRules(project, clearHeight) {
         id: 'coolant-dilution-unknown',
         severity: 'warn',
         layer: 'heating',
-        title: 'Залит концентрат — фактическая концентрация не известна',
+        title: 'A concentrate was filled — the actual concentration is not known',
         detail:
-          `На этикетке таблица разбавления по объёму: ${t}. Чем именно разбавляли ` +
-          'при заливке — не зафиксировано, поэтому теплофизика взята для ~50 %. ' +
-          'От концентрации зависят расход, потери давления и температура замерзания.',
+          `The label has a dilution table by volume: ${t}. What it was diluted with ` +
+          'at filling is not recorded, so the thermophysics is taken for ~50 %. ' +
+          'Flow, pressure drop and freezing point depend on the concentration.',
         fix:
-          'Померить ареометром (рефрактометром) перед заливкой ТП. Если всё равно ' +
-          'меняете состав — просто развести по таблице под нужную защиту.'
+          'Measure with a hydrometer (refractometer) before filling the heating. If you are replacing ' +
+          'the fluid anyway — just dilute it by the table for the protection you need.'
       });
     }
 
@@ -1701,18 +1701,18 @@ export function runRules(project, clearHeight) {
         id: 'boiler-warranty-antifreeze',
         severity: 'warn',
         layer: 'heating',
-        title: 'Антифриз выводит теплообменник из-под гарантии котла',
+        title: 'Antifreeze voids the boiler heat exchanger warranty',
         detail:
-          `Паспорт ${boiler.model}, раздел «Общие меры безопасности»: при работе на антифризе ` +
-          'дефекты первичного теплообменника — шум, вибрация, выход из строя — ' +
-          `НЕ покрываются гарантией производителя. Котёл выпуска ${boiler.made}, ` +
-          `гарантия ${boiler.warrantyMonths} месяца с ввода в эксплуатацию, то есть живая. ` +
-          'Это цена решения оставить антифриз, а не довод против него: ' +
-          'труба тёплого пола замурована в стяжку, и её разрыв необратим.',
+          `Data sheet ${boiler.model}, section “General safety measures”: when running on antifreeze ` +
+          'defects of the primary heat exchanger — noise, vibration, failure — ' +
+          `are NOT covered by the manufacturer warranty. The boiler was made ${boiler.made}, ` +
+          `the warranty is ${boiler.warrantyMonths} months from commissioning, i.e. still alive. ` +
+          'This is the price of the decision to keep the antifreeze, not an argument against it: ' +
+          'the underfloor heating pipe is embedded in the screed, and its rupture is irreversible.',
         fix:
-          'Решение осознанное — зафиксируйте его. Снизить риск: держать концентрацию ' +
-          'по этикетке, менять состав по выработке ингибиторов, не перегревать ' +
-          `(режим ${boiler.lowTempParam.code}=${boiler.lowTempParam.value} держит ${boiler.lowTempParam.cap} °C).`
+          'The decision is deliberate — record it. To lower the risk: hold the concentration ' +
+          'per the label, replace the fluid when the inhibitors are used up, do not overheat ' +
+          `(mode ${boiler.lowTempParam.code}=${boiler.lowTempParam.value} holds ${boiler.lowTempParam.cap} °C).`
       });
     }
 
@@ -1722,15 +1722,15 @@ export function runRules(project, clearHeight) {
         id: 'boiler-lowtemp-param',
         severity: 'info',
         layer: 'heating',
-        title: `${boiler.lowTempParam.code}=${boiler.lowTempParam.value}: низкотемпературный режим уже есть в котле`,
+        title: `${boiler.lowTempParam.code}=${boiler.lowTempParam.value}: the boiler already has a low-temperature mode`,
         detail:
-          `Параметр ограничивает контур отопления ${boiler.lowTempParam.cap} °C с отсечкой горелки ` +
-          `на ${boiler.lowTempParam.cutoff} °C. Это штатная защита стяжки, встроенная в котёл. ` +
-          `Плюс ${boiler.antiCycleParam.code}: задержка розжига ${boiler.antiCycleParam.factory} минут — ` +
-          'заводская защита от тактования, уже включена.',
+          `The parameter limits the heating circuit to ${boiler.lowTempParam.cap} °C with a burner cut-off ` +
+          `at ${boiler.lowTempParam.cutoff} °C. This is a standard screed protection built into the boiler. ` +
+          `Plus ${boiler.antiCycleParam.code}: ignition delay ${boiler.antiCycleParam.factory} minutes — ` +
+          'a factory anti-short-cycling protection, already on.',
         fix:
-          `Выставить ${boiler.lowTempParam.code}=${boiler.lowTempParam.value}. Накладной аварийный термостат ` +
-          'оставить как независимый дублёр: параметр платы защищает, пока плата исправна.'
+          `Set ${boiler.lowTempParam.code}=${boiler.lowTempParam.value}. Keep the strap-on emergency thermostat ` +
+          'as an independent backup: a board parameter protects only while the board is healthy.'
       });
     }
 
@@ -1748,27 +1748,27 @@ export function runRules(project, clearHeight) {
         id: 'coolant-hydraulics',
         severity: 'warn',
         layer: 'heating',
-        title: `Антифриз: расход +${((c.flowFactor - 1) * 100).toFixed(0)} %, потери давления ×${c.pressureDropFactor}`,
+        title: `Antifreeze: flow +${((c.flowFactor - 1) * 100).toFixed(0)} %, pressure drop ×${c.pressureDropFactor}`,
         detail:
-          `Теплоёмкость ${c.c} против 4,18 кДж/(кг·К) у воды, вязкость выше. ` +
-          `Тот же теплосъём требует большего расхода, а потери давления растут — ` +
-          `предельная длина петли ТП падает с 90 до ${maxLoopLength(c).toFixed(0)} м, ` +
-          'и насос нужен мощнее. Котёл по паспорту тоже теряет около 10 % теплосъёма.',
-        fix: 'Считать петли и подбирать насос по антифризу, а не по воде.'
+          `Heat capacity ${c.c} against 4.18 kJ/(kg·K) for water, higher viscosity. ` +
+          `The same heat output needs a larger flow, and the pressure drop grows — ` +
+          `the maximum heating loop length falls from 90 to ${maxLoopLength(c).toFixed(0)} m, ` +
+          'and a stronger pump is needed. Per the data sheet the boiler also loses about 10 % of its heat output.',
+        fix: 'Calculate the loops and select the pump for antifreeze, not for water.'
       });
 
       out.push({
         id: 'coolant-scope',
         severity: 'info',
         layer: 'plumbing',
-        title: `Без отопления дом остынет до 0 °C примерно за ${cool.hours.toFixed(0)} ч`,
+        title: `Without heating the house will cool to 0 °C in about ${cool.hours.toFixed(0)} h`,
         detail:
-          `При наружных ${project.climate.tOutDesign} °C и массе стяжки ` +
-          `${bc.screedMass.massKg.toFixed(0)} кг постоянная времени дома — ` +
-          `${cool.tauHours.toFixed(0)} ч. Антифриз оправдан для отключений ДЛИННЕЕ этого срока. ` +
-          'Но он защищает только контур отопления: водопровод, сифоны, унитаз и ' +
-          'вторичный теплообменник ГВС остаются с водой и замёрзнут раньше.',
-        fix: `Котёл потребляет ${project.boiler.electric} Вт — ИБП с аккумулятором закрывает причину, а не следствие.`
+          `At an outdoor ${project.climate.tOutDesign} °C and a screed mass of ` +
+          `${bc.screedMass.massKg.toFixed(0)} kg the time constant of the house is ` +
+          `${cool.tauHours.toFixed(0)} h. Antifreeze is justified for outages LONGER than this. ` +
+          'But it protects only the heating circuit: the water supply, traps, toilet and ' +
+          'the secondary DHW heat exchanger stay on water and will freeze sooner.',
+        fix: `The boiler draws ${project.boiler.electric} W — a UPS with a battery removes the cause, not the consequence.`
       });
 
       if (c.base === 'ethylene') {
@@ -1776,9 +1776,9 @@ export function runRules(project, clearHeight) {
           id: 'coolant-ethylene',
           severity: 'error',
           layer: 'plumbing',
-          title: 'Этиленгликоль в системе с контуром ГВС',
-          detail: 'Он токсичен, а вторичный теплообменник отделяет его от питьевой воды одной стенкой.',
-          fix: 'В бытовых системах с ГВС применяется только пропиленгликоль.'
+          title: 'Ethylene glycol in a system with a DHW circuit',
+          detail: 'It is toxic, and the secondary heat exchanger separates it from drinking water by a single wall.',
+          fix: 'In domestic systems with DHW only propylene glycol is used.'
         });
       }
 
@@ -1798,16 +1798,16 @@ export function runRules(project, clearHeight) {
           id: 'coolant-justified',
           severity: 'warn',
           layer: 'heating',
-          title: `Дом пустует на ${c.minHoldTemp} °C — до нуля остаётся ${cold.hours.toFixed(0)} ч, а не ${cool.hours.toFixed(0)}`,
+          title: `The house stands empty at ${c.minHoldTemp} °C — ${cold.hours.toFixed(0)} h to zero, not ${cool.hours.toFixed(0)}`,
           detail:
-            'Остывать приходится не от комфортной температуры, а от температуры поддержания, ' +
-            'и рядом никого нет, чтобы заметить отключение. Запас сокращается в разы. ' +
-            'Труба ТП замурована в стяжку: разрыв там неустраним без вскрытия бетона. ' +
-            'При таком режиме эксплуатации антифриз в тёплом полу оправдан.',
+            'It has to cool not from a comfortable temperature but from the holding temperature, ' +
+            'and nobody is around to notice the outage. The margin shrinks several times over. ' +
+            'The heating pipe is embedded in the screed: a rupture there cannot be fixed without breaking the concrete. ' +
+            'In this mode of use antifreeze in the underfloor heating is justified.',
           fix:
-            `Оставить антифриз и добавить ИБП: банк «${bank.label}» даёт ${bank.hours.toFixed(0)} ч — ` +
-            `перекрывает ${cold.hours.toFixed(0)}-часовое окно. Петли считать по антифризу, предел ` +
-            `${maxLoopLength(c).toFixed(0)} м.`
+            `Keep the antifreeze and add a UPS: the bank “${bank.label}” gives ${bank.hours.toFixed(0)} h — ` +
+            `it covers the ${cold.hours.toFixed(0)}-hour window. Calculate the loops for antifreeze, limit ` +
+            `${maxLoopLength(c).toFixed(0)} m.`
         });
       } else if (c.originalReasonResolved) {
         const ups = upsSizing({ boilerW: project.boiler.electric, targetHours: cool.hours });
@@ -1815,13 +1815,13 @@ export function runRules(project, clearHeight) {
           id: 'coolant-reconsider',
           severity: 'info',
           layer: 'heating',
-          title: 'Причина, по которой залит антифриз, устранена',
+          title: 'The reason antifreeze was filled has been eliminated',
           detail:
-            `${c.originalReason}. Сейчас подведена центральная вода — давление держится, ` +
-            'котёл стартует сам после возврата электричества.',
+            `${c.originalReason}. Mains water is now connected — the pressure holds, ` +
+            'and the boiler starts by itself after the power returns.',
           fix:
-            `ИБП с банком ${ups.options.find((o) => o.id === 'agm100x2').hours.toFixed(0)} ч ` +
-            'закрывает типовые отключения. Петли считать по антифризу — тогда подойдёт любой теплоноситель.'
+            `A UPS with a ${ups.options.find((o) => o.id === 'agm100x2').hours.toFixed(0)} h bank ` +
+            'covers typical outages. Calculate the loops for antifreeze — then any coolant will do.'
         });
       }
 
@@ -1830,12 +1830,12 @@ export function runRules(project, clearHeight) {
           id: 'coolant-unconfirmed',
           severity: 'warn',
           layer: 'heating',
-          title: 'Марка и концентрация антифриза не подтверждены',
+          title: 'The brand and concentration of the antifreeze are not confirmed',
           detail:
-            `Расчёт идёт по типовым свойствам «${c.label}» с защитой до ${c.freezePoint} °C. ` +
-            `Ингибиторы коррозии вырабатываются примерно за ${c.inhibitorYears} лет, после чего ` +
-            'состав меняют. Гликоли несовместимы с оцинкованными трубами и фитингами.',
-          fix: 'Посмотреть этикетку залитого состава и паспорт котла: производители ограничивают применение антифриза, а котёл новый и на гарантии.'
+            `The calculation uses typical properties of “${c.label}” with protection down to ${c.freezePoint} °C. ` +
+            `Corrosion inhibitors are used up in about ${c.inhibitorYears} years, after which ` +
+            'the fluid is replaced. Glycols are incompatible with galvanised pipes and fittings.',
+          fix: 'Look at the label of the filled fluid and the boiler data sheet: manufacturers restrict the use of antifreeze, and the boiler is new and under warranty.'
         });
       }
     }
@@ -1845,8 +1845,8 @@ export function runRules(project, clearHeight) {
         id: 'climate-unconfirmed',
         severity: 'info',
         layer: 'heating',
-        title: 'Климатические параметры не сверены с СП',
-        detail: `Расчёт идёт при ${project.climate.tOutDesign} °C (${project.climate.station}).`
+        title: 'Climate parameters not checked against the code',
+        detail: `The calculation uses ${project.climate.tOutDesign} °C (${project.climate.station}).`
       });
     }
 
@@ -1855,12 +1855,12 @@ export function runRules(project, clearHeight) {
         id: 'wall-unconfirmed',
         severity: 'warn',
         layer: 'heating',
-        title: 'Толщина и марка газобетона не замерены',
+        title: 'Aerated concrete thickness and grade not measured',
         detail:
-          `Расчёт идёт при ${project.envelope.wall.thickness} мм и λ = ${project.envelope.wall.lambda}. ` +
-          `Это даёт R = ${hl.rWall.toFixed(2)} м²·К/Вт по стене. Разница между D400 и D600 ` +
-          'почти двукратная, а от неё зависит вся нагрузка.',
-        fix: 'Замерить толщину по оконному откосу, марку найти в документах или на блоках.'
+          `The calculation uses ${project.envelope.wall.thickness} mm and λ = ${project.envelope.wall.lambda}. ` +
+          `This gives R = ${hl.rWall.toFixed(2)} m²·K/W for the wall. The difference between D400 and D600 is ` +
+          'almost twofold, and the whole load depends on it.',
+        fix: 'Measure the thickness at the window reveal, find the grade in the documents or on the blocks.'
       });
     }
   }
@@ -1872,9 +1872,9 @@ export function runRules(project, clearHeight) {
       id: 'screed-cover',
       severity: 'error',
       layer: 'heating',
-      title: 'Мало бетона над трубой тёплого пола',
-      detail: `Стяжка ${screed.screedTotal} мм при трубе Ø${screed.pipeOd} даёт ${coverAvailable} мм над трубой, минимум ${screed.pipeCoverMin} мм.`,
-      fix: 'Увеличить стяжку или уменьшить диаметр трубы.'
+      title: 'Not enough concrete over the heating pipe',
+      detail: `A ${screed.screedTotal} mm screed with a pipe Ø${screed.pipeOd} gives ${coverAvailable} mm over the pipe, minimum ${screed.pipeCoverMin} mm.`,
+      fix: 'Increase the screed or reduce the pipe diameter.'
     });
   }
 
@@ -1897,8 +1897,8 @@ export function runRules(project, clearHeight) {
         id: 'manifold-access',
         severity: 'warn',
         layer: 'heating',
-        title: 'Перекрыт доступ к коллектору',
-        detail: `«${spec?.name}» стоит в зоне обслуживания коллектора (700 мм спереди).`,
+        title: 'Access to the manifold is blocked',
+        detail: `“${spec?.name}” stands in the manifold service zone (700 mm in front).`,
         at: { x: manifold.x, y: manifold.y + manifold.d / 2 }
       });
     }
@@ -1911,11 +1911,11 @@ export function runRules(project, clearHeight) {
       id: 'unconfirmed',
       severity: 'warn',
       layer: 'architecture',
-      title: `${unconfirmed} привязок не подтверждено замером`,
+      title: `${unconfirmed} reference points not confirmed by measurement`,
       detail:
-        'Узлы и проёмы стоят на черновых координатах. До заливки стяжки каждую привязку ' +
-        'нужно заменить фактическим замером — иначе все проверки считают вымышленную геометрию.',
-      fix: 'Внести замеры мышкой или в src/data/project.js.'
+        'Nodes and openings stand on rough coordinates. Before the screed pour every reference ' +
+        'must be replaced with an actual measurement — otherwise all the checks work on invented geometry.',
+      fix: 'Enter the measurements with the mouse or in src/data/project.js.'
     });
   }
 

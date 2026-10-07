@@ -25,40 +25,40 @@ function load(project) {
 }
 
 describe('externalWallLength', () => {
-  it('санузел в правом верхнем углу выходит на две наружные стены', () => {
+  it('the bathroom in the top right corner faces two outer walls', () => {
     const bath = buildRooms(makeInitialProject().layout).find((r) => r.id === 'bath');
-    // 1800 по верхней стене + 1800 по правой
+    // 1800 along the top wall + 1800 along the right one
     expect(externalWallLength(bath.polygon)).toBeCloseTo(3.6, 6);
   });
 
-  it('у зала наружных стен больше всех', () => {
+  it('the living room has the most outer walls', () => {
     const rooms = buildRooms(makeInitialProject().layout);
     const living = externalWallLength(rooms.find((r) => r.id === 'living').polygon);
     const hall = externalWallLength(rooms.find((r) => r.id === 'hall').polygon);
     expect(living).toBeGreaterThan(hall);
   });
 
-  it('суммарно все помещения дают периметр коробки', () => {
+  it('in total all rooms give the perimeter of the box', () => {
     const rooms = buildRooms(makeInitialProject().layout);
     const sum = rooms.reduce((s, r) => s + externalWallLength(r.polygon), 0);
     expect(sum).toBeCloseTo(2 * (INNER_W + INNER_D), 5);
   });
 });
 
-describe('Климат по СП 131.13330.2020, метеостанция «Липецк»', () => {
+describe('Climate per SP 131.13330.2020, weather station “Lipetsk”', () => {
   const c = makeInitialProject().climate;
 
-  it('расчётная пятидневка обеспеченностью 0,92 — минус 27', () => {
+  it('the design five-day period at a probability of 0.92 is minus 27', () => {
     expect(c.tOutDesign).toBe(-27);
     expect(c.tOut098).toBe(-31);
     expect(c.confirmed).toBe(true);
   });
 
-  it('параметры отопительного периода помечены как несверенные', () => {
+  it('heating-season parameters are marked as unchecked', () => {
     expect(c.heatingPeriodConfirmed).toBe(false);
   });
 
-  it('стена перекрывает нормируемое сопротивление', () => {
+  it('the wall exceeds the required resistance', () => {
     const p = makeInitialProject();
     expect(wallR(p.envelope)).toBeGreaterThan(requiredWallR(c));
     expect(gsop(c)).toBeGreaterThan(3500);
@@ -66,13 +66,13 @@ describe('Климат по СП 131.13330.2020, метеостанция «Ли
 });
 
 describe('wallR', () => {
-  it('газобетон 300 плюс ЭППС 50 дают около 4 м²·К/Вт', () => {
+  it('aerated concrete 300 plus XPS 50 give about 4 m²·K/W', () => {
     const r = wallR(makeInitialProject().envelope);
     expect(r).toBeGreaterThan(3.5);
     expect(r).toBeLessThan(4.5);
   });
 
-  it('утолщение блока увеличивает сопротивление', () => {
+  it('a thicker block increases the resistance', () => {
     const p = makeInitialProject();
     const thin = wallR(p.envelope);
     const thick = wallR({ ...p.envelope, wall: { ...p.envelope.wall, thickness: 400 } });
@@ -80,30 +80,30 @@ describe('wallR', () => {
   });
 });
 
-describe('heatLoss — первый этаж', () => {
+describe('heatLoss — ground floor', () => {
   const hl = load(makeInitialProject());
 
-  it('нагрузка первого этажа около 1,8 кВт', () => {
+  it('the ground-floor load is about 1.8 kW', () => {
     expect(hl.totalKw).toBeGreaterThan(1.5);
     expect(hl.totalKw).toBeLessThan(2.5);
   });
 
-  it('вентиляция — весомая доля потерь', () => {
+  it('ventilation is a substantial share of the losses', () => {
     const vent = hl.byRoom.reduce((s, r) => s + r.qVent, 0);
     expect(vent / hl.total).toBeGreaterThan(0.25);
   });
 
-  it('пол по грунту почти не теряет — утеплитель работает', () => {
+  it('the floor on the ground loses almost nothing — the insulation works', () => {
     const ground = hl.byRoom.reduce((s, r) => s + r.qGround, 0);
     expect(ground / hl.total).toBeLessThan(0.1);
   });
 
-  it('прихожая — самое холодное место на квадрат: входная дверь и две стены', () => {
+  it('the hall is the coldest place per square metre: the front door and two walls', () => {
     const perM2 = Object.fromEntries(hl.byRoom.map((r) => [r.id, r.perM2]));
     expect(perM2.hall).toBeGreaterThan(perM2.living);
   });
 
-  it('похолодание расчётной температуры увеличивает нагрузку', () => {
+  it('a colder design temperature increases the load', () => {
     const p = makeInitialProject();
     p.climate = { ...p.climate, tOutDesign: -35 };
     expect(load(p).total).toBeGreaterThan(hl.total);
@@ -111,7 +111,7 @@ describe('heatLoss — первый этаж', () => {
 });
 
 describe('screedThermalMass', () => {
-  it('30 м² стяжки 70 мм по теплоёмкости равны почти тонне воды', () => {
+  it('30 m² of 70 mm screed has the heat capacity of almost a tonne of water', () => {
     const p = makeInitialProject();
     const m = screedThermalMass(30.25, p.screed);
     expect(m.massKg).toBeGreaterThan(4000);
@@ -120,42 +120,42 @@ describe('screedThermalMass', () => {
 });
 
 describe('burnerCycleMinutes', () => {
-  it('чем больше объём, тем длиннее цикл', () => {
+  it('the larger the volume, the longer the cycle', () => {
     const a = burnerCycleMinutes({ minPowerKw: 9.3, loadKw: 1.84, systemVolumeL: 24 });
     const b = burnerCycleMinutes({ minPowerKw: 9.3, loadKw: 1.84, systemVolumeL: 988 });
     expect(b).toBeGreaterThan(a);
   });
 
-  it('если котёл модулируется ниже нагрузки, тактования нет', () => {
+  it('if the boiler modulates below the load, there is no short-cycling', () => {
     expect(burnerCycleMinutes({ minPowerKw: 2, loadKw: 5, systemVolumeL: 30 })).toBe(Infinity);
   });
 });
 
-describe('Антифриз в контуре', () => {
+describe('Antifreeze in the circuit', () => {
   const p = makeInitialProject();
 
-  it('объёмная теплоёмкость ниже воды', () => {
+  it('volumetric heat capacity is lower than water', () => {
     expect(volumetricRatio(p.coolant)).toBeLessThan(1);
     expect(volumetricRatio(p.coolant)).toBeGreaterThan(0.85);
   });
 
-  it('предельная длина петли падает против воды', () => {
+  it('the maximum loop length falls against water', () => {
     const limit = maxLoopLength(p.coolant);
     expect(limit).toBeLessThan(90);
     expect(limit).toBeGreaterThan(60);
   });
 
-  it('вода не даёт поправок', () => {
+  it('water gives no corrections', () => {
     expect(maxLoopLength({ pressureDropFactor: 1 })).toBeCloseTo(90, 6);
   });
 });
 
-describe('houseCooldown — сколько есть времени без отопления', () => {
+describe('houseCooldown — how much time there is without heating', () => {
   const p = makeInitialProject();
   const hl = load(p);
   const ua = hl.total / (p.climate.tInLiving - p.climate.tOutDesign);
 
-  it('в расчётный мороз дом держится около суток', () => {
+  it('at the design frost the house holds for about a day', () => {
     const c = houseCooldown({
       screedMassKg: 4659,
       uaWPerK: ua,
@@ -166,54 +166,54 @@ describe('houseCooldown — сколько есть времени без ото
     expect(c.hours).toBeLessThan(48);
   });
 
-  it('в умеренный мороз время заметно больше', () => {
+  it('at a moderate frost the time is noticeably longer', () => {
     const hard = houseCooldown({ screedMassKg: 4659, uaWPerK: ua, tStart: 22, tOut: -27 });
     const mild = houseCooldown({ screedMassKg: 4659, uaWPerK: ua, tStart: 22, tOut: -10 });
     expect(mild.hours).toBeGreaterThan(hard.hours);
   });
 
-  it('если на улице выше нуля, дом не промёрзнет никогда', () => {
+  it('if it is above zero outside, the house will never freeze', () => {
     expect(houseCooldown({ screedMassKg: 4659, uaWPerK: ua, tStart: 22, tOut: 3 }).hours).toBe(Infinity);
   });
 });
 
-describe('Подбор ИБП для котла 110 Вт', () => {
+describe('Selecting a UPS for a 110 W boiler', () => {
   const p = makeInitialProject();
   const ups = upsSizing({ boilerW: p.boiler.electric, targetHours: 26 });
 
-  it('средняя нагрузка ниже паспортной', () => {
+  it('the average load is below the nameplate', () => {
     expect(ups.peakW).toBe(110);
     expect(ups.avgW).toBeLessThan(110);
   });
 
-  it('инвертора хватает самого малого — ограничение в батареях', () => {
+  it('the smallest inverter is enough — the limit is in the batteries', () => {
     expect(ups.inverterVaMin).toBeLessThanOrEqual(400);
   });
 
-  it('один AGM 100 А·ч даёт около 6 часов', () => {
+  it('one AGM 100 Ah gives about 6 hours', () => {
     const o = ups.options.find((x) => x.id === 'agm100');
     expect(o.hours).toBeGreaterThan(4);
     expect(o.hours).toBeLessThan(8);
   });
 
-  it('два AGM 100 А·ч закрывают типовое отключение', () => {
+  it('two AGM 100 Ah cover a typical outage', () => {
     const o = ups.options.find((x) => x.id === 'agm100x2');
     expect(o.hours).toBeGreaterThan(10);
   });
 
-  it('литий той же ёмкости работает вдвое дольше свинца', () => {
+  it('lithium of the same capacity lasts twice as long as lead', () => {
     const agm = ups.options.find((x) => x.id === 'agm100');
     const lfp = ups.options.find((x) => x.id === 'lfp100');
     expect(lfp.hours / agm.hours).toBeGreaterThan(1.7);
   });
 
-  it('собственное потребление инвертора учтено', () => {
+  it('the inverter own consumption is accounted for', () => {
     const withIdle = runtimeHours({ voltage: 12, ah: 100, dod: 0.5, count: 1 }, 100);
     const bare = (12 * 100 * 0.5 * 0.85) / 100;
     expect(withIdle).toBeLessThan(bare);
   });
 
-  it('требуемая ёмкость растёт со временем автономии', () => {
+  it('the required capacity grows with the run time', () => {
     expect(requiredAh({ loadW: 72, hours: 24 })).toBeGreaterThan(requiredAh({ loadW: 72, hours: 6 }));
   });
 });
@@ -229,24 +229,24 @@ describe('boilerCheck — BAXI ECO Life 24F', () => {
     pipeVolumeL: 40
   });
 
-  it('минимальная мощность 9,3 кВт кратно превышает нагрузку', () => {
+  it('the minimum output of 9.3 kW exceeds the load many times over', () => {
     expect(bc.minPowerKw).toBe(9.3);
     expect(bc.oversized).toBe(true);
     expect(bc.ratio).toBeGreaterThan(3);
   });
 
-  it('через смесительный узел цикл получается недопустимо коротким', () => {
+  it('through a mixing unit the cycle is unacceptably short', () => {
     const s = bc.schemes.find((x) => x.id === 'separated');
     expect(s.cycleMinutes).toBeLessThan(3);
     expect(s.ok).toBe(false);
   });
 
-  it('буфера 100 л не хватает', () => {
+  it('a 100 l buffer is not enough', () => {
     const s = bc.schemes.find((x) => x.id === 'buffer100');
     expect(s.ok).toBe(false);
   });
 
-  it('прямое низкотемпературное подключение решает задачу', () => {
+  it('a direct low-temperature connection solves the problem', () => {
     const s = bc.schemes.find((x) => x.id === 'direct');
     expect(s.cycleMinutes).toBeGreaterThan(MIN_CYCLE_MINUTES * 3);
     expect(s.ok).toBe(true);
@@ -254,30 +254,30 @@ describe('boilerCheck — BAXI ECO Life 24F', () => {
   });
 });
 
-// Подбор ИБП под конкретное железо: Штиль SW500L (online, 400 Вт, з/у 5 А)
-// и батареи, которые к нему предлагают. Проверено по карточкам ЭТМ.
-describe('ИБП: топология и зарядное решают больше, чем мощность инвертора', () => {
+// Selecting a UPS for specific hardware: Shtil SW500L (online, 400 W, 5 A charger)
+// and the batteries offered with it. Checked against the ETM catalogue cards.
+describe('UPS: topology and charger matter more than inverter power', () => {
   const sw500 = { topology: TOPOLOGY.online, chargerA: 5, alwaysOnW: 15 };
 
-  it('роутер идёт в средних ЦЕЛИКОМ, а котёл — с коэффициентом', () => {
-    // Котёл тактует, роутер работает непрерывно
+  it('the router counts in the average IN FULL, while the boiler with a factor', () => {
+    // The boiler cycles, the router works continuously
     const r = upsSizing({ boilerW: 110, ...sw500 });
     expect(r.avgW).toBeCloseTo(110 * 0.65 + 15, 6);
     expect(r.peakW).toBe(125);
   });
 
-  it('online съедает больше line-interactive на той же нагрузке', () => {
+  it('online uses more than line-interactive at the same load', () => {
     const base = { boilerW: 110, alwaysOnW: 15, chargerA: 5 };
     const li = upsSizing({ ...base, topology: TOPOLOGY.lineInteractive });
     const on = upsSizing({ ...base, topology: TOPOLOGY.online });
-    // Двойное преобразование работает всегда — отсюда постоянные 30 Вт
+    // Double conversion always runs — hence the constant 30 W
     expect(on.idleW).toBeGreaterThan(li.idleW);
     const h = (r) => r.options.find((o) => o.id === 'agm100x2').hours;
     expect(h(on)).toBeLessThan(h(li));
   });
 
-  it('батареи ИБП соединяются последовательно: банк 2 × 100 = 100 А·ч, а не 200', () => {
-    // Энергия складывается, ампер-часы — нет. От этого зависит зарядное.
+  it('UPS batteries are connected in series: a 2 × 100 bank is 100 Ah, not 200', () => {
+    // Energy adds up, amp-hours do not. The charger depends on this.
     const r = upsSizing({ boilerW: 110, ...sw500 });
     const two = r.options.find((o) => o.id === 'agm100x2');
     const one = r.options.find((o) => o.id === 'agm100');
@@ -286,9 +286,9 @@ describe('ИБП: топология и зарядное решают больш
     expect(two.hours).toBeCloseTo(one.hours * 2, 6);
   });
 
-  it('зарядное 5 А ограничивает свинцовый банк сотней ампер-часов', () => {
-    // Медленнее C/20 AGM не успевает вернуться к полному заряду
-    // между отключениями и сульфатирует за пару сезонов
+  it('a 5 A charger limits a lead bank to a hundred amp-hours', () => {
+    // Slower than C/20, AGM does not manage to return to full charge
+    // between outages and sulphates within a couple of seasons
     expect(maxBankAh(5)).toBe(100);
     const r = upsSizing({ boilerW: 110, ...sw500 });
     expect(r.bankLimitAh).toBe(100);
@@ -296,29 +296,29 @@ describe('ИБП: топология и зарядное решают больш
     expect(r.options.find((o) => o.id === 'agm140x2').chargeable).toBe(false);
   });
 
-  it('литию медленное зарядное не вредит — только долго', () => {
+  it('a slow charger does not harm lithium — it is only slow', () => {
     const r = upsSizing({ boilerW: 110, ...sw500 });
     const lfp = r.options.find((o) => o.id === 'lfp200');
     expect(lfp.bankAh).toBeGreaterThan(r.bankLimitAh);
     expect(lfp.chargeable).toBe(true);
-    // И хвоста заряда у лития почти нет, в отличие от свинца
+    // And lithium has almost no charge tail, unlike lead
     const pb = rechargeHours({ ah: 100, dod: 0.5, chargerA: 5 });
     const li = rechargeHours({ ah: 100, dod: 0.5, chargerA: 5, chemistry: 'lfp' });
     expect(pb.total).toBeGreaterThan(li.total);
   });
 
-  it('SF 1240 на 40 А·ч дают 3,5 часа — дом остывает за 12', () => {
+  it('SF 1240 of 40 Ah gives 3.5 hours — the house cools in 12', () => {
     const r = upsSizing({ boilerW: 110, targetHours: 12, ...sw500 });
     const sf = r.options.find((o) => o.id === 'agm40x2');
     expect(sf.hours).toBeLessThan(4);
     expect(sf.ok).toBe(false);
   });
 
-  it('правило C/20 — предупреждение о долгом заряде, а не запрет', () => {
-    // Моя прежняя оценка «5 А не тянет банк больше 100 А·ч» была занижена.
-    // Паспорт SW500L прямо разрешает до 250 А·ч: там интеллектуальный
-    // алгоритм заряда и термокомпенсация. Правило C/20 остаётся — но
-    // как отметка «заряжаться будет долго», а не как отказ.
+  it('the C/20 rule is a warning about slow charging, not a ban', () => {
+    // My earlier estimate “5 A cannot drive a bank above 100 Ah” was too low.
+    // The SW500L data sheet explicitly allows up to 250 Ah: it has an intelligent
+    // charging algorithm and temperature compensation. The C/20 rule stays — but
+    // as a note “it will charge slowly”, not as a refusal.
     const r = upsSizing({ boilerW: 110, ...sw500, deviceMaxBankAh: SW500L.maxBankAh });
     expect(r.bankLimitAh).toBe(250);
     expect(r.slowChargeAh).toBe(100);
@@ -327,7 +327,7 @@ describe('ИБП: топология и зарядное решают больш
     expect(big.slowCharge).toBe(true);
   });
 
-  it('старый вызов без топологии и зарядного продолжает работать', () => {
+  it('an old call without topology and charger keeps working', () => {
     const r = upsSizing({ boilerW: 110, targetHours: 12 });
     expect(r.idleW).toBe(TOPOLOGY.lineInteractive.idleW);
     expect(r.bankLimitAh).toBeNull();
@@ -335,37 +335,37 @@ describe('ИБП: топология и зарядное решают больш
   });
 });
 
-// Паспорт SW500L прочитан с сайта производителя. Две цифры опровергли
-// мои прежние оценки, и обе в лучшую сторону.
-describe('ИБП по паспорту SW500L', () => {
+// The SW500L data sheet was read from the manufacturer site. Two figures refuted
+// my earlier estimates, both for the better.
+describe('UPS per the SW500L data sheet', () => {
   const cfg = {
     boilerW: 110, alwaysOnW: 25, topology: TOPOLOGY.online,
     chargerA: SW500L.chargerA, deviceMaxBankAh: SW500L.maxBankAh,
     depth: SW500L.dodCutoff, targetHours: 12
   };
 
-  it('модель сходится с собственным обещанием производителя', () => {
-    // Штиль заявляет до 9,5 ч при 100 % нагрузке на банке 250 А·ч.
-    // Если наша формула даёт то же самое — значит КПД и глубина разряда
-    // взяты верно, и остальным цифрам можно верить.
+  it('the model agrees with the manufacturer own claim', () => {
+    // Shtil claims up to 9.5 h at 100 % load on a 250 Ah bank.
+    // If our formula gives the same — then the efficiency and depth of discharge
+    // are right, and the other figures can be trusted.
     const wh = SW500L.busV * SW500L.maxBankAh * SW500L.dodCutoff * 0.85;
     const hours = wh / (SW500L.watts + TOPOLOGY.online.idleW);
     expect(hours).toBeGreaterThan(9);
     expect(hours).toBeLessThan(10);
   });
 
-  it('шина 24 В — значит две батареи 12 В в серию', () => {
+  it('a 24 V bus — so two 12 V batteries in series', () => {
     expect(SW500L.busV).toBe(24);
     const r = upsSizing(cfg);
     const two = r.options.find((o) => o.id === 'agm100x2');
-    expect(two.bankAh).toBe(100); // ампер-часы не удваиваются
+    expect(two.bankAh).toBe(100); // amp-hours do not double
     expect(two.usableWh).toBe(SW500L.busV * 100 * SW500L.dodCutoff);
   });
 
-  it('2 × 100 А·ч закрывают цель в 12 часов', () => {
-    // По ресурсной глубине 50 % выходило 8,1 ч и цель не бралась.
-    // Но ИБП отсекает батарею на 80–85 %, и в настоящем отключении
-    // доступно именно столько.
+  it('2 × 100 Ah meet the 12-hour target', () => {
+    // By the service-life depth of 50 % it came to 8.1 h and the target was missed.
+    // But the UPS cuts the battery off at 80–85 %, and in a real outage
+    // exactly that much is available.
     const r = upsSizing(cfg);
     const two = r.options.find((o) => o.id === 'agm100x2');
     expect(two.hours).toBeGreaterThan(12);
@@ -374,21 +374,21 @@ describe('ИБП по паспорту SW500L', () => {
     expect(shallow.options.find((o) => o.id === 'agm100x2').hours).toBeLessThan(12);
   });
 
-  it('единственная выходная розетка — отсюда и щиток после ИБП', () => {
-    expect(SW500L.outlets).toMatch(/1 шт/);
+  it('the single output socket — hence the board after the UPS', () => {
+    expect(SW500L.outlets).toMatch(/1 pc/);
     expect(SW500L.maxOutA).toBeCloseTo(2.3, 6);
   });
 
-  it('ИБП только в помещении: рабочий диапазон от +5 °C', () => {
-    // На улицу его вешать нельзя, и это ещё один довод за щит в прихожей
+  it('the UPS only indoors: operating range from +5 °C', () => {
+    // It cannot be hung outside, and that is one more argument for the board in the hall
     expect(SW500L.tempC[0]).toBe(5);
     expect(SW500L.ip).toBe(20);
   });
 
-  it('влезает в нишу под окном прихожей', () => {
-    // Ниша 900 × 1100, освобождается от снятого радиатора
+  it('fits the niche under the hall window', () => {
+    // The niche is 900 × 1100, freed by the removed radiator
     expect(SW500L.sizeMm.w).toBeLessThan(900);
-    expect(SW500L.sizeMm.h + 420).toBeLessThan(1100); // полка с АКБ снизу
+    expect(SW500L.sizeMm.h + 420).toBeLessThan(1100); // shelf with batteries below
     expect(SW500L.massKg).toBe(5);
   });
 });

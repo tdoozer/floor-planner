@@ -18,33 +18,33 @@
 // потому что полезной площади пола здесь в обрез.
 
 export const CONNECTION_META = {
-  cw: { label: 'ХВС', color: '#2563eb', short: 'Х' },
-  hw: { label: 'ГВС', color: '#dc2626', short: 'Г' },
-  drain: { label: 'Слив', color: '#0f766e', short: 'С' },
-  gas: { label: 'Газ', color: '#f59e0b', short: 'Г' },
-  power: { label: '220В', color: '#ca8a04', short: 'Э' }
+  cw: { label: 'CW', color: '#2563eb', short: 'C' },
+  hw: { label: 'HW', color: '#dc2626', short: 'H' },
+  drain: { label: 'Drain', color: '#0f766e', short: 'D' },
+  gas: { label: 'Gas', color: '#f59e0b', short: 'G' },
+  power: { label: '230 V', color: '#ca8a04', short: 'E' }
 };
 
 export const FIXTURES = [
   // ---------- Кухня ----------
   {
     id: 'fridge',
-    name: 'Холодильник',
+    name: 'Refrigerator',
     category: 'kitchen',
     w: 0.6, d: 0.65, h: 2.0,
     color: '#e2e8f0',
     floorExclusion: true,
-    exclusionNote: 'Тёплый пол под холодильником заставляет его работать против себя',
+    exclusionNote: 'Underfloor heating under a refrigerator makes it work against itself',
     connections: [{ kind: 'power', dx: 0.3, dy: 0.6 }]
   },
   {
     id: 'sink',
-    builtInTop: true, // врезается В столешницу, а не стоит под ней
-    name: 'Мойка (модуль 600)',
+    builtInTop: true, // is set INTO the worktop, not under it
+    name: 'Sink (600 module)',
     category: 'kitchen',
     w: 0.6, d: 0.6, h: 0.9,
     color: '#cbd5e1',
-    workstation: true, // за этим прибором стоят — нужна высота над головой
+    workstation: true, // people stand at this fixture — headroom is needed
     floorExclusion: true,
     connections: [
       { kind: 'cw', dx: 0.3, dy: 0.5 },
@@ -54,8 +54,8 @@ export const FIXTURES = [
   },
   {
     id: 'sink_corner',
-    builtInTop: true, // врезается В столешницу, а не стоит под ней
-    name: 'Мойка угловая 900×600',
+    builtInTop: true, // is set INTO the worktop, not under it
+    name: 'Corner sink 900×600',
     category: 'kitchen',
     // Сама чаша 900 × 600, ставится ПО ДИАГОНАЛИ в угол — поворот 45°.
     // Габарит на плане тогда 1061 × 1061: это и есть угловой модуль.
@@ -71,7 +71,7 @@ export const FIXTURES = [
   },
   {
     id: 'dishwasher60',
-    name: 'Посудомойка 600',
+    name: 'Dishwasher 600',
     category: 'kitchen',
     w: 0.6, d: 0.6, h: 0.85,
     color: '#e2e8f0',
@@ -84,7 +84,7 @@ export const FIXTURES = [
   },
   {
     id: 'dishwasher45',
-    name: 'Посудомойка 450',
+    name: 'Dishwasher 450',
     category: 'kitchen',
     w: 0.45, d: 0.6, h: 0.85,
     color: '#e2e8f0',
@@ -97,8 +97,8 @@ export const FIXTURES = [
   },
   {
     id: 'hob_gas',
-    builtInTop: true, // врезается В столешницу, а не стоит под ней
-    name: 'Газовая варочная панель',
+    builtInTop: true, // is set INTO the worktop, not under it
+    name: 'Gas hob',
     category: 'kitchen',
     w: 0.6, d: 0.52, h: 0.9,
     color: '#fde68a',
@@ -112,7 +112,7 @@ export const FIXTURES = [
   },
   {
     id: 'oven',
-    name: 'Духовой шкаф',
+    name: 'Oven',
     category: 'kitchen',
     w: 0.6, d: 0.55, h: 0.6,
     color: '#e2e8f0',
@@ -121,7 +121,7 @@ export const FIXTURES = [
   },
   {
     id: 'worktop',
-    name: 'Столешница / шкаф 600',
+    name: 'Worktop / cabinet 600',
     category: 'kitchen',
     // Это КОРПУС нижнего шкафа: его высота подстраивается под столешницу,
     // а не спорит с ней. Под бетонной плитой 60 мм корпус будет 840.
@@ -135,12 +135,12 @@ export const FIXTURES = [
   // ---------- Санузел ----------
   {
     id: 'shower',
-    name: 'Душевая кабина 900×900',
+    name: 'Shower cabin 900×900',
     category: 'bath',
     w: 0.9, d: 0.9, h: 2.1,
     color: '#cffafe',
     floorExclusion: true,
-    exclusionNote: 'Поддон стоит на полу вплотную, греть его бессмысленно',
+    exclusionNote: 'The tray stands flat on the floor, heating it makes no sense',
     // Слив душа — самый рискованный элемент по высоте пирога пола
     connections: [
       { kind: 'cw', dx: 0.45, dy: 0.08 },
@@ -150,7 +150,7 @@ export const FIXTURES = [
   },
   {
     id: 'wc',
-    name: 'Унитаз',
+    name: 'Toilet',
     category: 'bath',
     w: 0.37, d: 0.65, h: 0.8,
     color: '#f8fafc',
@@ -162,7 +162,7 @@ export const FIXTURES = [
   },
   {
     id: 'basin',
-    name: 'Раковина',
+    name: 'Washbasin',
     category: 'bath',
     w: 0.55, d: 0.45, h: 0.85,
     color: '#f1f5f9',
@@ -175,14 +175,14 @@ export const FIXTURES = [
   },
   {
     id: 'washer',
-    name: 'Стиральная машина',
+    name: 'Washing machine',
     category: 'bath',
     w: 0.6, d: 0.6, h: 0.85,
     color: '#e2e8f0',
     // Исключать не обязательно: прибору 26…29 °C не вредят, а тепло
     // расходится вбок по бетону и выходит вокруг машины.
     floorExclusion: false,
-    exclusionNote: 'Трубу под ней класть можно — тепло уходит вбок по стяжке',
+    exclusionNote: 'Pipe can be laid under it — the heat spreads sideways through the screed',
     connections: [
       { kind: 'cw', dx: 0.3, dy: 0.55 },
       { kind: 'drain', dx: 0.45, dy: 0.55, dia: 40 },
@@ -191,7 +191,7 @@ export const FIXTURES = [
   },
   {
     id: 'towel_rail',
-    name: 'Полотенцесушитель',
+    name: 'Towel radiator',
     category: 'bath',
     w: 0.5, d: 0.12, h: 0.8,
     color: '#fecaca',
@@ -204,14 +204,14 @@ export const FIXTURES = [
     // Телевизор на стене. На полу не стоит, полу и мебели не мешает.
     // Габарит 55″: 1225 × 710 панель, на кронштейне ~80 от стены.
     id: 'tv_wall',
-    name: 'Телевизор 55″ на кронштейне',
+    name: 'TV 55″ on a bracket',
     category: 'furniture',
     w: 1.25, d: 0.08, h: 0.71,
     color: '#334155',
     wallMounted: true,
-    mountHeight: 0.8, // низ панели; центр экрана ≈ 1150 — уровень глаз сидящего
+    mountHeight: 0.8, // bottom of the panel; screen centre ≈ 1150 — seated eye level
     floorExclusion: false,
-    exclusionNote: 'Висит на стене',
+    exclusionNote: 'Wall-mounted',
     connections: []
   },
   {
@@ -219,7 +219,7 @@ export const FIXTURES = [
     // поэтому floorExclusion не применим. Отметка низа 1400 от чистого пола:
     // 900 столешница + 500 фартук.
     id: 'wall_cabinet',
-    name: 'Шкаф навесной 600',
+    name: 'Wall cabinet 600',
     category: 'kitchen',
     w: 0.6, d: 0.35, h: 0.72,
     color: '#e0e7ff',
@@ -235,7 +235,7 @@ export const FIXTURES = [
     // Верх при этом совпадает с обычными шкафами (1400 + 720 = 2120),
     // и линия фасадов остаётся ровной.
     id: 'wall_cabinet_hood',
-    name: 'Шкаф навесной с вытяжкой 600',
+    name: 'Wall cabinet with hood 600',
     category: 'kitchen',
     w: 0.6, d: 0.35, h: 0.47,
     color: '#c7d2fe',
@@ -246,7 +246,7 @@ export const FIXTURES = [
   },
   {
     id: 'wall_cabinet_corner',
-    name: 'Шкаф навесной угловой',
+    name: 'Corner wall cabinet',
     category: 'kitchen',
     w: 0.6, d: 0.6, h: 0.72,
     color: '#c7d2fe',
@@ -257,31 +257,31 @@ export const FIXTURES = [
   },
   {
     id: 'shelf_open',
-    name: 'Стеллаж открытый',
+    name: 'Open shelving unit',
     category: 'furniture',
     w: 0.4, d: 0.4, h: 1.5,
     color: '#fed7aa',
     // Открытый стеллаж — воздух под ним и сквозь него ходит,
     // поэтому тёплый пол он не запирает
     floorExclusion: false,
-    exclusionNote: 'Открытый: воздух проходит. Глухой цоколь — включите исключение',
+    exclusionNote: 'Open: air passes through. With a solid plinth — enable the exclusion',
     connections: []
   },
   {
     id: 'sofa',
-    name: 'Диван',
+    name: 'Sofa',
     category: 'furniture',
     w: 2.1, d: 0.9, h: 0.85,
     color: '#ddd6fe',
     // Диван на ножках: под ним трубу кладут, воздух проходит.
     // Если поставите модель с глухим коробом до пола — включите исключение.
     floorExclusion: false,
-    exclusionNote: 'На ножках. Глухой короб до пола — включите исключение',
+    exclusionNote: 'On legs. A solid box down to the floor — enable the exclusion',
     connections: []
   },
   {
     id: 'dining_table',
-    name: 'Обеденный стол',
+    name: 'Dining table',
     category: 'furniture',
     w: 1.4, d: 0.8, h: 0.75,
     color: '#fed7aa',
@@ -290,18 +290,18 @@ export const FIXTURES = [
   },
   {
     id: 'bench',
-    name: 'Лавка у стола',
+    name: 'Bench by the table',
     category: 'furniture',
     w: 1.4, d: 0.4, h: 0.45,
     color: '#fde68a',
     // Лавки на ножках — под ними тоже кладём
     floorExclusion: false,
-    exclusionNote: 'На ножках. Глухая до пола — включите исключение',
+    exclusionNote: 'On legs. Solid to the floor — enable the exclusion',
     connections: []
   },
   {
     id: 'wardrobe',
-    name: 'Шкаф / гардероб',
+    name: 'Wardrobe / cupboard',
     category: 'furniture',
     w: 1.0, d: 0.6, h: 2.2,
     color: '#e7e5e4',
@@ -319,7 +319,7 @@ export const FIXTURES = [
   },
   {
     id: 'tv_unit',
-    name: 'Тумба ТВ',
+    name: 'TV unit',
     category: 'furniture',
     w: 1.4, d: 0.4, h: 0.5,
     color: '#e7e5e4',
@@ -329,10 +329,10 @@ export const FIXTURES = [
 ];
 
 export const CATEGORY_LABELS = {
-  kitchen: 'Кухня',
-  bath: 'Санузел',
-  furniture: 'Мебель',
-  electrical: 'Электрика'
+  kitchen: 'Kitchen',
+  bath: 'Bathroom',
+  furniture: 'Furniture',
+  electrical: 'Electrics'
 };
 
 // Электроточки. Габарит условный — на плане это значок, а не предмет.
@@ -340,35 +340,35 @@ export const CATEGORY_LABELS = {
 // от группы зависит сечение кабеля и номинал автомата.
 const ELECTRICAL = [
   {
-    id: 'socket2', name: 'Розетка двойная', category: 'electrical',
+    id: 'socket2', name: 'Double socket', category: 'electrical',
     w: 0.15, d: 0.06, h: 0.08, color: '#fde68a',
     mountHeight: 0.3, circuit: 'sockets', power: 0,
     floorExclusion: false, connections: []
   },
   {
-    id: 'socket4', name: 'Блок 4 розетки', category: 'electrical',
+    id: 'socket4', name: '4-gang socket block', category: 'electrical',
     w: 0.32, d: 0.06, h: 0.08, color: '#fcd34d',
     mountHeight: 1.1, circuit: 'kitchen', power: 0,
     floorExclusion: false, connections: []
   },
   {
-    id: 'socket_app', name: 'Розетка под технику', category: 'electrical',
+    id: 'socket_app', name: 'Appliance socket', category: 'electrical',
     w: 0.15, d: 0.06, h: 0.08, color: '#f59e0b',
     mountHeight: 0.15, circuit: 'appliance', power: 2200,
-    note: 'Отдельная линия. Ставить в СОСЕДНЕМ шкафу, не за самим прибором',
+    note: 'Separate line. Place it in the NEIGHBOURING cabinet, not behind the appliance itself',
     floorExclusion: false, connections: []
   },
   {
-    id: 'socket_ip44', name: 'Розетка влагозащищённая', category: 'electrical',
+    id: 'socket_ip44', name: 'Splash-proof socket', category: 'electrical',
     w: 0.15, d: 0.06, h: 0.08, color: '#38bdf8',
     mountHeight: 1.1, circuit: 'bath', power: 0,
-    note: 'IP44, вне зоны брызг от душа',
+    note: 'IP44, outside the shower splash zone',
     floorExclusion: false, connections: []
   },
   {
     // Оптика заходит в дом ВМЕСТЕ С ГАЗОВОЙ ТРУБОЙ, под потолком,
     // в промежутке 700 мм между глухим окном и котлом. Роутер вешается там же.
-    id: 'ont_router', name: 'Роутер / ONT', category: 'electrical',
+    id: 'ont_router', name: 'Router / ONT', category: 'electrical',
     w: 0.24, d: 0.06, h: 0.18, color: '#a5b4fc',
     mountHeight: 2.3, circuit: 'boiler', power: 15,
     wallMounted: true, floorExclusion: false, connections: []
@@ -376,13 +376,13 @@ const ELECTRICAL = [
   {
     // Приставка подключается к роутеру ВИТОЙ ПАРОЙ, поэтому висит
     // не у роутера, а за телевизором.
-    id: 'tv_box', name: 'ТВ-приставка', category: 'electrical',
+    id: 'tv_box', name: 'TV set-top box', category: 'electrical',
     w: 0.2, d: 0.14, h: 0.05, color: '#c7d2fe',
     mountHeight: 0.8, circuit: 'sockets', power: 12,
     wallMounted: true, floorExclusion: false, connections: []
   },
   {
-    id: 'data_socket', name: 'Розетка RJ45', category: 'electrical',
+    id: 'data_socket', name: 'RJ45 socket', category: 'electrical',
     w: 0.09, d: 0.06, h: 0.08, color: '#818cf8',
     mountHeight: 0.3, circuit: 'data', power: 0,
     floorExclusion: false, connections: []
@@ -390,7 +390,7 @@ const ELECTRICAL = [
   {
     // Пустая гофра с протяжкой. Самое дешёвое, что можно заложить:
     // стандарты слаботочки меняются, а стены вскрывать больше не захочется.
-    id: 'data_reserve', name: 'Резервная гофра с протяжкой', category: 'electrical',
+    id: 'data_reserve', name: 'Spare conduit with a pull cord', category: 'electrical',
     w: 0.09, d: 0.06, h: 0.08, color: '#94a3b8',
     mountHeight: 0.3, circuit: 'data', power: 0,
     floorExclusion: false, connections: []
@@ -399,7 +399,7 @@ const ELECTRICAL = [
     // Щиток аварийного питания ПОСЛЕ ИБП. Нужен не для красоты:
     // у Штиль SW500L на выходе ОДНА розетка Schuko, а потребителей четыре.
     // Он же и снимает исходное возражение — у каждой ветки свой аппарат.
-    id: 'panel_ups', name: 'Щиток аварийного питания', category: 'electrical',
+    id: 'panel_ups', name: 'Emergency power board', category: 'electrical',
     w: 0.22, d: 0.1, h: 0.16, color: '#f97316',
     mountHeight: 1.6, circuit: 'boiler', power: 0,
     floorExclusion: false, connections: []
@@ -409,7 +409,7 @@ const ELECTRICAL = [
     // на жиле PE, а ради селективности: у прибора класса II нет
     // заземляемых частей, значит утечка на землю физически невозможна
     // и общее УЗО котла он потревожить не может.
-    id: 'light_ups', name: 'Светильник аварийный (от ИБП, класс II)',
+    id: 'light_ups', name: 'Emergency luminaire (from the UPS, class II)',
     category: 'electrical',
     w: 0.24, d: 0.24, h: 0.08, color: '#fde047',
     mountHeight: 2.6, circuit: 'boiler', power: 10,
@@ -420,7 +420,7 @@ const ELECTRICAL = [
     // освещения, заряжается от неё и зажигается сам при пропадании
     // напряжения. Кабель от котельной тянуть не надо, и работает он даже
     // тогда, когда отказал сам ИБП.
-    id: 'light_bap', name: 'Светильник с БАП (свой аккумулятор)',
+    id: 'light_bap', name: 'Luminaire with battery backup (own battery)',
     category: 'electrical',
     w: 0.24, d: 0.24, h: 0.1, color: '#4ade80',
     mountHeight: 2.6, circuit: 'light', power: 12, emergency: true,
@@ -429,19 +429,19 @@ const ELECTRICAL = [
   {
     // Единственная ветка ИБП, содержимое которой заранее неизвестно.
     // Отсюда и свой дифавтомат, и автомат номиналом по остатку инвертора.
-    id: 'socket_ups', name: 'Розетка аварийная (от ИБП)', category: 'electrical',
+    id: 'socket_ups', name: 'Emergency socket (from the UPS)', category: 'electrical',
     w: 0.09, d: 0.06, h: 0.08, color: '#fb923c',
     mountHeight: 0.3, circuit: 'boiler', power: 0,
     floorExclusion: false, connections: []
   },
   {
-    id: 'switch1', name: 'Выключатель', category: 'electrical',
+    id: 'switch1', name: 'Switch', category: 'electrical',
     w: 0.09, d: 0.06, h: 0.08, color: '#e2e8f0',
     mountHeight: 0.9, circuit: 'light', power: 0, gangs: 1,
     floorExclusion: false, connections: []
   },
   {
-    id: 'switch2', name: 'Выключатель двухклавишный', category: 'electrical',
+    id: 'switch2', name: 'Two-gang switch', category: 'electrical',
     w: 0.09, d: 0.06, h: 0.08, color: '#cbd5e1',
     mountHeight: 0.9, circuit: 'light', power: 0, gangs: 2,
     floorExclusion: false, connections: []
@@ -449,10 +449,10 @@ const ELECTRICAL = [
   {
     // Проходной: одна и та же лампа включается и выключается из ДВУХ мест.
     // Ставится только парами — одиночный проходной бессмыслен.
-    id: 'switch_way', name: 'Выключатель проходной', category: 'electrical',
+    id: 'switch_way', name: 'Two-way switch', category: 'electrical',
     w: 0.09, d: 0.06, h: 0.08, color: '#94a3b8',
     mountHeight: 0.9, circuit: 'light', power: 0, gangs: 1, twoWay: true,
-    note: 'Работает только в паре со вторым проходным',
+    note: 'Works only as a pair with a second two-way switch',
     floorExclusion: false, connections: []
   },
   {
@@ -460,37 +460,37 @@ const ELECTRICAL = [
     // из двух мест. Внутри это два проходных механизма в одной рамке.
     // Между парой таких нужны ЧЕТЫРЕ перекидные жилы плюс земля —
     // 5×1,5 или два кабеля 3×1,5. Это надо заложить ДО штробления.
-    id: 'switch2_way', name: 'Выключатель двухклавишный проходной', category: 'electrical',
+    id: 'switch2_way', name: 'Two-gang two-way switch', category: 'electrical',
     w: 0.09, d: 0.06, h: 0.08, color: '#64748b',
     mountHeight: 0.9, circuit: 'light', power: 0, gangs: 2, twoWay: true,
-    note: 'Работает только в паре со вторым таким же',
+    note: 'Works only as a pair with a second one like it',
     floorExclusion: false, connections: []
   },
   {
     // ОБЩИЙ свет: накладной светильник с матовым плафоном («тарелка»).
     // Угол 90–120°, свет мягкий и рассеянный. Это НЕ спот: спот узкий
     // и направленный, рассеивателя у него не бывает — это разные приборы.
-    id: 'light', name: 'Светильник общий (плафон)', category: 'electrical',
+    id: 'light', name: 'General luminaire (ceiling light)', category: 'electrical',
     w: 0.3, d: 0.3, h: 0.09, color: '#fef3c7',
     mountHeight: 2.7, circuit: 'light', power: 12, beam: 110,
-    note: 'Накладной с матовым плафоном, широкий рассеянный свет',
+    note: 'Surface-mounted with a frosted shade, wide diffuse light',
     floorExclusion: false, connections: []
   },
   {
     // РАБОЧИЙ свет: поворотный спот или трековый светильник.
     // Угол 24–40°, луч направляется на столешницу.
-    id: 'light_work', name: 'Спот рабочий (поворотный)', category: 'electrical',
+    id: 'light_work', name: 'Task spot (adjustable)', category: 'electrical',
     w: 0.1, d: 0.1, h: 0.12, color: '#fbbf24',
     mountHeight: 2.7, circuit: 'light', power: 10, beam: 30,
-    note: 'Поворотный спот или трек. Отступ 600–700 от стены и разворот ' +
-      'к фартуку — иначе светит в спину',
+    note: 'Adjustable spot or track. Set 600–700 from the wall and turned ' +
+      'towards the backsplash — otherwise it shines into your back',
     floorExclusion: false, connections: []
   },
   {
-    id: 'light_pendant', name: 'Подвес над столом', category: 'electrical',
+    id: 'light_pendant', name: 'Pendant over the worktop', category: 'electrical',
     w: 0.3, d: 0.3, h: 0.3, color: '#f59e0b',
     mountHeight: 1.6, circuit: 'light', power: 20,
-    note: 'Низко: 750–800 над столешницей',
+    note: 'Low: 750–800 above the worktop',
     floorExclusion: false, connections: []
   }
 ];

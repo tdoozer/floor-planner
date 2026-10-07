@@ -8,14 +8,14 @@ import { electricalPlan } from '../calc/electrical.js';
 import { heatLoss } from '../calc/heatloss.js';
 import { layoutLoops } from '../calc/loops.js';
 
-// Трёхмерный «рентген стяжки».
+// Three-dimensional “screed X-ray”.
 //
-// Смысл не в красивой картинке, а в том, что на плане нельзя увидеть:
-// на какой отметке лежит труба относительно кабеля, попадает ли розетка
-// в проём, проходит ли голова под маршем. Поэтому стяжка полупрозрачная,
-// а всё, что в неё замуровывается, — сплошное.
+// The point is not a pretty picture but what cannot be seen on the plan:
+// at what level the pipe lies relative to the cable, whether a socket falls
+// into an opening, whether a head clears the flight. So the screed is translucent,
+// and everything embedded in it is solid.
 //
-// Оси Three.js: y вверх. План (x, y) → сцена (x, elev, y).
+// Three.js axes: y is up. Plan (x, y) → scene (x, elev, y).
 
 const CUT_EPS = 0.001;
 
@@ -23,9 +23,9 @@ function toVec(p, elev) {
   return new THREE.Vector3(p.x, elev, p.y);
 }
 
-// Труба по ортогональной ломаной. Скругляем углы, иначе на повороте
-// получается излом, которого у реальной трубы быть не может:
-// у PEX 16 минимальный радиус изгиба около пяти диаметров.
+// The pipe follows an orthogonal polyline. Corners are rounded, otherwise a bend
+// gets a kink that a real pipe cannot have:
+// PEX 16 has a minimum bend radius of about five diameters.
 function tubeFromPoints(points, elev, radius, color) {
   const pts = points.map((p) => toVec(p, elev));
   if (pts.length < 2) return null;
@@ -87,7 +87,7 @@ export default function Scene3D({ project }) {
     return buildScene({ project, loops, electrical });
   }, [project]);
 
-  // --- Построение сцены ---
+  // --- Building the scene ---
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return undefined;
@@ -110,7 +110,7 @@ export default function Scene3D({ project }) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(INNER_W / 2, 0.2, INNER_D / 2);
     controls.enableDamping = true;
-    controls.maxPolarAngle = Math.PI / 2 - 0.02; // под пол не проваливаемся
+    controls.maxPolarAngle = Math.PI / 2 - 0.02; // do not fall below the floor
     controls.update();
 
     three.add(new THREE.AmbientLight(0xffffff, 0.75));
@@ -121,7 +121,7 @@ export default function Scene3D({ project }) {
     fill.position.set(-5, 4, -6);
     three.add(fill);
 
-    // Плоскость отсечения — «разрез» модели. Без неё внутрь не заглянуть.
+    // Clipping plane — a “section” of the model. Without it you cannot look inside.
     const clip = new THREE.Plane(new THREE.Vector3(0, 0, -1), INNER_D);
     renderer.clippingPlanes = [clip];
 
@@ -135,7 +135,7 @@ export default function Scene3D({ project }) {
     Object.values(groups).forEach((g) => three.add(g));
     groupsRef.current = { groups, clip, renderer, camera, controls, three };
 
-    // --- Пирог пола: плиты на своих отметках ---
+    // --- Floor build-up: slabs at their levels ---
     scene.slabs.forEach((s) => {
       const m = boxMesh({
         w: INNER_W, h: s.thickness, d: INNER_D,
@@ -146,7 +146,7 @@ export default function Scene3D({ project }) {
       groups.pie.add(m);
     });
 
-    // --- Стены ---
+    // --- Walls ---
     scene.walls.forEach((w) => {
       const dx = w.b.x - w.a.x;
       const dy = w.b.y - w.a.y;
@@ -158,7 +158,7 @@ export default function Scene3D({ project }) {
         opacity: w.kind === 'outer' ? 0.35 : 0.55,
         transparent: true
       });
-      // Наружные стены стоят СНАРУЖИ габарита 5500 — он внутренний
+      // Outer walls stand OUTSIDE the 5500 envelope — it is the inner one
       const outward = w.kind === 'outer' ? w.thickness / 2 : 0;
       const nx = -dy / len;
       const ny = dx / len;
@@ -171,7 +171,7 @@ export default function Scene3D({ project }) {
       groups.architecture.add(m);
     });
 
-    // --- Проёмы: цветные панели в теле стены ---
+    // --- Openings: coloured panels in the wall body ---
     scene.openings.forEach((o) => {
       const dx = o.b.x - o.a.x;
       const dy = o.b.y - o.a.y;
@@ -194,14 +194,14 @@ export default function Scene3D({ project }) {
       groups.architecture.add(m);
     });
 
-    // --- Лестница ---
+    // --- Stair ---
     scene.steps.forEach((s) => {
       const m = boxMesh({ w: s.w, h: s.height, d: s.d, color: '#d6d3d1' });
       m.position.set(s.x + s.w / 2, s.bottom + s.height / 2, s.y + s.d / 2);
       groups.architecture.add(m);
     });
 
-    // --- Труба тёплого пола: сплошная, внутри полупрозрачной стяжки ---
+    // --- Heating pipe: solid, inside the translucent screed ---
     scene.pipes.forEach((p) => {
       const m = tubeFromPoints(p.points, p.elev, p.radius, p.color);
       if (m) {
@@ -210,7 +210,7 @@ export default function Scene3D({ project }) {
       }
     });
 
-    // --- Кабель: ниже трубы, в утеплителе ---
+    // --- Cable: below the pipe, in the insulation ---
     scene.cables.forEach((c) => {
       const m = tubeFromPoints(c.points, c.elev, c.radius, c.color);
       if (m) {
@@ -219,7 +219,7 @@ export default function Scene3D({ project }) {
       }
     });
 
-    // --- Столешница: плита с вырезами под мойку и панель ---
+    // --- Worktop: a slab with cut-outs for the sink and the hob ---
     if (scene.worktop) {
       const wt = scene.worktop;
       const shape = new THREE.Shape(wt.polygon.map((p) => new THREE.Vector2(p.x, p.y)));
@@ -241,7 +241,7 @@ export default function Scene3D({ project }) {
         depth: wt.thickness,
         bevelEnabled: false
       });
-      // Форма построена в плоскости XY, а нам нужна горизонтальная плита
+      // The shape is built in the XY plane, but we need a horizontal slab
       geo.rotateX(Math.PI / 2);
       const mesh = new THREE.Mesh(
         geo,
@@ -251,7 +251,7 @@ export default function Scene3D({ project }) {
       groups.equipment.add(mesh);
     }
 
-    // --- Оборудование и электроточки ---
+    // --- Equipment and electrical points ---
     scene.boxes.forEach((b) => {
       const m = boxMesh({
         w: b.w, h: b.height, d: b.d,
@@ -279,8 +279,8 @@ export default function Scene3D({ project }) {
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
-    // Слушать window мало: границу панели тянут мышкой, и окно при этом
-    // не меняется — событие resize не приходит, а холст остаётся старым.
+    // Listening to window is not enough: the panel border is dragged with the mouse, and the window
+    // does not change — no resize event arrives, and the canvas stays stale.
     const ro = new ResizeObserver(onResize);
     ro.observe(mount);
     window.addEventListener('resize', onResize);
@@ -299,7 +299,7 @@ export default function Scene3D({ project }) {
     };
   }, [scene]);
 
-  // --- Слои ---
+  // --- Layers ---
   useEffect(() => {
     const g = groupsRef.current.groups;
     if (!g) return;
@@ -308,7 +308,7 @@ export default function Scene3D({ project }) {
     });
   }, [visible]);
 
-  // --- Разрез ---
+  // --- Section ---
   useEffect(() => {
     const c = groupsRef.current.clip;
     if (c) c.constant = cut + CUT_EPS;
@@ -322,11 +322,11 @@ export default function Scene3D({ project }) {
 
       <div className="scene3d-controls">
         {[
-          ['pie', 'Пирог пола'],
-          ['heating', 'Труба ТП'],
-          ['electrical', 'Кабель и точки'],
-          ['equipment', 'Мебель'],
-          ['architecture', 'Стены и лестница']
+          ['pie', 'Floor build-up'],
+          ['heating', 'Heating pipe'],
+          ['electrical', 'Cable and points'],
+          ['equipment', 'Furniture'],
+          ['architecture', 'Walls and stair']
         ].map(([k, label]) => (
           <label key={k} className="check">
             <input type="checkbox" checked={visible[k]} onChange={() => toggle(k)} />
@@ -335,7 +335,7 @@ export default function Scene3D({ project }) {
         ))}
 
         <label className="scene3d-cut">
-          Разрез по глубине: <b>{cut.toFixed(2)} м</b>
+          Section depth: <b>{cut.toFixed(2)} m</b>
           <input
             type="range" min="0.4" max={INNER_D} step="0.05"
             value={cut}

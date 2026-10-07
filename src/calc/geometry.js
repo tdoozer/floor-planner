@@ -131,7 +131,7 @@ export function doorSwing(wall, opening) {
 
 // ---------- Лестница ----------
 
-export const STAIR_STRUCTURE_THICKNESS = 0.15; // м, косоуры + ступень
+export const STAIR_STRUCTURE_THICKNESS = 0.15; // m, stringers + step
 
 export function stairFootprint(stair) {
   return { x: stair.x, y: stair.y, w: stair.width, h: stair.length };
@@ -145,8 +145,8 @@ export function stairHeadroom(stair, px, py, clearHeight) {
   if (px < f.x || px > f.x + f.w || py < f.y || py > f.y + f.h) return null;
 
   const risePerStep = stair.totalRise / stair.risers;
-  const slope = risePerStep / stair.tread; // подъём на метр проекции
-  const run = f.y + f.h - py; // расстояние от нижней ступени
+  const slope = risePerStep / stair.tread; // rise per metre of projection
+  const run = f.y + f.h - py; // distance from the bottom step
   const treadTop = run * slope;
   const underside = treadTop - STAIR_STRUCTURE_THICKNESS;
 
@@ -194,12 +194,12 @@ export function riserPoint(riser) {
 // Ориентиры для марша. Это ПРЕДПОЛОЖЕНИЯ до сверки с актуальным текстом СП —
 // инструмент считает соответствие, а не выдаёт нормы за проверенную истину.
 export const STAIR_NORMS = {
-  blondel: [0.6, 0.65], // 2h + s, «шаговая» формула
-  comfort: 0.45, // h + s, формула удобства
+  blondel: [0.6, 0.65], // 2h + s, the “stride” formula
+  comfort: 0.45, // h + s, the comfort formula
   comfortTolerance: 0.02,
-  minTread: 0.23, // ширина проступи
-  maxRise: 0.2, // высота ступени
-  minWidth: 0.9, // ширина ступени (марша) — для одноквартирного дома уточнить
+  minTread: 0.23, // tread depth
+  maxRise: 0.2, // riser height
+  minWidth: 0.9, // step (flight) width — to be refined for a single-family house
   maxAngleDeg: 40
 };
 
@@ -210,7 +210,7 @@ export const STAIR_NORMS = {
 export function stairCheck(stair, norms = STAIR_NORMS) {
   const h = stair.totalRise / stair.risers;
   const s = stair.tread;
-  const run = s * (stair.risers - 1); // проекция без верхней площадки
+  const run = s * (stair.risers - 1); // projection without the top landing
   const angleDeg = (Math.atan(h / s) * 180) / Math.PI;
   const blondel = 2 * h + s;
   const comfort = h + s;
@@ -255,7 +255,7 @@ export function drainRoute(from, riser) {
   return { points: pts, length };
 }
 
-export const DRAIN_SLOPE = 0.02; // 2 см на метр
+export const DRAIN_SLOPE = 0.02; // 2 cm per metre
 
 // Помещается ли слив в пирог пола.
 // Отсчёт в мм от чистого пола, вниз — отрицательные значения.
@@ -292,12 +292,12 @@ export function drainFit({ routeLength, dia, riserInvertM, screed }) {
 // утеплитель, потому что там перепад вдвое больше и задача уже двумерная.
 // Все коэффициенты — ориентиры, их нужно подтвердить.
 export const GROUND_DEFAULTS = {
-  lambdaXps: 0.034, // Вт/(м·К), ЭППС
-  lambdaScreed: 1.2, // цементно-песчаная стяжка
-  lambdaFinish: 0.2, // чистовое покрытие
-  rSoil: 1.5, // эффективное сопротивление грунта под утеплённой плитой
-  deltaT: 20, // средний перепад «стяжка ↔ грунт», K
-  seasonHours: 5000 // часов отопительного сезона
+  lambdaXps: 0.034, // W/(m·K), XPS
+  lambdaScreed: 1.2, // cement-sand screed
+  lambdaFinish: 0.2, // finish covering
+  rSoil: 1.5, // effective resistance of the ground under the insulated slab
+  deltaT: 20, // mean “screed ↔ ground” difference, K
+  seasonHours: 5000 // hours of the heating season
 };
 
 export function groundLoss(screed, area, p = GROUND_DEFAULTS) {
@@ -309,7 +309,7 @@ export function groundLoss(screed, area, p = GROUND_DEFAULTS) {
   return {
     rIns,
     rTotal,
-    q, // Вт/м²
+    q, // W/m²
     watts: q * area,
     kwhPerSeason: (q * area * p.seasonHours) / 1000
   };
@@ -358,12 +358,12 @@ export function floorLevels(levels, screed) {
 
 export function screedStackup(screed) {
   const layers = [
-    { id: 'finish', name: 'Чистовое покрытие', thickness: screed.finishThickness, color: '#a16207' },
-    { id: 'screed', name: 'Стяжка с трубой ТП', thickness: screed.screedTotal, color: '#94a3b8' },
-    { id: 'insulation', name: 'ЭППС', thickness: screed.insulation, color: '#fbbf24' },
-    { id: 'waterproofing', name: 'Гидроизоляция', thickness: screed.waterproofing, color: '#1e293b' },
-    { id: 'sandBed', name: 'Песчаная подсыпка', thickness: screed.sandBed ?? 0, color: '#fbbf24' },
-    { id: 'gravel', name: 'Щебень, капиллярный разрыв', thickness: screed.gravel, color: '#78716c' }
+    { id: 'finish', name: 'Finish covering', thickness: screed.finishThickness, color: '#a16207' },
+    { id: 'screed', name: 'Screed with heating pipe', thickness: screed.screedTotal, color: '#94a3b8' },
+    { id: 'insulation', name: 'XPS', thickness: screed.insulation, color: '#fbbf24' },
+    { id: 'waterproofing', name: 'Waterproofing', thickness: screed.waterproofing, color: '#1e293b' },
+    { id: 'sandBed', name: 'Sand bed', thickness: screed.sandBed ?? 0, color: '#fbbf24' },
+    { id: 'gravel', name: 'Crushed stone, capillary break', thickness: screed.gravel, color: '#78716c' }
   ];
   const total = layers.reduce((s, l) => s + l.thickness, 0);
   let top = 0;

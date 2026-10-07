@@ -39,13 +39,13 @@ function build(project = makeInitialProject()) {
 }
 
 describe('floorOutput', () => {
-  it('съём растёт с перепадом поверхность–воздух', () => {
+  it('output grows with the surface–air difference', () => {
     const warm = floorOutput({ maxFloorTemp: 31, airTemp: 24, spacing: 0.15 });
     const cool = floorOutput({ maxFloorTemp: 26, airTemp: 20, spacing: 0.15 });
     expect(warm).toBeGreaterThan(cool);
   });
 
-  it('широкий шаг снижает съём', () => {
+  it('a wide pitch reduces output', () => {
     const tight = floorOutput({ maxFloorTemp: 26, airTemp: 20, spacing: 0.1 });
     const wide = floorOutput({ maxFloorTemp: 26, airTemp: 20, spacing: 0.25 });
     expect(wide).toBeLessThan(tight);
@@ -54,7 +54,7 @@ describe('floorOutput', () => {
 });
 
 describe('pipeLength', () => {
-  it('подводка входит в длину дважды', () => {
+  it('the feed counts twice in the length', () => {
     const a = pipeLength({ area: 20, spacing: 0.15, supplyRunM: 0 });
     const b = pipeLength({ area: 20, spacing: 0.15, supplyRunM: 5 });
     expect(b - a).toBeCloseTo(10, 6);
@@ -62,55 +62,55 @@ describe('pipeLength', () => {
 });
 
 describe('supplyRun', () => {
-  it('манхэттенское расстояние от коллектора до центра помещения', () => {
+  it('Manhattan distance from the manifold to the room centre', () => {
     const square = [{ x: 4, y: 0 }, { x: 6, y: 0 }, { x: 6, y: 2 }, { x: 4, y: 2 }];
     expect(supplyRun({ x: 0, y: 0 }, square)).toBeCloseTo(5 + 1, 6);
   });
 });
 
-describe('layoutLoops — требование заказчика', () => {
+describe('layoutLoops — the owner requirement', () => {
   const L = build();
   const byId = (id) => L.byRoom.find((r) => r.id === id);
 
-  it('санузел и прихожая укладываются в один контур каждый', () => {
+  it('the bathroom and the hall each fit into one loop', () => {
     expect(byId('bath').loops).toBe(1);
     expect(byId('hall').loops).toBe(1);
   });
 
-  it('зал одним контуром НЕ укладывается', () => {
+  it('the living room does NOT fit into one loop', () => {
     expect(byId('living').loops).toBeGreaterThan(1);
   });
 
-  it('даже самый широкий рабочий шаг не спасает зал', () => {
+  it('even the widest working pitch does not save the living room', () => {
     const living = byId('living');
     const oneLoop = living.candidates.filter((c) => c.loops === 1);
     expect(oneLoop).toHaveLength(0);
   });
 
-  // Вернув пол под лестницей, зал получил столько запаса, что закрывается
-  // на ЛЮБОМ шаге. Выбранные 200 — не предел, а осознанная середина:
-  // шире смысла нет, уже — лишняя труба.
-  it('после возврата пола под лестницей зал закрывается на любом шаге', () => {
+  // With the floor under the stair restored, the living room got so much margin that it closes
+  // at ANY pitch. The chosen 200 is not a limit but a deliberate middle:
+  // wider makes no sense, narrower is extra pipe.
+  it('after restoring the floor under the stair the living room closes at any pitch', () => {
     byId('living').candidates.forEach((c) => expect(c.enough).toBe(true));
     expect(byId('living').spacing).toBeCloseTo(0.2, 3);
   });
 
-  it('ни одна петля не длиннее предела по антифризу', () => {
+  it('no loop is longer than the antifreeze limit', () => {
     L.byRoom.forEach((r) => expect(r.perLoop).toBeLessThanOrEqual(L.limit + 1e-6));
     expect(L.limit).toBeLessThan(90);
   });
 
-  it('зал закрывается полом, санузел — нет', () => {
-    // В зале ТП оставлен между холодильником и панелью и под стиралкой,
-    // поэтому площади хватает. В санузле мешает душевой поддон:
-    // 0,81 из 3,24 м² — четверть помещения, и это уже не отыграть.
+  it('the living room is covered by the floor, the bathroom is not', () => {
+    // In the living room the heating is left between the refrigerator and the hob and under the washing machine,
+    // so the area is enough. In the bathroom the shower tray gets in the way:
+    // 0.81 of 3.24 m² — a quarter of the room, and that cannot be won back.
     expect(L.byRoom.find((r) => r.id === 'living').deficit).toBe(false);
     expect(L.byRoom.find((r) => r.id === 'bath').deficit).toBe(true);
     expect(L.byRoom.find((r) => r.id === 'hall').deficit).toBe(false);
   });
 
-  it('сплошной фронт кухни вернул бы зал в дефицит', () => {
-    // Проверяем, что запас держится именно на открытых участках пола
+  it('a solid kitchen front would put the living room back into deficit', () => {
+    // Check that the margin rests precisely on the open stretches of floor
     const p = makeInitialProject();
     p.floorExclusionZones = [
       { id: 'all-top', x: 0, y: 0, w: 3.7, d: 0.6 },
@@ -123,60 +123,60 @@ describe('layoutLoops — требование заказчика', () => {
     expect(build(p).byRoom.find((r) => r.id === 'living').deficit).toBe(true);
   });
 
-  it('без мебели пол справляется — дело именно в потерянной площади', () => {
+  it('without furniture the floor copes — the point is exactly the lost area', () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) => ({ ...e, floorExclusion: false }));
     p.floorExclusionZones = [];
     build(p).byRoom.forEach((r) => expect(r.deficit).toBe(false));
   });
 
-  it('дефицит санузла считается количественно', () => {
+  it('the bathroom deficit is calculated quantitatively', () => {
     const bath = L.byRoom.find((r) => r.id === 'bath');
     const best = Math.max(...bath.candidates.map((c) => c.capacity));
     const shortfallW = (bath.requiredWm2 - best) * bath.effectiveArea;
-    // Порядка 30 Вт — закрывается полотенцесушителем
+    // On the order of 30 W — covered by a towel radiator
     expect(shortfallW).toBeGreaterThan(10);
     expect(shortfallW).toBeLessThan(60);
   });
 
-  it('в зале остаётся запас по съёму', () => {
+  it('the living room keeps a margin of output', () => {
     const living = L.byRoom.find((r) => r.id === 'living');
     const best = Math.max(...living.candidates.map((c) => c.capacity));
     expect(best).toBeGreaterThan(living.requiredWm2);
   });
 
-  it('разбаланс длин требует балансировочных клапанов', () => {
+  it('the length imbalance requires balancing valves', () => {
     expect(L.balanced).toBe(false);
     expect(L.imbalance).toBeGreaterThan(0.3);
   });
 
-  it('зал укладывается в два контура при подтверждённом пределе', () => {
-    // Правило большого пальца давало 71 м и требовало трёх контуров.
-    // Поверочный расчёт гидравлики позволил поднять предел до 75.
+  it('the living room fits into two loops with a confirmed limit', () => {
+    // The rule of thumb gave 71 m and required three loops.
+    // A verification hydraulic calculation allowed raising the limit to 75.
     const living = L.byRoom.find((r) => r.id === 'living');
     expect(living.limit).toBe(75);
     expect(living.loops).toBe(2);
     expect(living.perLoop).toBeLessThanOrEqual(living.limit);
   });
 
-  it('всего четыре контура', () => {
+  it('four loops in total', () => {
     expect(L.totalLoops).toBe(4);
   });
 
-  it('на пропиленгликоле зал требовал бы трёх контуров', () => {
-    // Так считалось, пока состав не был прочитан по этикетке
+  it('on propylene glycol the living room would need three loops', () => {
+    // That is how it was counted until the fluid was read from the label
     const p = makeInitialProject();
     p.coolant = { ...p.coolant, maxLoopOverrideM: null, pressureDropFactor: 1.6 };
     const living = build(p).byRoom.find((r) => r.id === 'living');
-    // 90 м для воды, делённые на корень из поправки 1,6
+    // 90 m for water, divided by the root of the 1.6 correction
     expect(living.limit).toBeCloseTo(71.2, 0);
-    // Каждая петля укладывается в предел — иначе контуров было бы больше
+    // Every loop fits the limit — otherwise there would be more loops
     expect(living.perLoop).toBeLessThanOrEqual(living.limit);
   });
 
-  it('на фактическом этиленгликоле двух хватает и по правилу большого пальца', () => {
-    // Этиленгликоль жиже: предел поднимается с 71 до 76 м сам собой,
-    // и подтверждённый расчётом override 75 оказывается консервативнее
+  it('on the actual ethylene glycol two are enough even by the rule of thumb', () => {
+    // Ethylene glycol is thinner: the limit rises from 71 to 76 m by itself,
+    // and the override of 75 confirmed by calculation turns out to be more conservative
     const p = makeInitialProject();
     p.coolant = { ...p.coolant, maxLoopOverrideM: null };
     const living = build(p).byRoom.find((r) => r.id === 'living');
@@ -184,12 +184,12 @@ describe('layoutLoops — требование заказчика', () => {
     expect(living.loops).toBe(2);
   });
 
-  it('санузел и прихожая укладываются в один контур', () => {
+  it('the bathroom and the hall each fit into one loop', () => {
     expect(L.byRoom.find((r) => r.id === 'bath').loops).toBe(1);
     expect(L.byRoom.find((r) => r.id === 'hall').loops).toBe(1);
   });
 
-  it('без краевой зоны зал требует трёх контуров', () => {
+  it('without the edge zone the living room needs three loops', () => {
     const p = makeInitialProject();
     const bare = layoutLoops({
       layout: p.layout,
@@ -202,63 +202,63 @@ describe('layoutLoops — требование заказчика', () => {
       exclusionZones: p.floorExclusionZones, edgeZone: false
     });
     const living = bare.byRoom.find((r) => r.id === 'living');
-    // Без краевой зоны зал уже не закрывается на 200 — его загоняет
-    // на 100 мм и три контура. Именно это краевая зона и покупает.
+    // Without the edge zone the living room no longer closes at 200 — it is driven
+    // to 100 mm and three loops. That is exactly what the edge zone buys.
     expect(living.spacing).toBeCloseTo(0.15, 3);
     expect(living.candidates.find((c) => c.spacing === 0.2).enough).toBe(false);
   });
 });
 
-describe('Мебель вычитается из поля тёплого пола', () => {
+describe('Furniture is subtracted from the heating field', () => {
   const L = build();
   const living = L.byRoom.find((r) => r.id === 'living');
 
-  it('кухня съедает полезную площадь', () => {
-    // Порог ниже прежнего: ручных зон больше нет, вычитаются только
-    // сами приборы, а линейная мойка 600 меньше углового модуля 1061
+  it('the kitchen eats usable area', () => {
+    // A lower threshold than before: there are no manual zones any more, only
+    // the appliances themselves are subtracted, and the linear 600 sink is smaller than the 1061 corner module
     expect(living.excludedArea).toBeGreaterThan(1.5);
     expect(living.effectiveArea).toBeLessThan(living.area);
   });
 
-  it('нагрузка на оставшиеся квадраты растёт', () => {
+  it('the load on the remaining square metres grows', () => {
     expect(living.requiredWm2).toBeGreaterThan(living.requiredBare);
   });
 
-  it('унитаз и раковина трубу не вытесняют — под ними кладут', () => {
+  it('the toilet and washbasin do not displace the pipe — it is laid under them', () => {
     const bath = L.byRoom.find((r) => r.id === 'bath');
-    // Исключается только душевой поддон
+    // Only the shower tray is excluded
     expect(bath.exclusions).toHaveLength(1);
   });
 
-  it('стиральная машина под лестницей вытесняет трубу', () => {
+  it('the washing machine under the stair displaces the pipe', () => {
     const ids = living.exclusions.length;
     expect(ids).toBeGreaterThan(3);
   });
 
-  it('снятие исключения возвращает площадь', () => {
+  it('lifting the exclusion returns the area', () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) => ({ ...e, floorExclusion: false }));
     p.floorExclusionZones = [];
     const free = build(p).byRoom.find((r) => r.id === 'living');
-    // Растеризация даёт погрешность порядка нанометра — сравниваем приближённо
+    // Rasterisation gives an error of the order of a nanometre — compare approximately
     expect(free.excludedArea).toBeCloseTo(0, 6);
     expect(free.requiredWm2).toBeCloseTo(free.requiredBare, 4);
   });
 });
 
-describe('Кухня на открытом каркасе', () => {
+describe('Kitchen on an open frame', () => {
   const flat = build();
   const frame = build({ ...makeInitialProject(), kitchenOnFrame: true });
   const living = (L) => L.byRoom.find((r) => r.id === 'living');
 
-  // Флаг стал НИЧЕГО НЕ МЕНЯТЬ, и это правильное состояние: всё, что он
-  // раньше снимал, — ручные зоны исключения — уже убрано насовсем.
-  // Приборы вычитаются в обоих режимах одинаково.
-  it('каркас больше ничего не возвращает — возвращать нечего', () => {
+  // The flag became CHANGE NOTHING, and that is the right state: everything it
+  // used to lift — the manual exclusion zones — has been removed for good.
+  // Appliances are subtracted identically in both modes.
+  it('the frame returns nothing any more — there is nothing to return', () => {
     expect(living(frame).effectiveArea).toBeCloseTo(living(flat).effectiveArea, 6);
   });
 
-  it('и запас в зале одинаков в обоих режимах', () => {
+  it('and the margin in the living room is the same in both modes', () => {
     const margin = (L) => {
       const r = living(L);
       return Math.max(...r.candidates.map((c) => c.capacity)) - r.requiredWm2;
@@ -267,20 +267,20 @@ describe('Кухня на открытом каркасе', () => {
     expect(living(frame).deficit).toBe(false);
   });
 
-  it('мойка, панель и приборы на полу исключаются и на каркасе', () => {
-    // Столешницы уходят на каркас, остальное остаётся вычтенным.
-    // Порог ниже прежнего: линейная мойка 600 отнимает меньше пола,
-    // чем угловой модуль 1061 × 1061 под 45°.
+  it('the sink, hob and floor-standing appliances are excluded on the frame too', () => {
+    // Worktops move onto the frame, the rest stays subtracted.
+    // A lower threshold than before: the linear 600 sink takes less floor
+    // than the 1061 × 1061 corner module at 45°.
     expect(living(frame).excludedArea).toBeGreaterThan(1.5);
   });
 
-  it('в санузле каркас ничего не меняет — там душевой поддон', () => {
+  it('in the bathroom the frame changes nothing — there is a shower tray', () => {
     const bath = (L) => L.byRoom.find((r) => r.id === 'bath');
     expect(bath(frame).effectiveArea).toBeCloseTo(bath(flat).effectiveArea, 2);
     expect(bath(frame).deficit).toBe(true);
   });
 
-  it('исключение стиралки отняло бы площадь обратно', () => {
+  it('excluding the washing machine would take the area back', () => {
     const p = makeInitialProject();
     p.kitchenOnFrame = true;
     p.equipment = p.equipment.map((e) =>
@@ -290,59 +290,59 @@ describe('Кухня на открытом каркасе', () => {
   });
 });
 
-describe('Подводка от коллектора', () => {
+describe('Feed from the manifold', () => {
   const L = build();
   const p = makeInitialProject();
   const manifold = p.nodes.find((n) => n.type === 'manifold');
 
-  it('коллектор встал между котлом и окном', () => {
+  it('the manifold stands between the boiler and the window', () => {
     const boiler = p.nodes.find((n) => n.type === 'boiler');
-    // Котёл 4.80…5.20, окно 3.20…4.10 — между ними 700 мм
+    // Boiler 4.80…5.20, window 3.20…4.10 — 700 mm between them
     expect(boiler.y).toBeCloseTo(4.8, 2);
     expect(manifold.y).toBeGreaterThanOrEqual(4.1);
     expect(manifold.y + manifold.d).toBeLessThanOrEqual(4.8);
   });
 
-  it('каждая петля получила свою трассу', () => {
+  it('every loop got its own route', () => {
     expect(L.supply.length).toBe(L.totalLoops);
   });
 
-  it('в трассах НЕТ диагоналей — только прямые углы', () => {
+  it('there are NO diagonals in the routes — right angles only', () => {
     L.supply.forEach((route) => {
       for (let i = 1; i < route.points.length; i++) {
         const dx = Math.abs(route.points[i].x - route.points[i - 1].x);
         const dy = Math.abs(route.points[i].y - route.points[i - 1].y);
-        // Отрезок либо горизонтальный, либо вертикальный
+        // A segment is either horizontal or vertical
         expect(Math.min(dx, dy)).toBeLessThan(1e-6);
       }
     });
   });
 
-  it('трубы идут параллельными полосами, не по одной линии', () => {
+  it('the pipes run in parallel lanes, not along one line', () => {
     const lanes = L.supply.map((r) => r.corridorX);
     expect(new Set(lanes).size).toBe(lanes.length);
   });
 
-  it('ближняя петля получает внутреннюю полосу', () => {
+  it('the nearest loop gets the inner lane', () => {
     const sorted = [...L.supply].sort((a, b) => a.lane - b.lane);
     expect(sorted[0].corridorX).toBeLessThan(sorted[sorted.length - 1].corridorX);
   });
 });
 
-describe('Краевая зона и мебель', () => {
-  it('полоса узкая: метр захватил бы половину комнаты', () => {
+describe('Edge zone and furniture', () => {
+  it('the strip is narrow: a metre would take half the room', () => {
     expect(EDGE_ZONE.width).toBeLessThanOrEqual(0.6);
     expect(EDGE_ZONE.spacing).toBeLessThan(0.15);
   });
 
-  it('трасса в краевой полосе идёт чаще, чем в поле', () => {
+  it('the run in the edge strip is denser than in the field', () => {
     const living = build().byRoom.find((r) => r.id === 'living');
     const edgeRows = living.path.rows.filter((r) => r.edge);
     expect(edgeRows.length).toBeGreaterThan(5);
     expect(edgeRows.length).toBeLessThan(living.path.rows.length);
   });
 
-  it('без краевой зоны трасса идёт равномерно', () => {
+  it('without the edge zone the run is uniform', () => {
     const p = makeInitialProject();
     const bare = layoutLoops({
       layout: p.layout,
@@ -358,32 +358,32 @@ describe('Краевая зона и мебель', () => {
     expect(living.path.rows.every((r) => !r.edge)).toBe(true);
   });
 
-  it('диван у южной стены попадает в краевую полосу', () => {
+  it('a sofa by the south wall falls into the edge strip', () => {
     const sofa = makeInitialProject().equipment.find((e) => e.catalogId === 'sofa');
     expect(overlapsEdgeZone(boundingBox(sofa))).toBe(true);
   });
 
-  it('обеденный стол в центре — не попадает', () => {
+  it('a dining table in the centre does not', () => {
     const table = makeInitialProject().equipment.find((e) => e.catalogId === 'dining_table');
     expect(overlapsEdgeZone(boundingBox(table))).toBe(false);
   });
 
-  it('минимальный зазор задан явно', () => {
+  it('the minimum gap is set explicitly', () => {
     expect(MIN_FURNITURE_GAP).toBeGreaterThanOrEqual(0.05);
   });
 });
 
-describe('Трасса змейкой обходит мебель', () => {
+describe('The snake run goes around furniture', () => {
   const L = build();
 
-  it('у каждого помещения построена геометрия трассы', () => {
+  it('every room has a run geometry built', () => {
     L.byRoom.forEach((r) => {
       expect(r.path.points.length).toBeGreaterThan(4);
       expect(r.loopPaths.length).toBe(r.loops);
     });
   });
 
-  it('точки трассы не попадают внутрь исключённых пятен', () => {
+  it('run points do not fall inside the excluded patches', () => {
     const living = L.byRoom.find((r) => r.id === 'living');
     living.path.points.forEach((p) => {
       living.exclusions.forEach((e) => {
@@ -394,7 +394,7 @@ describe('Трасса змейкой обходит мебель', () => {
     });
   });
 
-  it('трасса держится внутри габарита дома', () => {
+  it('the run stays inside the house envelope', () => {
     L.byRoom.forEach((r) => {
       r.path.points.forEach((p) => {
         expect(p.x).toBeGreaterThanOrEqual(0);
@@ -405,22 +405,22 @@ describe('Трасса змейкой обходит мебель', () => {
     });
   });
 
-  it('деление на контуры сохраняет все проходы', () => {
+  it('splitting into loops keeps all the passes', () => {
     const living = L.byRoom.find((r) => r.id === 'living');
     const total = living.loopPaths.reduce((s, p) => s + p.length, 0);
     expect(total).toBe(living.path.points.length);
   });
 });
 
-describe('Встречная укладка', () => {
-  it('порядок строк чередуется: прямой ход через одну, обратный по пропущенным', () => {
+describe('Counterflow laying', () => {
+  it('row order alternates: forward every other one, return on the skipped ones', () => {
     const rows = [0, 1, 2, 3, 4, 5].map((i) => ({ y: i, x1: 0, x2: 1 }));
     const order = bifilarOrder(rows).map((r) => r.y);
-    // Вперёд по чётным, назад по нечётным
+    // Forward on the even ones, back on the odd ones
     expect(order).toEqual([0, 2, 4, 5, 3, 1]);
   });
 
-  it('соседние строки разнесены по ходу петли — кроме точки разворота', () => {
+  it('adjacent rows are spaced apart along the loop — except at the turning point', () => {
     const rows = Array.from({ length: 8 }, (_, i) => ({ y: i, x1: 0, x2: 1 }));
     const order = bifilarOrder(rows).map((r) => r.y);
 
@@ -428,26 +428,26 @@ describe('Встречная укладка', () => {
     for (let y = 0; y < 7; y++) {
       gaps.push(Math.abs(order.indexOf(y) - order.indexOf(y + 1)));
     }
-    // Ровно одна пара идёт подряд — там, где труба разворачивается
-    // у дальнего края. Это физика улитки, а не изъян раскладки.
+    // Exactly one pair goes in a row — where the pipe turns round
+    // at the far edge. This is the physics of a snail, not a flaw of the layout.
     expect(gaps.filter((g) => g === 1)).toHaveLength(1);
     expect(gaps.filter((g) => g > 1)).toHaveLength(6);
   });
 
-  it('все строки использованы ровно один раз', () => {
+  it('all rows are used exactly once', () => {
     const rows = Array.from({ length: 7 }, (_, i) => ({ y: i, x1: 0, x2: 1 }));
     const order = bifilarOrder(rows).map((r) => r.y).sort((a, b) => a - b);
     expect(order).toEqual([0, 1, 2, 3, 4, 5, 6]);
   });
 
-  it('длина трубы от порядка укладки не зависит', () => {
+  it('the pipe length does not depend on the laying order', () => {
     const p = makeInitialProject();
     const bif = build({ ...p, loopMode: 'bifilar' }).totalPipe;
     const ser = build({ ...p, loopMode: 'serpentine' }).totalPipe;
     expect(bif).toBeCloseTo(ser, 6);
   });
 
-  it('сегменты трассы размечены от подачи к обратке', () => {
+  it('route segments are marked from supply to return', () => {
     const segs = pathSegments([{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }]);
     expect(segs[0].t).toBeLessThan(segs[segs.length - 1].t);
     expect(segs[0].t).toBeGreaterThanOrEqual(0);
@@ -455,8 +455,8 @@ describe('Встречная укладка', () => {
   });
 });
 
-describe('roomLoops — влияние теплоносителя', () => {
-  it('на воде предел петли выше, чем на антифризе', () => {
+describe('roomLoops — effect of the coolant', () => {
+  it('on water the loop limit is higher than on antifreeze', () => {
     const p = makeInitialProject();
     const room = buildRooms(p.layout).find((r) => r.id === 'living');
     const args = {
@@ -470,41 +470,41 @@ describe('roomLoops — влияние теплоносителя', () => {
     const glycol = roomLoops({ ...args, coolant: p.coolant });
     const water = roomLoops({ ...args, coolant: { pressureDropFactor: 1 } });
     expect(water.limit).toBeGreaterThan(glycol.limit);
-    // Но зал всё равно не помещается в один контур даже на воде
+    // But the living room does not fit into one loop even on water
     expect(water.loops).toBeGreaterThan(1);
   });
 });
 
-describe('тёплый пол под лестницей', () => {
+describe('underfloor heating under the stair', () => {
   const p = makeInitialProject();
 
-  // Полоса 800 × 2600 под маршем раньше была вычтена «как не помещение».
-  // Ошибка: теплопотери зала считаются на полную площадь, включая её
-  // и участок ВОСТОЧНОЙ НАРУЖНОЙ стены над ней.
-  it('зон исключения под лестницей не осталось', () => {
+  // The 800 × 2600 strip under the flight used to be subtracted “as not a room”.
+  // A mistake: the heat loss of the living room is counted for the full area, including it
+  // and the section of the EAST OUTER WALL above it.
+  it('no exclusion zones under the stair are left', () => {
     const stair = p.floorExclusionZones.filter((z) => z.x >= 4.5);
     expect(stair).toHaveLength(0);
   });
 
-  it('ручных зон исключения не осталось совсем', () => {
+  it('no manual exclusion zones are left at all', () => {
     expect(p.floorExclusionZones).toHaveLength(0);
   });
 
-  it('полезная площадь зала выросла до 20 м²', () => {
+  it('the usable area of the living room grew to 20 m²', () => {
     const L = build(p);
     const living = L.byRoom.find((r) => r.id === 'living');
     expect(living.effectiveArea).toBeGreaterThan(19.9);
     expect(living.deficit).toBe(false);
   });
 
-  it('запас зала стал двузначным, а шаг раздвинулся до 200', () => {
+  it('the living room margin became two-digit and the pitch widened to 200', () => {
     const living = build(p).byRoom.find((r) => r.id === 'living');
     const cap = Math.max(...living.candidates.map((c) => c.capacity));
     expect(cap - living.requiredWm2).toBeGreaterThan(10);
     expect(living.spacing).toBeCloseTo(0.2, 3);
   });
 
-  it('возврат исключения снова зажимает зал', () => {
+  it('restoring the exclusion squeezes the living room again', () => {
     const tight = makeInitialProject();
     tight.floorExclusionZones = [
       ...tight.floorExclusionZones,
@@ -516,7 +516,7 @@ describe('тёплый пол под лестницей', () => {
   });
 });
 
-describe('мебель на полу против мебели у стены', () => {
+describe('furniture on the floor against furniture at the wall', () => {
   const withWardrobe = (excl) => {
     const p = makeInitialProject();
     p.equipment = [
@@ -527,21 +527,21 @@ describe('мебель на полу против мебели у стены', (
     return build(p).byRoom.find((r) => r.id === 'hall');
   };
 
-  // Шкаф был единственным предметом мебели, вычитавшим пол, — и это
-  // расходилось и с диваном, и с лавками, и со стеллажом.
-  it('гардероб трубу не вытесняет', () => {
+  // The cupboard was the only piece of furniture that subtracted floor — and that
+  // differed from the sofa, the benches and the shelving unit.
+  it('the wardrobe does not displace the pipe', () => {
     expect(getFixture('wardrobe').floorExclusion).toBe(false);
     expect(withWardrobe(undefined).effectiveArea).toBeCloseTo(4.6, 2);
   });
 
-  it('вся мебель ведёт себя одинаково', () => {
+  it('all furniture behaves the same', () => {
     ['sofa', 'bench', 'dining_table', 'shelf_open', 'tv_unit', 'wardrobe']
       .forEach((id) => expect(getFixture(id).floorExclusion).toBeFalsy());
   });
 
-  // Прихожая закрывается в обоих случаях — дело не в мощности,
-  // а в холодном кармане за задней стенкой шкафа у наружной стены
-  it('исключение шкафа поднимает требуемую отдачу, но дефицита нет', () => {
+  // The hall closes in both cases — the point is not the power,
+  // but the cold pocket behind the back panel of a cupboard at the outer wall
+  it('excluding the cupboard raises the required output, but there is no deficit', () => {
     const off = withWardrobe(true);
     const on = withWardrobe(false);
     expect(off.requiredWm2).toBeGreaterThan(on.requiredWm2);
@@ -550,27 +550,27 @@ describe('мебель на полу против мебели у стены', (
   });
 });
 
-describe('кухонные зоны исключения после переезда мойки', () => {
+describe('kitchen exclusion zones after the sink moved', () => {
   const p = makeInitialProject();
 
-  // Зоны описывали УГЛОВУЮ мойку 1061 × 1061 у перегородки санузла.
-  // Мойка стала линейной и уехала под окно — зоны остались висеть там,
-  // где теперь панель и духовка, и задваивали их собственное исключение.
-  it('ручных зон в правом варианте не осталось', () => {
+  // The zones described the CORNER 1061 × 1061 sink at the bathroom partition.
+  // The sink became linear and moved under the window — the zones stayed hanging
+  // where the hob and oven are now, and doubled their own exclusion.
+  it('no manual zones are left in the right variant', () => {
     expect(p.floorExclusionZones).toHaveLength(0);
   });
 
-  it('приборы по-прежнему вычитают свой габарит сами', () => {
+  it('appliances still subtract their own footprint', () => {
     ['fridge', 'sink', 'dishwasher60', 'hob_gas', 'oven']
       .forEach((id) => expect(getFixture(id).floorExclusion).toBe(true));
   });
 
-  it('нижний шкаф трубу не вытесняет — он на вентилируемом цоколе', () => {
+  it('a base cabinet does not displace the pipe — it stands on a ventilated plinth', () => {
     const store = p.equipment.find((e) => e.id === 'eq-store1');
     expect(store.floorExclusion).toBe(false);
   });
 
-  it('зал получил ещё площади и запаса', () => {
+  it('the living room gained more area and margin', () => {
     const living = build(p).byRoom.find((r) => r.id === 'living');
     const cap = Math.max(...living.candidates.map((c) => c.capacity));
     expect(living.effectiveArea).toBeGreaterThan(20.5);

@@ -8,7 +8,7 @@
 // 110 Вт потянет любой инвертор, а вот часы даёт только банк батарей.
 
 export const INVERTER_EFFICIENCY = 0.85;
-export const INVERTER_IDLE_W = 12; // собственное потребление инвертора
+export const INVERTER_IDLE_W = 12; // own consumption of the inverter
 
 // Топология ИБП. Разница не в качестве синуса — чистый синус даёт и то, и другое,
 // — а в том, СКОЛЬКО ИБП съедает сам, пока держит нагрузку от батареи.
@@ -24,14 +24,14 @@ export const INVERTER_IDLE_W = 12; // собственное потреблен�
 // Паспорт Штиль SW500L — СВЕРЕНО с карточкой производителя (shtyl.ru).
 // Две цифры здесь опровергают мои прежние оценки, и обе в лучшую сторону.
 export const SW500L = {
-  model: 'Штиль SW500L',
-  va: 500, watts: 400, // круглосуточно, заявлено производителем
+  model: 'Shtil SW500L',
+  va: 500, watts: 400, // continuous, as declared by the manufacturer
   maxOutA: 2.3,
-  topology: 'online', wave: 'чистая синусоида', accuracy: 2,
-  inputRange: [90, 295], // очень широкий — ИБП сам работает стабилизатором
-  outlets: 'EURO F-type с заземлением, 1 шт.', // отсюда и нужда в щитке после
+  topology: 'online', wave: 'pure sine', accuracy: 2,
+  inputRange: [90, 295], // very wide — the UPS itself acts as a stabiliser
+  outlets: 'EURO F-type with earth, 1 pc.', // hence the need for a board after it
   chargerA: 5,
-  busV: 24, // подтверждается батарейными модулями BM-24-xx: две АКБ 12 В в серию
+  busV: 24, // confirmed by BM-24-xx battery modules: two 12 V batteries in series
   // ПРОИЗВОДИТЕЛЬ РАЗРЕШАЕТ ДО 250 А·ч. Моя оценка «не больше 100 по правилу
   // C/20» была занижена: у SW500L интеллектуальный алгоритм заряда
   // и термокомпенсация, и Штиль прямо указывает предел 250.
@@ -41,13 +41,13 @@ export const SW500L = {
   // чем я считал по «свинец глубже половины не разряжать».
   dodCutoff: 0.8,
   sizeMm: { w: 357, h: 287, d: 112, dBracket: 116 }, massKg: 5,
-  tempC: [5, 40], // ТОЛЬКО в помещении
+  tempC: [5, 40], // indoors ONLY
   ip: 20
 };
 
 export const TOPOLOGY = {
   lineInteractive: { id: 'line', label: 'line-interactive', idleW: 12 },
-  online: { id: 'online', label: 'online, двойное преобразование', idleW: 30 }
+  online: { id: 'online', label: 'online, double conversion', idleW: 30 }
 };
 
 // Зарядное устройство — НЕДООЦЕНЁННОЕ ограничение. Оно, а не инвертор,
@@ -81,13 +81,13 @@ export function rechargeHours({ ah, dod = 0.5, chargerA, chemistry = 'agm' }) {
 export const BATTERIES = [
   // Батарея охранной серии на 40 А·ч: дёшево за ампер-час, но энергии
   // в паре меньше киловатт-часа — на котёл это единицы часов, не десятки.
-  { id: 'agm40x2', label: 'AGM 12 В · 40 А·ч × 2', voltage: 12, ah: 40, dod: 0.5, count: 2, chemistry: 'agm' },
-  { id: 'agm100', label: 'AGM 12 В · 100 А·ч', voltage: 12, ah: 100, dod: 0.5, count: 1, chemistry: 'agm' },
-  { id: 'agm100x2', label: 'AGM 12 В · 100 А·ч × 2', voltage: 12, ah: 100, dod: 0.5, count: 2, chemistry: 'agm' },
-  { id: 'agm140x2', label: 'AGM 12 В · 140 А·ч × 2', voltage: 12, ah: 140, dod: 0.5, count: 2, chemistry: 'agm' },
-  { id: 'agm200x2', label: 'AGM 12 В · 200 А·ч × 2', voltage: 12, ah: 200, dod: 0.5, count: 2, chemistry: 'agm' },
-  { id: 'lfp100', label: 'LiFePO4 12 В · 100 А·ч', voltage: 12, ah: 100, dod: 0.9, count: 1, chemistry: 'lfp' },
-  { id: 'lfp200', label: 'LiFePO4 12 В · 200 А·ч', voltage: 12, ah: 200, dod: 0.9, count: 1, chemistry: 'lfp' }
+  { id: 'agm40x2', label: 'AGM 12 V · 40 Ah × 2', voltage: 12, ah: 40, dod: 0.5, count: 2, chemistry: 'agm' },
+  { id: 'agm100', label: 'AGM 12 V · 100 Ah', voltage: 12, ah: 100, dod: 0.5, count: 1, chemistry: 'agm' },
+  { id: 'agm100x2', label: 'AGM 12 V · 100 Ah × 2', voltage: 12, ah: 100, dod: 0.5, count: 2, chemistry: 'agm' },
+  { id: 'agm140x2', label: 'AGM 12 V · 140 Ah × 2', voltage: 12, ah: 140, dod: 0.5, count: 2, chemistry: 'agm' },
+  { id: 'agm200x2', label: 'AGM 12 V · 200 Ah × 2', voltage: 12, ah: 200, dod: 0.5, count: 2, chemistry: 'agm' },
+  { id: 'lfp100', label: 'LiFePO4 12 V · 100 Ah', voltage: 12, ah: 100, dod: 0.9, count: 1, chemistry: 'lfp' },
+  { id: 'lfp200', label: 'LiFePO4 12 V · 200 Ah', voltage: 12, ah: 200, dod: 0.9, count: 1, chemistry: 'lfp' }
 ];
 
 export function usableWh(battery, depth = null) {

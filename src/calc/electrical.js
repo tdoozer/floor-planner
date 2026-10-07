@@ -20,15 +20,15 @@ import { boundingBox, getFixture } from '../data/fixtures.js';
 //   3) нужна своя защита (мокрая зона — УЗО 10 мА, а не общие 30).
 // Всё остальное объединяется.
 export const CIRCUITS = {
-  light: { label: 'Освещение', cable: '3×1,5', breaker: 10, rcd: false },
-  sockets: { label: 'Розетки общие', cable: '3×2,5', breaker: 16, rcd: true },
-  kitchen: { label: 'Розетки кухни', cable: '3×2,5', breaker: 16, rcd: true },
+  light: { label: 'Lighting', cable: '3×1.5', breaker: 10, rcd: false },
+  sockets: { label: 'General sockets', cable: '3×2.5', breaker: 16, rcd: true },
+  kitchen: { label: 'Kitchen sockets', cable: '3×2.5', breaker: 16, rcd: true },
   // Холодильник + посудомойка: 0,3 + 2,2 = 2,5 кВт из 3,5 доступных
-  kitchenApp: { label: 'Кухонная техника', cable: '3×2,5', breaker: 16, rcd: true, load: 2500 },
+  kitchenApp: { label: 'Kitchen appliances', cable: '3×2.5', breaker: 16, rcd: true, load: 2500 },
   // Духовой шкаф: 3,5 кВт — один выбирает линию целиком
-  appliance: { label: 'Отдельная линия', cable: '3×2,5', breaker: 16, rcd: true, load: 3500 },
+  appliance: { label: 'Dedicated line', cable: '3×2.5', breaker: 16, rcd: true, load: 3500 },
   // Санузел + стиральная машина: одна мокрая зона, УЗО 10 мА
-  bath: { label: 'Санузел и стиральная', cable: '3×2,5', breaker: 16, rcd: true, rcdMa: 10, load: 3700 },
+  bath: { label: 'Bathroom and washing machine', cable: '3×2.5', breaker: 16, rcd: true, rcdMa: 10, load: 3700 },
   // Котёл: отдельно не по мощности (110 Вт), а потому что чужое УЗО
   // не имеет права его гасить. Он же идёт через ИБП.
   //
@@ -36,10 +36,10 @@ export const CIRCUITS = {
   // 12 Вт на нём теряются, а без интернета в отключение не видно ни котла,
   // ни дома. Цена решения честная: в байпасе ИБП розетка роутера окажется
   // под тем же УЗО, что и котёл. Больше на линию не вешать ничего.
-  boiler: { label: 'Котёл и роутер (ИБП)', cable: '3×1,5', breaker: 6, rcd: true, load: 130 },
+  boiler: { label: 'Boiler and router (UPS)', cable: '3×1.5', breaker: 6, rcd: true, load: 130 },
   // Слаботочка автомата не имеет и в силовой щит не идёт вовсе.
   // Она здесь только чтобы точки попали на слой электрики и в спецификацию.
-  data: { label: 'Слаботочка', cable: 'UTP cat.6', breaker: 0, rcd: false, load: 0, lowVoltage: true }
+  data: { label: 'Low-voltage', cable: 'UTP cat.6', breaker: 0, rcd: false, load: 0, lowVoltage: true }
 };
 
 // Что тянется по полу, а что по стенам и потолку.
@@ -60,9 +60,9 @@ export const BACK_BOX = { depth: 45, diameter: 68, crown: 68 };
 export const CABLE_OD_MM = 12;
 
 export const ROUTE = {
-  pitch: 0.05, // расстояние между соседними трассами в пучке
-  standoff: 0.1, // отступ пучка от стены
-  riseAllowance: 1.2 // запас на подъём по стене и заводку в коробку, м
+  pitch: 0.05, // distance between adjacent routes in a bundle
+  standoff: 0.1, // offset of the bundle from the wall
+  riseAllowance: 1.2 // allowance for rising up the wall and entering the box, m
 };
 
 // Ортогональная трасса от ввода до точки. Полосы назначаются по удалённости,
@@ -155,7 +155,7 @@ export function switchCoverage(equipment = []) {
 
   const twoWay = switches.filter((s) => specOf(s)?.twoWay);
   const unpaired = twoWay.filter((s) => {
-    if (s.pairWith === 'MANSARD') return false; // пара за пределами этажа
+    if (s.pairWith === 'MANSARD') return false; // the pair is outside this floor
     return !switches.some((o) => o.id === s.pairWith || o.pairWith === s.id);
   });
 

@@ -49,7 +49,7 @@ export function tripsInstantly({ loadW, rating, curve = MCB_CURVES.B, voltage = 
 }
 
 export const PANEL = {
-  modules: 8, // DIN-бокс на 8 модулей: вход, четыре ветки и два в запас
+  modules: 8, // DIN enclosure for 8 modules: input, four branches and two spare
   voltage: 220,
   // Дифавтомат на розетке — 10 мА, а не 30: ближе к нагрузке и чувствительнее
   // общего, поэтому при утечке срабатывает первым.
@@ -61,27 +61,27 @@ export const PANEL = {
 // щитка было видно, что гасить нельзя.
 export const BRANCHES = [
   {
-    id: 'boiler', label: 'Котёл', watts: 110, breaker: 6, rcd: false,
-    why: 'Ради него всё и построено. Автомат свой, чтобы авария в любой ' +
-      'другой ветке до котла не дошла.'
+    id: 'boiler', label: 'Boiler', watts: 110, breaker: 6, rcd: false,
+    why: 'It is what everything is built for. It has its own breaker so that a fault in any ' +
+      'other branch does not reach the boiler.'
   },
   {
-    id: 'router', label: 'Роутер', watts: 15, breaker: 6, rcd: false,
-    why: 'Без интернета в отключение не видно ни котла, ни дома.'
+    id: 'router', label: 'Router', watts: 15, breaker: 6, rcd: false,
+    why: 'Without the internet during an outage you can see neither the boiler nor the house.'
   },
   {
-    id: 'light', label: 'Свет котельной', watts: 10, breaker: 6, rcd: false,
+    id: 'light', label: 'Boiler-room light', watts: 10, breaker: 6, rcd: false,
     classII: true,
-    why: 'Котёл надо ВИДЕТЬ, чтобы им заняться. Светильник класса II: ' +
-      'заземляемых частей нет, значит утечка на землю физически невозможна ' +
-      'и общее УЗО он не потревожит.'
+    why: 'You have to SEE the boiler to deal with it. A class II luminaire: ' +
+      'no earthed parts, so an earth leakage is physically impossible ' +
+      'and it will not disturb the common RCD.'
   },
   {
-    id: 'socket', label: 'Аварийная розетка', watts: null, breaker: null,
+    id: 'socket', label: 'Emergency socket', watts: null, breaker: null,
     rcd: true, rcdMa: PANEL.socketRcdMa, sized: true, curve: 'B',
-    why: 'Единственная ветка, содержимое которой заранее неизвестно. ' +
-      'Поэтому у неё и свой дифавтомат, и номинал по остатку инвертора, ' +
-      'и характеристика B: она отсекает чайник мгновенно, а не через секунды.'
+    why: 'The only branch whose content is unknown in advance. ' +
+      'That is why it has its own RCBO, a rating set by what is left of the inverter, ' +
+      'and characteristic B: it cuts off a kettle instantly, not after seconds.'
   }
 ];
 

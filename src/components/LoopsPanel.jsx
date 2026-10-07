@@ -43,57 +43,57 @@ export default function LoopsPanel({
     <>
       <section className="panel">
         <div className="panel-head">
-          <span>Контуры тёплого пола</span>
-          <span className="muted">{L.totalLoops} шт · {L.totalPipe.toFixed(0)} м</span>
+          <span>Underfloor heating loops</span>
+          <span className="muted">{L.totalLoops} pcs · {L.totalPipe.toFixed(0)} m</span>
         </div>
         <table className="mini-table calc-table">
           <tbody>
             <tr className="head-row">
-              <td>Помещение</td>
-              <td className="num">шаг · трубы</td>
-              <td className="calc-target">контуров</td>
+              <td>Room</td>
+              <td className="num">pitch · pipe</td>
+              <td className="calc-target">loops</td>
             </tr>
             {L.byRoom.map((r) => (
               <tr key={r.id} className={r.loops > 1 ? 'calc-off' : ''}>
                 <td>{r.name}</td>
-                <td className="num">{mm(r.spacing)} · {r.totalPipe.toFixed(0)} м</td>
+                <td className="num">{mm(r.spacing)} · {r.totalPipe.toFixed(0)} m</td>
                 <td className="calc-target">
-                  {r.loops} × {r.perLoop.toFixed(0)} м
+                  {r.loops} × {r.perLoop.toFixed(0)} m
                 </td>
               </tr>
             ))}
             <tr className="total">
-              <td>Предел петли</td>
-              <td className="num">{L.limit.toFixed(0)} м</td>
-              <td className="calc-target">антифриз</td>
+              <td>Loop limit</td>
+              <td className="num">{L.limit.toFixed(0)} m</td>
+              <td className="calc-target">antifreeze</td>
             </tr>
           </tbody>
         </table>
         <p className="panel-note">
-          Санузел и прихожая — отдельными контурами, как и просили. Зал в один
-          контур не укладывается: даже широким шагом трубы выходит больше,
-          чем допускает предел {L.limit.toFixed(0)} м.
-          Разбаланс длин {(L.imbalance * 100).toFixed(0)} % — балансировочные клапаны
-          на коллекторе обязательны.
+          The bathroom and the hall have separate loops, as requested. The living room does not fit
+          into one loop: even at a wide pitch it needs more pipe
+          than the {L.limit.toFixed(0)} m limit allows.
+          Length imbalance is {(L.imbalance * 100).toFixed(0)} % — balancing valves
+          on the manifold are mandatory.
         </p>
       </section>
 
       <section className="panel">
         <div className="panel-head">
-          <span>Полезная площадь пола</span>
-          <span className="muted">мебель вычтена</span>
+          <span>Usable floor area</span>
+          <span className="muted">furniture subtracted</span>
         </div>
         <table className="mini-table calc-table">
           <tbody>
             <tr className="head-row">
-              <td>Помещение</td>
-              <td className="num">занято</td>
-              <td className="calc-target">Вт/м² стало</td>
+              <td>Room</td>
+              <td className="num">occupied</td>
+              <td className="calc-target">W/m² now</td>
             </tr>
             {L.byRoom.map((r) => (
               <tr key={r.id} className={r.deficit ? 'calc-off' : ''}>
                 <td>{r.name}</td>
-                <td className="num">{r.excludedArea.toFixed(2)} м²</td>
+                <td className="num">{r.excludedArea.toFixed(2)} m²</td>
                 <td className="calc-target">
                   {r.requiredBare.toFixed(0)} → {r.requiredWm2.toFixed(0)}
                 </td>
@@ -107,70 +107,70 @@ export default function LoopsPanel({
             checked={!!project.kitchenOnFrame}
             onChange={(e) => onUpdateKitchenFrame(e.target.checked)}
           />
-          Кухня на открытом каркасе
+          Kitchen on an open frame
         </label>
         <label className="full-field">
-          Кратность воздухообмена, 1/ч
+          Air change rate, 1/h
           <input
             type="number" step="0.1" value={envelope.ventilationAch}
             onChange={(e) => onUpdateEnvelope({ ventilationAch: Number(e.target.value) })}
           />
         </label>
         <p className="panel-note">
-          Под кухонными шкафами, холодильником, душевым поддоном и стиральной
-          машиной трубу не кладут: тепло там запирается, в комнату не выходит.
-          Площадь уходит, а нагрузка остаётся — поэтому требование на оставшиеся
-          квадраты растёт. Мебель на ножках с зазором от 50 мм не исключается:
-          снимите галочку у дивана или лавок, и площадь вернётся.
-          Кратность воздухообмена — самый чувствительный параметр всего расчёта.
+          No pipe is laid under kitchen cabinets, the fridge, the shower tray or the washing
+          machine: the heat gets trapped there and does not reach the room.
+          The area is lost but the load remains — so the requirement on the remaining
+          square metres goes up. Furniture on legs with a gap of 50 mm or more is not excluded:
+          untick the sofa or benches and the area comes back.
+          The air change rate is the most sensitive parameter of the whole calculation.
         </p>
         <p className="panel-note">
-          <b>Кухня на каркасе</b> — бетонная столешница на стойках с продуваемым
-          зазором под фронтом. Тогда сплошные зоны исчезают, а исключаются только
-          приборы, стоящие на полу: холодильник, посудомойка, духовой шкаф,
-          стиралка, плюс мойка (сифон и фильтр) и варочная панель (газ и доступ
-          к нему). Столешницы и глухие шкафы уходят на каркас — под ними труба.
+          <b>Kitchen on a frame</b> — a concrete worktop on posts with a ventilated
+          gap under the front. Then the solid zones disappear and only appliances
+          standing on the floor are excluded: the fridge, dishwasher, oven,
+          washing machine, plus the sink (trap and filter) and the hob (gas and access
+          to it). Worktops and blind cabinets move onto the frame — pipe runs under them.
         </p>
       </section>
 
       <section className="panel">
         <div className="panel-head">
-          <span>Гидравлика и насос</span>
-          <span className="muted">{H.totalFlowLh.toFixed(0)} л/ч</span>
+          <span>Hydraulics and pump</span>
+          <span className="muted">{H.totalFlowLh.toFixed(0)} l/h</span>
         </div>
         <table className="mini-table calc-table">
           <tbody>
             <tr>
-              <td>Худший контур</td>
-              <td className="num">{H.worst.dropM.toFixed(2)} м</td>
-              <td className="calc-target">{H.worst.velocity.toFixed(2)} м/с</td>
+              <td>Worst loop</td>
+              <td className="num">{H.worst.dropM.toFixed(2)} m</td>
+              <td className="calc-target">{H.worst.velocity.toFixed(2)} m/s</td>
             </tr>
             <tr>
-              <td>С местными сопр.</td>
-              <td className="num">{H.requiredHeadM.toFixed(2)} м</td>
-              <td className="calc-target">требуется</td>
+              <td>With local losses</td>
+              <td className="num">{H.requiredHeadM.toFixed(2)} m</td>
+              <td className="calc-target">required</td>
             </tr>
             <tr className={H.boilerPumpEnough ? '' : 'calc-off'}>
-              <td>Насос котла</td>
-              <td className="num">≈ {H.boilerHeadM} м</td>
+              <td>Boiler pump</td>
+              <td className="num">≈ {H.boilerHeadM} m</td>
               <td className="calc-target">
-                {H.boilerPumpEnough ? '✓' : '✕'} запас {H.margin.toFixed(2)} м
+                {H.boilerPumpEnough ? '✓' : '✕'} margin {H.margin.toFixed(2)} m
               </td>
             </tr>
             <tr className="calc-off">
-              <td>Режим течения</td>
+              <td>Flow regime</td>
               <td className="num">Re {H.worst.reynolds.toFixed(0)}</td>
-              <td className="calc-target">{H.anyLaminar ? 'ламинарный' : 'турбулентный'}</td>
+              <td className="calc-target">{H.anyLaminar ? 'laminar' : 'turbulent'}</td>
             </tr>
           </tbody>
         </table>
         <p className="panel-note">
-          По напору насоса котла хватает с запасом. Но {H.boilerHeadM} м — это
-          <b> предположение</b>, сверьте с графиком насоса в паспорте.
-          Течение <b>ламинарное</b> из-за вязкости антифриза: теплоотдача от трубы
-          к бетону хуже, чем в турбулентном режиме, и это уже учтено запасом
-          по шагу. Отдельный насос на коллекторе всё равно оправдан —
-          он даёт непрерывную циркуляцию независимо от логики котла.
+          The boiler pump head is enough with a margin. But {H.boilerHeadM} m is an
+          <b> assumption</b>, check it against the pump curve in the data sheet.
+          The flow is <b>laminar</b> because of the antifreeze viscosity: heat transfer from the pipe
+          to the concrete is worse than in a turbulent regime, and this is already covered by the margin
+          on the pitch. A separate pump on the manifold is still justified —
+          it gives continuous circulation independent of the boiler logic.
         </p>
       </section>
 
@@ -178,14 +178,14 @@ export default function LoopsPanel({
         <section className="panel" key={r.id}>
           <div className="panel-head">
             <span>{r.name}</span>
-            <span className="muted">нужно {r.requiredWm2.toFixed(0)} Вт/м²</span>
+            <span className="muted">need {r.requiredWm2.toFixed(0)} W/m²</span>
           </div>
           <table className="mini-table calc-table">
             <tbody>
               <tr className="head-row">
-                <td>Шаг</td>
-                <td className="num">съём</td>
-                <td className="calc-target">трубы · контуров</td>
+                <td>Pitch</td>
+                <td className="num">output</td>
+                <td className="calc-target">pipe · loops</td>
               </tr>
               {r.candidates.map((c) => {
                 const margin = c.capacity / r.requiredWm2 - 1;
@@ -197,7 +197,7 @@ export default function LoopsPanel({
                   >
                     <td>
                       <button className="link-btn" onClick={() => onUpdateSpacing(r.id, c.spacing)}>
-                        {mm(c.spacing)} мм
+                        {mm(c.spacing)} mm
                       </button>
                     </td>
                     <td className="num">
@@ -205,7 +205,7 @@ export default function LoopsPanel({
                       {c.enough && <span className="muted"> +{(margin * 100).toFixed(0)}%</span>}
                     </td>
                     <td className="calc-target">
-                      {c.enough ? '✓' : '✕'} {c.totalPipe.toFixed(0)} м · {c.loops}
+                      {c.enough ? '✓' : '✕'} {c.totalPipe.toFixed(0)} m · {c.loops}
                     </td>
                   </tr>
                 );
@@ -213,11 +213,11 @@ export default function LoopsPanel({
             </tbody>
           </table>
           <p className="panel-note">
-            Температура поверхности ограничена {r.maxFloorTemp} °C при воздухе{' '}
-            {r.airTemp} °C. Подводка от коллектора {r.supplyRunM.toFixed(1)} м
-            в одну сторону, в длину петли входит дважды.
+            Surface temperature is limited to {r.maxFloorTemp} °C at an air temperature of{' '}
+            {r.airTemp} °C. The feed from the manifold is {r.supplyRunM.toFixed(1)} m
+            one way, and counts twice in the loop length.
             {r.candidates.find((c) => c.spacing === r.spacing)?.capacity / r.requiredWm2 < 1.1 && (
-              <> <b>Запас меньше 10 % — стоит взять шаг мельче.</b></>
+              <> <b>Margin below 10 % — consider a finer pitch.</b></>
             )}
           </p>
         </section>

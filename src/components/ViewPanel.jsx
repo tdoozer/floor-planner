@@ -3,8 +3,8 @@ import React, { Suspense, lazy, useState } from 'react';
 import RenderPanel from './RenderPanel.jsx';
 import { pipeElevation, cableElevation } from '../calc/scene3d.js';
 
-// Three.js весит немало и нужен только на этой вкладке — грузим лениво,
-// чтобы не тормозить открытие плана.
+// Three.js is heavy and only needed on this tab — loaded lazily
+// so that opening the plan is not slowed down.
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
 
 export default function ViewPanel({ project }) {
@@ -20,8 +20,8 @@ export default function ViewPanel({ project }) {
       <>
         <section className="panel">
           <div className="variant-switch">
-            <button onClick={() => setMode('xray')}>Рентген стяжки</button>
-            <button className="active">Фотореалистичный рендер</button>
+            <button onClick={() => setMode('xray')}>Screed X-ray</button>
+            <button className="active">Photorealistic render</button>
           </div>
         </section>
         <RenderPanel project={project} />
@@ -33,65 +33,65 @@ export default function ViewPanel({ project }) {
     <>
       <section className="panel">
         <div className="variant-switch">
-          <button className="active">Рентген стяжки</button>
-          <button onClick={() => setMode('render')}>Фотореалистичный рендер</button>
+          <button className="active">Screed X-ray</button>
+          <button onClick={() => setMode('render')}>Photorealistic render</button>
         </div>
       </section>
 
       <section className="panel">
         <div className="panel-head">
-          <span>Рентген стяжки</span>
+          <span>Screed X-ray</span>
           <span className="pill">3D</span>
         </div>
 
         {on ? (
-          <Suspense fallback={<p className="panel-note">Загружается сцена…</p>}>
+          <Suspense fallback={<p className="panel-note">Loading scene…</p>}>
             <Scene3D project={project} />
           </Suspense>
         ) : (
           <>
             <p className="panel-note">
-              Объёмная модель собирается из тех же чисел, что план и разрез:
-              пирог показан послойно на своих отметках, труба и кабель — там,
-              где они реально лягут. Стяжка полупрозрачная, поэтому видно,
-              что в неё замуровывается.
+              The 3D model is built from the same numbers as the plan and the section:
+              the build-up is shown layer by layer at its levels, the pipe and cable where
+              they will actually lie. The screed is translucent, so you can see
+              what is embedded in it.
             </p>
             <button className="link-btn" onClick={() => setOn(true)}>
-              Построить сцену
+              Build scene
             </button>
           </>
         )}
       </section>
 
       <section className="panel">
-        <div className="panel-head"><span>Отметки в пироге</span></div>
+        <div className="panel-head"><span>Levels in the build-up</span></div>
         <table className="mini-table">
           <tbody>
-            <tr><td>Чистый пол</td><td className="num">0</td></tr>
-            <tr><td>Низ стяжки</td><td className="num">−{screed.finishThickness + screed.screedTotal} мм</td></tr>
-            <tr className="accent"><td>Ось трубы ТП</td><td className="num">−{pipeMm.toFixed(0)} мм</td></tr>
-            <tr className="accent"><td>Ось кабеля</td><td className="num">−{cableMm.toFixed(0)} мм</td></tr>
-            <tr><td>Низ утеплителя</td><td className="num">−{screed.finishThickness + screed.screedTotal + screed.insulation} мм</td></tr>
+            <tr><td>Finished floor</td><td className="num">0</td></tr>
+            <tr><td>Screed bottom</td><td className="num">−{screed.finishThickness + screed.screedTotal} mm</td></tr>
+            <tr className="accent"><td>Heating pipe axis</td><td className="num">−{pipeMm.toFixed(0)} mm</td></tr>
+            <tr className="accent"><td>Cable axis</td><td className="num">−{cableMm.toFixed(0)} mm</td></tr>
+            <tr><td>Insulation bottom</td><td className="num">−{screed.finishThickness + screed.screedTotal + screed.insulation} mm</td></tr>
           </tbody>
         </table>
         <p className="panel-note">
-          Кабель идёт <b>ниже трубы, в слое утеплителя</b> — между ними{' '}
-          {(cableMm - pipeMm).toFixed(0)} мм. Именно поэтому пересечения трасс
-          безопасны: они физически не встречаются, и сверлить потом нечего.
+          The cable runs <b>below the pipe, in the insulation layer</b> — {(cableMm - pipeMm).toFixed(0)} mm
+          between them. That is exactly why route crossings
+          are safe: they physically never meet, and there is nothing to drill into later.
         </p>
       </section>
 
       <section className="panel">
-        <div className="panel-head"><span>Что смотреть в объёме</span></div>
+        <div className="panel-head"><span>What to look at in 3D</span></div>
         <ul className="bullets">
-          <li>Труба против кабеля — они на разных отметках, но на плане это не видно.</li>
-          <li>Розетки против проёмов: коробка на своей высоте, окно на своей.</li>
-          <li>Марш: 15 подступенков по 200 — на плане это одна полоса.</li>
-          <li>Навесные шкафы над столешницей: в плане они накладываются, в объёме нет.</li>
+          <li>Pipe against cable — they are at different levels, but the plan does not show it.</li>
+          <li>Sockets against openings: the box at its height, the window at its own.</li>
+          <li>The flight: 15 risers of 200 — on the plan it is a single strip.</li>
+          <li>Wall cabinets over the worktop: they overlap in plan, not in 3D.</li>
         </ul>
         <p className="panel-note">
-          Плита столешницы нарисована с вырезами под мойку и панель — видно,
-          что стоит под ней, а что врезано в неё.
+          The worktop slab is drawn with cut-outs for the sink and the hob — you can see
+          what stands under it and what is set into it.
         </p>
       </section>
     </>

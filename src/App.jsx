@@ -23,9 +23,9 @@ const LS_PROJECT = 'floor_project';
 const LS_LAYERS = 'floor_layers';
 const LS_SIDEBAR = 'floor_sidebar_w';
 
-// Ширина правой панели. Минимум 320 — уже этого поля с двумя колонками
-// начинают ломаться; максимум оставляет плану не меньше 360 px,
-// иначе он превращается в марку.
+// Width of the right panel. A minimum of 320 — below it the two-column fields
+// start to break; the maximum leaves the plan at least 360 px,
+// otherwise it shrinks to a stamp.
 export const SIDEBAR = { min: 320, max: 900, default: 380, planMin: 360 };
 
 export function clampSidebar(width, viewportW) {
@@ -39,7 +39,7 @@ function loadJson(key, fallback) {
     if (!raw) return fallback;
     return JSON.parse(raw);
   } catch (e) {
-    console.error(`Не удалось прочитать ${key} из localStorage`, e);
+    console.error(`Failed to read ${key} from localStorage`, e);
     return fallback;
   }
 }
@@ -47,8 +47,8 @@ function loadJson(key, fallback) {
 export default function App() {
   const [project, setProject] = useState(() => {
     const saved = loadJson(LS_PROJECT, null);
-    // Вариант планировки — тоже выбор заказчика, а не константа кода.
-    // По умолчанию санузел справа, у стояка.
+    // The layout variant is also the owner's choice, not a code constant.
+    // By default the bathroom is on the right, by the stack.
     const base = makeInitialProject(saved?.layout?.variant ?? 'bathRight');
     return mergeProject(base, saved);
   });
@@ -56,7 +56,7 @@ export default function App() {
   const [layers, setLayers] = useState(() => {
     const saved = loadJson(LS_LAYERS, null);
     if (!saved) return DEFAULT_LAYERS;
-    // Дополняем недостающие слои, если список расширился
+    // Add missing layers if the list has grown
     return { ...DEFAULT_LAYERS, ...saved };
   });
 
@@ -67,8 +67,8 @@ export default function App() {
   const [showDrainRoutes, setShowDrainRoutes] = useState(true);
   const [focusPoint, setFocusPoint] = useState(null);
 
-  // Ширина сайдбара тянется мышкой: 3D и схема обвязки требуют места,
-  // а план на вкладке «Смета» не нужен вовсе.
+  // The sidebar width is dragged with the mouse: 3D and the piping diagram need room,
+  // while the plan is not needed on the Estimate tab at all.
   const [sidebarW, setSidebarW] = useState(() => {
     const saved = Number(loadJson(LS_SIDEBAR, SIDEBAR.default));
     return Number.isFinite(saved) && saved > 0 ? saved : SIDEBAR.default;
@@ -78,10 +78,10 @@ export default function App() {
   const planRef = useRef(null);
   const containerRef = useRef(null);
 
-  // ---------- Персист ----------
+  // ---------- Persistence ----------
   useEffect(() => {
-    // Вместе с проектом пишем список id, известных коду сейчас: иначе
-    // при следующем запуске не отличить удалённое заказчиком от добавленного мной
+    // Together with the project we write the list of ids known to the code right now: otherwise
+    // on the next start we cannot tell what the owner deleted from what I added
     const base = makeInitialProject(project.layout.variant);
     localStorage.setItem(LS_PROJECT, JSON.stringify(stampKnownIds(project, base)));
   }, [project]);
@@ -90,7 +90,7 @@ export default function App() {
     localStorage.setItem(LS_LAYERS, JSON.stringify(layers));
   }, [layers]);
 
-  // ---------- Масштабирование под окно ----------
+  // ---------- Scaling to the window ----------
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -104,8 +104,8 @@ export default function App() {
     return () => ro.disconnect();
   }, []);
 
-  // Масштаб «по размеру окна», умноженный на зум. Поля минимальны:
-  // каждый лишний пиксель отступа — это уменьшенный план.
+  // “Fit to window” scale multiplied by the zoom. Margins are minimal:
+  // every extra pixel of padding is a smaller plan.
   const [zoom, setZoom] = useState(1);
 
   const fitPxPerMeter = useMemo(() => {
@@ -117,11 +117,11 @@ export default function App() {
 
   const pxPerMeter = fitPxPerMeter * zoom;
 
-  // ---------- Перетаскивание границы ----------
+  // ---------- Dragging the divider ----------
   //
-  // Слушатели вешаются на window, а не на сам разделитель: увести курсор
-  // с полоски в 6 px во время рывка проще простого, и тогда перетаскивание
-  // молча обрывается.
+  // Listeners are attached to window, not to the divider itself: it is very easy
+  // to move the cursor off a 6 px strip during a quick drag, and then the drag
+  // silently breaks off.
   useEffect(() => {
     if (!resizing) return undefined;
 
@@ -135,8 +135,8 @@ export default function App() {
     window.addEventListener('mouseup', stop);
     window.addEventListener('touchmove', onMove, { passive: true });
     window.addEventListener('touchend', stop);
-    // Пока тянем — гасим выделение текста и держим курсор, иначе на полпути
-    // выделяется вся страница
+    // While dragging we suppress text selection and hold the cursor, otherwise halfway
+    // the whole page gets selected
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'col-resize';
 
@@ -150,7 +150,7 @@ export default function App() {
     };
   }, [resizing]);
 
-  // Окно сузили — панель могла выйти за допустимые границы
+  // The window was narrowed — the panel may have gone beyond the allowed limits
   useEffect(() => {
     const onResize = () => setSidebarW((w) => clampSidebar(w, window.innerWidth));
     onResize();
@@ -162,7 +162,7 @@ export default function App() {
     localStorage.setItem(LS_SIDEBAR, JSON.stringify(sidebarW));
   }, [sidebarW]);
 
-  // Клавиатура: стрелки двигают границу, Home возвращает исходную ширину
+  // Keyboard: arrows move the divider, Home restores the original width
   const onSplitterKey = useCallback((e) => {
     const step = e.shiftKey ? 48 : 12;
     if (e.key === 'ArrowLeft') {
@@ -177,7 +177,7 @@ export default function App() {
     e.preventDefault();
   }, []);
 
-  // ---------- Мутации ----------
+  // ---------- Mutations ----------
   const updateEquipment = useCallback((id, updates) => {
     setProject((p) => ({
       ...p,
@@ -196,13 +196,13 @@ export default function App() {
     setProject((p) => ({ ...p, stair: { ...p.stair, ...updates } }));
   }, []);
 
-  // Двинули перегородку — пересчитались помещения, площади и все проверки.
+  // A partition was moved — rooms, areas and all checks were recalculated.
   const updateLayout = useCallback((updates) => {
     setProject((p) => ({ ...p, layout: normalizeLayout({ ...p.layout, ...updates }) }));
   }, []);
 
-  // Переключение варианта планировки. Заменяет разбивку, проёмы и расстановку;
-  // лестница и пирог пола сохраняются — они от варианта не зависят.
+  // Switching the layout variant. Replaces the breakdown, openings and placement;
+  // the stair and the floor build-up are kept — they do not depend on the variant.
   const switchVariant = useCallback((variantId) => {
     setProject((p) => (p.layout.variant === variantId ? p : applyVariant(p, variantId)));
     setSelectedId(null);
@@ -261,17 +261,17 @@ export default function App() {
   }, []);
 
   const handleReset = useCallback(() => {
-    if (!window.confirm('Сбросить планировку к исходной? Все ваши правки будут потеряны.')) return;
-    // Текущий вариант сохраняем — сбрасываются правки внутри него, а не выбор варианта
+    if (!window.confirm('Reset the layout to the original? All your edits will be lost.')) return;
+    // The current variant is kept — edits within it are reset, not the choice of variant
     setProject((p) => makeInitialProject(p.layout.variant));
     setLayers(DEFAULT_LAYERS);
     setSelectedId(null);
   }, []);
 
-  // ---------- Предупреждения ----------
+  // ---------- Warnings ----------
   const warnings = useMemo(() => runRules(project, CLEAR_HEIGHT), [project]);
 
-  // ---------- Раскладка петель для отрисовки на слое «Тёплый пол» ----------
+  // ---------- Loop layout for drawing on the “Underfloor heating” layer ----------
   const loops = useMemo(() => {
     const hl = heatLoss({
       layout: project.layout,
@@ -294,7 +294,7 @@ export default function App() {
     });
   }, [project]);
 
-  // Трассы электрики пересчитываются вместе с расстановкой точек
+  // Electrical routes are recalculated together with the placement of points
   const electrical = useMemo(
     () =>
       electricalPlan({
@@ -304,12 +304,12 @@ export default function App() {
     [project]
   );
 
-  // ---------- Экспорт ----------
+  // ---------- Export ----------
   //
-  // html2canvas разбирает CSS собственным парсером и спотыкается о всё
-  // современное. Любой такой спотык — исключение внутри async-обработчика,
-  // то есть КНОПКА ПРОСТО НЕ РАБОТАЕТ и ничего не сообщает. Поэтому здесь
-  // два слоя защиты: чистка стилей в клоне и явное сообщение об ошибке.
+  // html2canvas parses CSS with its own parser and stumbles on anything
+  // modern. Any such stumble is an exception inside an async handler,
+  // i.e. THE BUTTON SIMPLY DOES NOT WORK and reports nothing. So there are
+  // two layers of protection here: cleaning styles in the clone and an explicit error message.
   const [exportError, setExportError] = useState('');
 
   const captureCanvas = useCallback(async () => {
@@ -323,11 +323,11 @@ export default function App() {
       backgroundColor: '#ffffff',
       logging: false,
       useCORS: true,
-      // Зум-панель на чертеже не нужна
+      // The zoom panel is not needed on the drawing
       ignoreElements: (el) => el.classList?.contains('zoom-bar'),
       onclone: (doc) => {
-        // Градиенты и всё, что парсер не осилит, заменяем ровной заливкой:
-        // на чертеже двухцветный значок не стоит потерянного экспорта
+        // Gradients and anything the parser cannot handle are replaced with a flat fill:
+        // on a drawing a two-colour icon is not worth a lost export
         doc.querySelectorAll('*').forEach((el) => {
           const bg = el.style?.backgroundImage;
           if (bg && bg !== 'none') {
@@ -355,8 +355,8 @@ export default function App() {
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (e) {
-      console.error('Экспорт PNG не удался', e);
-      setExportError(`PNG не сохранился: ${e.message}`);
+      console.error('PNG export failed', e);
+      setExportError(`PNG was not saved: ${e.message}`);
     }
   }, [captureCanvas, visibleLayerNames]);
 
@@ -375,7 +375,7 @@ export default function App() {
     const h = canvas.height * ratio;
 
     pdf.setFontSize(11);
-    pdf.text(`План 1-го этажа 5,5 x 5,5 м — слои: ${visibleLayerNames.join(', ')}`, margin, margin + 6);
+    pdf.text(`Ground floor plan 5.5 x 5.5 m — layers: ${visibleLayerNames.join(', ')}`, margin, margin + 6);
     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin + 20, w, h);
     pdf.save(`plan-1etazh-${visibleLayerNames.join('-')}.pdf`);
   }, [captureCanvas, visibleLayerNames]);
@@ -385,8 +385,8 @@ export default function App() {
     try {
       await exportPdf();
     } catch (e) {
-      console.error('Экспорт PDF не удался', e);
-      setExportError(`PDF не сохранился: ${e.message}`);
+      console.error('PDF export failed', e);
+      setExportError(`PDF was not saved: ${e.message}`);
     }
   }, [exportPdf]);
 
@@ -406,12 +406,12 @@ export default function App() {
       <div className="plan-column" ref={containerRef}>
         <div className="zoom-bar">
           <button onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}
-            title="Мельче">−</button>
-          <button className="zoom-fit" onClick={() => setZoom(1)} title="По размеру окна">
+            title="Smaller">−</button>
+          <button className="zoom-fit" onClick={() => setZoom(1)} title="Fit to window">
             {Math.round(zoom * 100)}%
           </button>
           <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)))}
-            title="Крупнее">+</button>
+            title="Larger">+</button>
         </div>
         <Plan
           ref={planRef}
@@ -439,12 +439,12 @@ export default function App() {
         className={`splitter${resizing ? ' active' : ''}`}
         role="separator"
         aria-orientation="vertical"
-        aria-label="Граница плана и панели"
+        aria-label="Divider between the plan and the panel"
         aria-valuenow={sidebarW}
         aria-valuemin={SIDEBAR.min}
         aria-valuemax={SIDEBAR.max}
         tabIndex={0}
-        title="Тянуть мышкой · двойной щелчок — исходная ширина"
+        title="Drag with the mouse · double-click — original width"
         onMouseDown={(e) => { e.preventDefault(); setResizing(true); }}
         onTouchStart={() => setResizing(true)}
         onDoubleClick={() => setSidebarW(clampSidebar(SIDEBAR.default, window.innerWidth))}

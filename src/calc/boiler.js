@@ -8,9 +8,9 @@
 // Лечится не заменой котла (иначе просядет ГВС), а объёмом теплоносителя,
 // с которым котёл гидравлически связан, и погодозависимой автоматикой.
 
-export const WATER_C = 4.18; // кДж/(кг·К)
-export const CONCRETE_C = 0.84; // кДж/(кг·К)
-export const CONCRETE_DENSITY = 2200; // кг/м³
+export const WATER_C = 4.18; // kJ/(kg·K)
+export const CONCRETE_C = 0.84; // kJ/(kg·K)
+export const CONCRETE_DENSITY = 2200; // kg/m³
 
 // Цикл короче 10 минут считается тактованием
 export const MIN_CYCLE_MINUTES = 10;
@@ -41,7 +41,7 @@ export function burnerCycleMinutes({
   coolantRatio = 1
 }) {
   const excessW = (minPowerKw - loadKw) * 1000;
-  if (excessW <= 0) return Infinity; // котёл модулируется ниже нагрузки — тактования нет
+  if (excessW <= 0) return Infinity; // the boiler modulates below the load — no short-cycling
   const energyKj = systemVolumeL * WATER_C * coolantRatio * hysteresisK;
   return (energyKj * 1000) / excessW / 60;
 }
@@ -52,7 +52,7 @@ export function burnerCycleMinutes({
 // где отключение длиннее полученного времени.
 export function houseCooldown({
   screedMassKg,
-  structureFactor = 1.6, // стены, перегородки, мебель сверх массы стяжки
+  structureFactor = 1.6, // walls, partitions, furniture on top of the screed mass
   uaWPerK,
   tStart = 22,
   tOut = -27,
@@ -85,20 +85,20 @@ export function boilerCheck({ boiler, loadKw, areaM2, screed, pipeVolumeL = 0, c
   const schemes = [
     {
       id: 'separated',
-      name: 'ТП через смесительный узел',
-      note: 'Котёл отделён от стяжки: видит только свой контур',
+      name: 'Underfloor heating through a mixing unit',
+      note: 'The boiler is separated from the screed: it sees only its own circuit',
       volumeL: boilerLoopL + pipeVolumeL * 0.3
     },
     {
       id: 'buffer100',
-      name: 'То же плюс буфер 100 л',
-      note: 'Буферу нужно место в прихожей',
+      name: 'Same plus a 100 l buffer',
+      note: 'The buffer needs space in the hall',
       volumeL: boilerLoopL + pipeVolumeL * 0.3 + 100
     },
     {
       id: 'direct',
-      name: 'Прямое низкотемпературное подключение',
-      note: 'Котёл связан со всей массой стяжки',
+      name: 'Direct low-temperature connection',
+      note: 'The boiler is coupled to the whole screed mass',
       volumeL: boilerLoopL + pipeVolumeL + mass.waterEquivalentL
     }
   ].map((s) => ({

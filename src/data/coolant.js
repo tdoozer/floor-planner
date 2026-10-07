@@ -14,12 +14,12 @@ export const COOLANT = {
   // Это ЭТИЛЕНГЛИКОЛЬ, а не пропиленгликоль. И это КОНЦЕНТРАТ:
   // разбавляется водой, концентрация в системе зависит от того, как разбавили.
   base: 'ethylene', // propylene | ethylene | water
-  label: '«Тёплый Дом» −65 °C, этиленгликоль (концентрат)',
-  brand: 'Тёплый Дом',
-  maker: 'ООО «Гелена Химавто»',
-  spec: 'ТУ 2422-003-52600040-01',
-  toxic: true, // на этикетке прямо: «ЯДОВИТО»
-  workingRange: [-65, 112], // °C по этикетке
+  label: '“Teply Dom” −65 °C, ethylene glycol (concentrate)',
+  brand: 'Teply Dom',
+  maker: 'OOO “Gelena Khimavto”',
+  spec: 'TU 2422-003-52600040-01',
+  toxic: true, // the label says it outright: “TOXIC”
+  workingRange: [-65, 112], // °C per the label
 
   // Дата изготовления и заявленный срок службы
   manufactured: '2014-06-02',
@@ -39,16 +39,16 @@ export const COOLANT = {
   crystallization: null,
 
   // Теплофизика против воды, этиленгликоль ~50 %
-  c: 3.4, // кДж/(кг·К)
-  density: 1060, // кг/м³
-  lambda: 0.40, // Вт/(м·К) против 0,6 у воды
+  c: 3.4, // kJ/(kg·K)
+  density: 1060, // kg/m³
+  lambda: 0.40, // W/(m·K) versus 0.6 for water
 
   // Поправки к гидравлике. Этиленгликоль ЛУЧШЕ пропиленгликоля:
   // ниже вязкость, выше теплопроводность. Прежние значения были взяты
   // для пропилена и оказались консервативными — расчёт от этого не страдает.
-  flowFactor: 1.16, // расход при том же ΔT
-  pressureDropFactor: 1.4, // потери давления (у пропилена было 1,6)
-  boilerDerate: 0.92, // снижение теплосъёма котла
+  flowFactor: 1.16, // flow at the same ΔT
+  pressureDropFactor: 1.4, // pressure drop (it was 1.6 for propylene)
+  boilerDerate: 0.92, // reduction of the boiler heat transfer
 
   // ПОДТВЕРЖДЁННЫЙ РАСЧЁТОМ предел длины петли, м.
   // Правило большого пальца давало 71 м, и зал переваливал за два контура
@@ -69,7 +69,7 @@ export const COOLANT = {
   // Исходная причина заливки антифриза (поверхностный насос терял давление
   // при отключении электричества) УСТРАНЕНА подведением центральной воды.
   originalReasonResolved: true,
-  originalReason: 'Поверхностный насос терял давление при отключении электричества',
+  originalReason: 'The surface pump lost pressure during a power outage',
 
   // НО появилось обстоятельство ВАЖНЕЕ: дом зимой подолгу стоит пустым.
   // Отопление держат на минимуме, лишь бы выше нуля. Это радикально сокращает
@@ -80,7 +80,7 @@ export const COOLANT = {
   // Труба ТП замурована в стяжку — разрыв там неустраним без вскрытия бетона.
   // Поэтому антифриз в тёплом полу оправдан именно как страховка необратимого.
   houseEmptyInWinter: true,
-  minHoldTemp: 8 // °C, на сколько выставляют отопление в отсутствие хозяев
+  minHoldTemp: 8 // °C, what the heating is set to while the owners are away
 };
 
 // Объёмная теплоёмкость относительно воды: важна для инерции системы

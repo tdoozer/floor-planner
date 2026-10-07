@@ -4,15 +4,15 @@ import { CLEAR_HEIGHT } from '../data/project.js';
 import { STYLES, VIEWPOINTS, buildRenderPrompt, renderUrl } from '../calc/renderPrompt.js';
 import { floorLevels } from '../calc/geometry.js';
 
-// Фотореалистичный рендер.
+// Photorealistic render.
 //
-// Промпт НЕ пишется руками: он собирается из расстановки — из выбранной
-// точки съёмки берутся видимые предметы и складываются во фразу. Текст
-// при этом остаётся редактируемым: модель не всегда понимает с первого раза,
-// и правка формулировки должна быть под рукой.
+// The prompt is NOT written by hand: it is assembled from the placement — the visible
+// items are taken from the chosen viewpoint and folded into a phrase. The text
+// stays editable: the model does not always get it right the first time,
+// and tweaking the wording must be at hand.
 //
-// Картинка идёт через прокси /prompt/ — в проде его отдаёт nginx,
-// в dev проксирует Vite. Ключей и токенов в коде нет.
+// The image goes through the /prompt/ proxy — in production it is served by nginx,
+// in dev Vite proxies it. There are no keys or tokens in the code.
 export default function RenderPanel({ project }) {
   const [viewpointId, setViewpointId] = useState(VIEWPOINTS[0].id);
   const [styleId, setStyleId] = useState(STYLES[0].id);
@@ -32,8 +32,8 @@ export default function RenderPanel({ project }) {
     [project, viewpointId, styleId, clearHeight, daylight]
   );
 
-  // Пока текст не трогали руками — он следует за расстановкой.
-  // Тронули — перестаём его перетирать, иначе правки пропадают.
+  // While the text has not been touched by hand, it follows the placement.
+  // Once touched, we stop overwriting it, otherwise edits are lost.
   useEffect(() => {
     if (!edited) setText(built.text);
   }, [built.text, edited]);
@@ -65,8 +65,8 @@ export default function RenderPanel({ project }) {
     <>
       <section className="panel">
         <div className="panel-head">
-          <span>Точка съёмки</span>
-          <span className="pill">{built.visible.length} предметов в кадре</span>
+          <span>Viewpoint</span>
+          <span className="pill">{built.visible.length} items in frame</span>
         </div>
         <div className="variant-switch vertical">
           {VIEWPOINTS.map((v) => (
@@ -81,15 +81,15 @@ export default function RenderPanel({ project }) {
           ))}
         </div>
         <p className="panel-note">
-          В кадр попадает то, что реально стоит на плане:{' '}
+          The frame contains what actually stands on the plan:{' '}
           {built.visible.slice(0, 5).map((s) => s.name.toLowerCase()).join(', ')}
-          {built.visible.length > 5 ? ' и дальше' : ''}. Двинули диван — промпт
-          пересобрался сам.
+          {built.visible.length > 5 ? ' and more' : ''}. Move the sofa and the prompt
+          reassembles itself.
         </p>
       </section>
 
       <section className="panel">
-        <div className="panel-head"><span>Стиль и свет</span></div>
+        <div className="panel-head"><span>Style and light</span></div>
         <div className="variant-switch">
           {STYLES.map((s) => (
             <button
@@ -103,16 +103,16 @@ export default function RenderPanel({ project }) {
         </div>
         <label className="check">
           <input type="checkbox" checked={daylight} onChange={(e) => setDaylight(e.target.checked)} />
-          Дневной свет (иначе вечер, только искусственный)
+          Daylight (otherwise evening, artificial light only)
         </label>
       </section>
 
       <section className="panel">
         <div className="panel-head">
-          <span>Промпт</span>
+          <span>Prompt</span>
           {edited && (
             <button className="link-btn" onClick={() => { setEdited(false); setText(built.text); }}>
-              вернуть собранный
+              restore the assembled one
             </button>
           )}
         </div>
@@ -123,23 +123,23 @@ export default function RenderPanel({ project }) {
           onChange={(e) => { setText(e.target.value); setEdited(true); }}
         />
         <div className="row-btns">
-          <button onClick={() => generate(seed)}>Сгенерировать</button>
+          <button onClick={() => generate(seed)}>Generate</button>
           <button onClick={() => generate(Math.floor(Math.random() * 1e6))}>
-            Другой вариант
+            Another variant
           </button>
-          {url && <button onClick={download}>Скачать</button>}
+          {url && <button onClick={download}>Download</button>}
         </div>
       </section>
 
       <section className="panel">
         <div className="panel-head">
-          <span>Результат</span>
+          <span>Result</span>
           {url && <span className="pill">seed {seed}</span>}
         </div>
         {!url && (
           <p className="panel-note">
-            Картинка приходит с Pollinations через локальный прокси. Первая
-            генерация занимает 10–30 секунд.
+            The image comes from Pollinations through a proxy. The first
+            generation takes 10–30 seconds.
           </p>
         )}
         {error && <p className="panel-note error-text">{error}</p>}
@@ -147,22 +147,22 @@ export default function RenderPanel({ project }) {
           <div className={`render-frame${loading ? ' loading' : ''}`}>
             <img
               src={url}
-              alt="Визуализация интерьера"
+              alt="Interior visualisation"
               onLoad={() => setLoading(false)}
               onError={() => {
                 setLoading(false);
                 setError(
-                  'Сервис не ответил. Обычно это перегрузка бесплатного ' +
-                  'Pollinations — попробуйте «Другой вариант» через минуту.'
+                  'The service did not respond. This is usually an overload of the free ' +
+                  'Pollinations — try “Another variant” in a minute.'
                 );
               }}
             />
           </div>
         )}
         <p className="panel-note">
-          <b>Это картинка, а не чертёж.</b> Модель не соблюдает размеры
-          и расстановку буквально — она показывает настроение и сочетания.
-          Для геометрии есть вкладка 3D.
+          <b>This is a picture, not a drawing.</b> The model does not follow dimensions
+          and placement literally — it shows mood and combinations.
+          For geometry there is the 3D tab.
         </p>
       </section>
     </>

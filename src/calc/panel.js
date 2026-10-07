@@ -16,22 +16,22 @@
 
 // Что стоит в уличном ящике сейчас — прочитано с фотографии.
 export const EXISTING = {
-  meter: { model: 'Меркурий 203.1', rating: '5(80) А', year: 2012, serial: '12567771',
+  meter: { model: 'Mercury 203.1', rating: '5(80) A', year: 2012, serial: null,
     // Межповерочный интервал 16 лет: до 2028-го счётчик легитимен.
     // Менять его теперь обязанность сетевой организации, не ваша.
     calibrationYears: 16 },
-  input: { device: 'ВА47-29', curve: 'C', rating: 32, poles: 2 },
-  voltageRelay: { model: 'РММ47', uMin: 165, uMax: 265, autoReset: false },
-  spd: { model: 'ОПС', class: 2, up: 1.8 },
+  input: { device: 'VA47-29', curve: 'C', rating: 32, poles: 2 },
+  voltageRelay: { model: 'RMM47', uMin: 165, uMax: 265, autoReset: false },
+  spd: { model: 'SPD', class: 2, up: 1.8 },
   groups: [
-    { device: 'ВА47-29', curve: 'C', rating: 25, rcd: null },
-    { device: 'АВДТ 32', curve: 'C', rating: 25, rcd: 30 }
+    { device: 'VA47-29', curve: 'C', rating: 25, rcd: null },
+    { device: 'AVDT 32', curve: 'C', rating: 25, rcd: 30 }
   ],
   socket: true
 };
 
-export const OUTDOOR_MIN_C = -25; // нижняя граница электронных АВДТ
-export const DESIGN_OUTDOOR_C = -27; // расчётная наружная для объекта
+export const OUTDOOR_MIN_C = -25; // lower limit of electronic RCBOs
+export const DESIGN_OUTDOOR_C = -27; // design outdoor temperature for the site
 
 // Мощности по группам, в двух колонках. Одна цифра тут врёт:
 // у чайника и ТЭНа посудомойки пик держится минуты, а не часы, и тепловой
@@ -41,11 +41,11 @@ export const DESIGN_OUTDOOR_C = -27; // расчётная наружная дл
 //   sustained — средняя за полчаса и дольше, то есть то, что реально греет автомат
 export const GROUP_LOADS = {
   light: { peak: 300, sustained: 300 },
-  sockets: { peak: 1500, sustained: 300 }, // телевизор и зарядки
-  kitchen: { peak: 3000, sustained: 200 }, // чайник кипит три минуты
-  kitchenApp: { peak: 2500, sustained: 1000 }, // ТЭН посудомойки + холодильник
-  appliance: { peak: 3500, sustained: 1500 }, // духовка после разогрева модулирует
-  bath: { peak: 3700, sustained: 1200 }, // стиралка греет воду минут пятнадцать
+  sockets: { peak: 1500, sustained: 300 }, // TV and chargers
+  kitchen: { peak: 3000, sustained: 200 }, // the kettle boils for three minutes
+  kitchenApp: { peak: 2500, sustained: 1000 }, // dishwasher heater + refrigerator
+  appliance: { peak: 3500, sustained: 1500 }, // the oven modulates after warming up
+  bath: { peak: 3700, sustained: 1200 }, // the washing machine heats water for about fifteen minutes
   boiler: { peak: 130, sustained: 130 }
 };
 
@@ -53,10 +53,10 @@ export const GROUP_LOADS = {
 // одновременности по справочнику — усреднение по многим домам;
 // для одного дома честнее перебрать конкретные сценарии.
 export const SCENARIOS = [
-  { id: 'idle', label: 'Дом пустой, поддержание', groups: ['boiler'] },
-  { id: 'evening', label: 'Обычный вечер', groups: ['light', 'sockets', 'kitchenApp', 'boiler'] },
-  { id: 'cooking', label: 'Готовка с посудомойкой', groups: ['light', 'kitchen', 'kitchenApp', 'appliance', 'boiler'] },
-  { id: 'worst', label: 'Праздник: духовка, ПММ, стиралка и чайник',
+  { id: 'idle', label: 'House empty, holding temperature', groups: ['boiler'] },
+  { id: 'evening', label: 'Ordinary evening', groups: ['light', 'sockets', 'kitchenApp', 'boiler'] },
+  { id: 'cooking', label: 'Cooking with the dishwasher on', groups: ['light', 'kitchen', 'kitchenApp', 'appliance', 'boiler'] },
+  { id: 'worst', label: 'Party: oven, dishwasher, washing machine and kettle',
     groups: ['light', 'kitchen', 'kitchenApp', 'appliance', 'bath', 'boiler'] }
 ];
 
@@ -73,10 +73,10 @@ export function scenarioLoad(groups, kind = 'sustained', loads = GROUP_LOADS) {
 export const TRIP = { hold: 1.13, hour: 1.45, magnetic: 5 };
 
 export function tripBand(ratio) {
-  if (ratio <= TRIP.hold) return { band: 'hold', label: 'держит сколько угодно' };
-  if (ratio <= TRIP.hour) return { band: 'slow', label: 'выбьет за десятки минут' };
-  if (ratio < TRIP.magnetic) return { band: 'minutes', label: 'выбьет за минуты' };
-  return { band: 'instant', label: 'мгновенно' };
+  if (ratio <= TRIP.hold) return { band: 'hold', label: 'holds indefinitely' };
+  if (ratio <= TRIP.hour) return { band: 'slow', label: 'trips in tens of minutes' };
+  if (ratio < TRIP.magnetic) return { band: 'minutes', label: 'trips in minutes' };
+  return { band: 'instant', label: 'instantly' };
 }
 
 // Проверка ввода: считаем ОБА тока и смотрим, что делает автомат с каждым.
@@ -118,28 +118,28 @@ const WIDTH = { mcb1: 1, mcb2: 2, rcbo: 2, rcd: 2, relay: 2, spd: 2, socket: 3, 
 // Счётчик сидит на СВОЕЙ панели над рейкой и модулей на ней не занимает —
 // на фотографии это хорошо видно. Считаем только то, что стоит на DIN.
 export const OUTDOOR = {
-  id: 'vsch', label: 'ВЩ — ввод и учёт, снаружи', modules: 12,
+  id: 'vsch', label: 'Outdoor board — feed and metering', modules: 12,
   devices: [
-    { id: 'QF1', label: 'Вводной автомат 2P C32', width: WIDTH.mcb2, keep: true,
-      why: 'Номинал задан договором, а не выбором. Оставляем как есть.' },
-    { id: 'KV1', label: 'Реле напряжения с АВТОВОЗВРАТОМ', width: WIDTH.relay, replace: 'РММ47',
-      why: 'ГЛАВНАЯ ЗАМЕНА. РММ47 сбрасывает автомат и оставляет его выключенным ' +
-        'до ручного взвода. В пустом доме это значит: одна просадка сети в январе — ' +
-        'и дом без отопления до вашего приезда. ИБП держит около 13 часов, дальше мороз. ' +
-        'Реле С АВТОВОЗВРАТОМ само включает питание, когда напряжение вернулось.' },
-    { id: 'FV1', label: 'УЗИП класс II', width: WIDTH.spd, keep: true,
-      why: 'Уже стоит. Воздушный ввод в деревне — грозовые импульсы реальны.' },
-    { id: 'QD1', label: 'УЗО 2P 63 А / 300 мА, тип S', width: WIDTH.rcd, add: true,
-      why: 'Противопожарное. Тип S обязателен: без выдержки времени оно будет ' +
-        'выбивать вместе с групповыми 30 мА, и селективности не получится.' },
-    { id: 'XS1', label: 'Сервисная розетка', width: WIDTH.socket, keep: true,
-      why: 'Есть, полезна при работах у ящика.' }
+    { id: 'QF1', label: 'Main breaker 2P C32', width: WIDTH.mcb2, keep: true,
+      why: 'The rating is set by the contract, not by choice. Keep as is.' },
+    { id: 'KV1', label: 'Voltage relay with AUTO-RESET', width: WIDTH.relay, replace: 'RMM47',
+      why: 'THE MAIN REPLACEMENT. The RMM47 trips the breaker and leaves it off ' +
+        'until it is re-armed by hand. In an empty house this means: one mains dip in January — ' +
+        'and the house is without heating until you arrive. The UPS holds about 13 hours, then frost. ' +
+        'A relay WITH AUTO-RESET switches the power back on by itself when the voltage returns.' },
+    { id: 'FV1', label: 'SPD class II', width: WIDTH.spd, keep: true,
+      why: 'Already there. An overhead feed in a village — lightning surges are real.' },
+    { id: 'QD1', label: 'RCD 2P 63 A / 300 mA, type S', width: WIDTH.rcd, add: true,
+      why: 'Fire protection. Type S is mandatory: without a time delay it will ' +
+        'trip together with the group 30 mA devices, and there will be no selectivity.' },
+    { id: 'XS1', label: 'Service socket', width: WIDTH.socket, keep: true,
+      why: 'It is there, useful when working at the box.' }
   ],
   // Отсюда уезжает внутрь: два групповых аппарата, которые сейчас стоят
   // на улице. Они и освобождают три модуля под противопожарное УЗО.
   moveIndoors: [
-    { label: 'ВА47-29 C25', why: 'групповой аппарат на улице — не место' },
-    { label: 'АВДТ 32 C25 / 30 мА', why: 'электронный дифавтомат при −27 °C за пределом диапазона' }
+    { label: 'VA47-29 C25', why: 'a group device outdoors is the wrong place' },
+    { label: 'AVDT 32 C25 / 30 mA', why: 'an electronic RCBO at −27 °C is outside its range' }
   ]
 };
 
@@ -147,32 +147,32 @@ export const OUTDOOR = {
 // дом подолгу стоит пустым, и «выбило одно — погасло всё» здесь дороже,
 // чем разница в цене аппаратов.
 export const INDOOR = {
-  id: 'shchr', label: 'ЩР — распределительный, в прихожей', modules: 24,
+  id: 'shchr', label: 'Distribution board, in the hall', modules: 24,
   devices: [
-    { id: 'QF0', label: 'Вводной выключатель нагрузки 2P 40 А', width: WIDTH.mcb2,
-      why: 'Чтобы обесточить дом, не выходя на улицу.' },
-    { id: 'QF1', label: 'Освещение — C10, 3×1,5', width: WIDTH.mcb1, circuit: 'light',
+    { id: 'QF0', label: 'Main load switch 2P 40 A', width: WIDTH.mcb2,
+      why: 'To de-energise the house without going outside.' },
+    { id: 'QF1', label: 'Lighting — C10, 3×1.5', width: WIDTH.mcb1, circuit: 'light',
       rating: 10, rcdMa: null,
-      why: 'Без УЗО: светильники класса II и потолочная разводка. Зато при ' +
-        'аварии в розетках свет остаётся — в пустом доме это важнее.' },
-    { id: 'QFD2', label: 'Розетки общие — C16 / 30 мА', width: WIDTH.rcbo, circuit: 'sockets',
+      why: 'No RCD: class II luminaires and ceiling wiring. In return, when ' +
+        'the sockets fault the light stays on — in an empty house that matters more.' },
+    { id: 'QFD2', label: 'General sockets — C16 / 30 mA', width: WIDTH.rcbo, circuit: 'sockets',
       rating: 16, rcdMa: 30 },
-    { id: 'QFD3', label: 'Розетки кухни — C16 / 30 мА', width: WIDTH.rcbo, circuit: 'kitchen',
+    { id: 'QFD3', label: 'Kitchen sockets — C16 / 30 mA', width: WIDTH.rcbo, circuit: 'kitchen',
       rating: 16, rcdMa: 30 },
-    { id: 'QFD4', label: 'Холодильник и посудомойка — C16 / 30 мА', width: WIDTH.rcbo, circuit: 'kitchenApp',
+    { id: 'QFD4', label: 'Refrigerator and dishwasher — C16 / 30 mA', width: WIDTH.rcbo, circuit: 'kitchenApp',
       rating: 16, rcdMa: 30,
-      why: 'Отдельно от розеток кухни: холодильник не должен гаснуть из-за ' +
-        'утечки в чайнике, пока дом пустой.' },
-    { id: 'QFD5', label: 'Духовой шкаф — C16 / 30 мА', width: WIDTH.rcbo, circuit: 'appliance',
+      why: 'Separate from the kitchen sockets: the refrigerator must not go dark because of ' +
+        'a leakage in the kettle while the house is empty.' },
+    { id: 'QFD5', label: 'Oven — C16 / 30 mA', width: WIDTH.rcbo, circuit: 'appliance',
       rating: 16, rcdMa: 30,
-      why: '3,5 кВт выбирают линию целиком — делить не с кем.' },
-    { id: 'QFD6', label: 'Санузел и стиральная — C16 / 10 мА', width: WIDTH.rcbo, circuit: 'bath',
+      why: '3.5 kW takes the whole line — there is nobody to share it with.' },
+    { id: 'QFD6', label: 'Bathroom and washing machine — C16 / 10 mA', width: WIDTH.rcbo, circuit: 'bath',
       rating: 16, rcdMa: 10,
-      why: 'Мокрая зона: 10 мА, а не общие 30.' },
-    { id: 'QFD7', label: 'Котёл через ИБП — C6 / 30 мА', width: WIDTH.rcbo, circuit: 'boiler',
+      why: 'A wet zone: 10 mA, not the common 30.' },
+    { id: 'QFD7', label: 'Boiler through the UPS — C6 / 30 mA', width: WIDTH.rcbo, circuit: 'boiler',
       rating: 6, rcdMa: 30,
-      why: 'Питает ИБП, а от него аварийный щиток. Свой аппарат — чтобы ' +
-        'чужая авария не гасила отопление.' }
+      why: 'Feeds the UPS, and from it the emergency board. Its own device — so that ' +
+        'someone else’s fault does not shut down the heating.' }
   ]
 };
 
@@ -183,16 +183,16 @@ export const INDOOR = {
 // сработает. Все наши группы идут на 3×2,5 под C16, поэтому оба аппарата
 // в дело не идут и остаются запасом.
 export function salvage(existing = EXISTING, groups = INDOOR.devices) {
-  const cableA = 16; // предел для 3×2,5 в нашей раскладке
+  const cableA = 16; // limit for 3×2.5 in our layout
   return existing.groups.map((g) => {
     const fits = groups.some((d) => d.rating === g.rating && (d.rcdMa ?? null) === (g.rcd ?? null));
     return {
       ...g,
       reusable: fits,
       why: fits
-        ? 'подходит под группу как есть'
-        : `номинал ${g.rating} А выше допустимого ${cableA} А для кабеля 3×2,5 — ` +
-          'в дело не идёт, остаётся запасом'
+        ? 'fits the group as is'
+        : `rating ${g.rating} A is above the permissible ${cableA} A for a 3×2.5 cable — ` +
+          'not used, stays in reserve'
     };
   });
 }
@@ -213,10 +213,10 @@ export function panelFill(panel) {
 // чувствительнее вышестоящей, а вышестоящая — с выдержкой времени.
 export function rcdChain() {
   return [
-    { at: 'ВЩ', ma: 300, type: 'S', role: 'противопожарное, с выдержкой' },
-    { at: 'ЩР', ma: 30, type: 'AC/A', role: 'групповые, мгновенные' },
-    { at: 'ЩР, санузел', ma: 10, type: 'A', role: 'мокрая зона' },
-    { at: 'ЩАП, после ИБП', ma: 10, type: 'A', role: 'аварийная розетка' }
+    { at: 'Outdoor board', ma: 300, type: 'S', role: 'fire protection, time-delayed' },
+    { at: 'Distribution board', ma: 30, type: 'AC/A', role: 'group, instantaneous' },
+    { at: 'Distribution board, bathroom', ma: 10, type: 'A', role: 'wet zone' },
+    { at: 'Emergency board, after the UPS', ma: 10, type: 'A', role: 'emergency socket' }
   ];
 }
 
@@ -224,7 +224,7 @@ export function panelPlan({ inputRating = EXISTING.input.rating, outdoorC = DESI
   const outdoor = panelFill(OUTDOOR);
   const indoor = panelFill(INDOOR);
   const input = inputCheck({ rating: inputRating });
-  const freedModules = OUTDOOR.moveIndoors.length + 1; // C25 (1) + АВДТ32 (2)
+  const freedModules = OUTDOOR.moveIndoors.length + 1; // C25 (1) + AVDT32 (2)
   return {
     existing: EXISTING,
     outdoor,

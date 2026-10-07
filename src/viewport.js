@@ -1,12 +1,12 @@
-// Мировая область отрисовки плана: коробка дома плюс запас под размерные линии.
-// Вынесено отдельным модулем, чтобы App и компоненты плана не образовали
-// циклический импорт.
+// World area for drawing the plan: the house box plus room for dimension lines.
+// Kept in a separate module so that App and the plan components do not form
+// a circular import.
 
 import { INNER_D, INNER_W, WALL_OUTER } from './data/project.js';
 
-// Место под размерные цепочки. Величина прямо съедает масштаб плана:
-// при 1,25 м на поля уходило 28 % ширины полотна. 0,85 хватает на две
-// цепочки сверху и подпись, а план стал заметно крупнее.
+// Room for the dimension chains. The value directly eats into the plan scale:
+// at 1.25 m the margins took 28 % of the canvas width. 0.85 is enough for two
+// chains at the top and a label, and the plan became noticeably larger.
 export const VIEW_MARGIN = 0.85;
 
 export const WORLD = {

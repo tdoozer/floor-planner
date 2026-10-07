@@ -76,8 +76,8 @@ export function windowsCheck({ openings, envelope, climate, rh = 50, roomTemp })
 //
 // Считаем послойно. Утопленный подрозетник съедает и штукатурку, и часть
 // блока; воздух внутри коробки и её пластик в запас не берём — так честнее.
-export const R_SI_WALL = 0.115; // тепловосприятие внутренней поверхности стены
-export const R_SE_WALL = 0.043; // теплоотдача наружной
+export const R_SI_WALL = 0.115; // heat transfer resistance of the inner wall surface
+export const R_SE_WALL = 0.043; // of the outer one
 
 export function wallLayersR(envelope, { recessMm = 0 } = {}) {
   const w = envelope.wall;
@@ -118,7 +118,7 @@ export function backBoxCheck({ envelope, tIn, tOut, rh = 55, recessMm = 45 }) {
     remainingMm: r.blockMm,
     tSolid: solid,
     tAtBox: atBox,
-    penalty: solid - atBox, // во сколько градусов обходится утапливание
+    penalty: solid - atBox, // how many degrees recessing costs
     dewPoint: dp,
     margin: atBox - dp,
     condenses: atBox < dp,

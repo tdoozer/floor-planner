@@ -1,20 +1,20 @@
 // @vitest-environment jsdom
 //
-// Смоук-тест: приложение действительно монтируется и рисует план.
-// Ловит именно тот класс ошибок, который на проде выглядит как пустая страница —
-// битый импорт, отсутствующий слой, падение в расчётном ядре при первом рендере.
+// Smoke test: the app really mounts and draws the plan.
+// Catches exactly the class of errors that looks like an empty page in production —
+// a broken import, a missing layer, a crash in the calculation core on first render.
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import App, { SIDEBAR, clampSidebar } from '../App.jsx';
 
-// Без `globals: true` автоочистка testing-library не регистрируется,
-// и рендеры накапливаются между тестами. Чистим явно.
+// Without `globals: true` the testing-library auto-cleanup is not registered,
+// and renders pile up between tests. We clean up explicitly.
 afterEach(cleanup);
 
 beforeAll(() => {
-  // jsdom не реализует ResizeObserver, а App масштабирует план по контейнеру.
+  // jsdom does not implement ResizeObserver, and App scales the plan to its container.
   global.ResizeObserver = class {
     observe() {}
     unobserve() {}
@@ -26,310 +26,310 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-describe('Приложение монтируется', () => {
-  it('рисует заголовок и все три помещения', () => {
+describe('The app mounts', () => {
+  it('draws the heading and all three rooms', () => {
     render(<App />);
-    expect(screen.getByText('Первый этаж 5,5 × 5,5')).toBeTruthy();
-    expect(screen.getAllByText('Зал (кухня-гостиная)').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Санузел').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Прихожая-котельная').length).toBeGreaterThan(0);
+    expect(screen.getByText('Ground floor 5.5 × 5.5')).toBeTruthy();
+    expect(screen.getAllByText('Living room (kitchen-living)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Bathroom').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Hall / boiler room').length).toBeGreaterThan(0);
   });
 
-  it('площади сходятся к 30,25 м² в свету', () => {
+  it('areas add up to 30.25 m² clear', () => {
     render(<App />);
-    expect(screen.getByText('30.25 м²')).toBeTruthy();
+    expect(screen.getByText('30.25 m²')).toBeTruthy();
   });
 
-  it('выводит все шесть слоёв', () => {
+  it('shows all six layers', () => {
     render(<App />);
-    ['Архитектура', 'Сантехника', 'Тёплый пол', 'Электрика', 'Оборудование', 'Размеры']
+    ['Architecture', 'Plumbing', 'Underfloor heating', 'Electrics', 'Equipment', 'Dimensions']
       .forEach((name) => expect(screen.getByText(name)).toBeTruthy());
   });
 
-  it('рендерит расставленное оборудование на плане', () => {
+  it('renders the placed equipment on the plan', () => {
     render(<App />);
-    // Приборы из стартовой расстановки — подписи на плане
-    expect(screen.getAllByTitle('Холодильник').length).toBeGreaterThan(0);
-    expect(screen.getAllByTitle('Унитаз').length).toBeGreaterThan(0);
-    expect(screen.getAllByTitle('Душевая кабина 900×900').length).toBeGreaterThan(0);
+    // Fixtures from the starting placement — labels on the plan
+    expect(screen.getAllByTitle('Refrigerator').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('Toilet').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('Shower cabin 900×900').length).toBeGreaterThan(0);
   });
 
-  it('стартует на варианте «санузел справа» с угловой кухней', () => {
+  it('starts on the “bathroom on the right” variant with the kitchen in a line', () => {
     render(<App />);
-    expect(document.querySelector('.variant-switch button.active').textContent).toBe('Санузел справа');
-    // Кухня углом: линия по верхней стене плюс ветка вдоль грани санузла.
-    // Мойка ЛИНЕЙНАЯ и под глухой створкой окна — угловая уступила место
-    // правильному порядку зон.
-    expect(screen.getAllByTitle('Столешница / шкаф 600').length).toBe(1);
-    expect(screen.getAllByTitle('Мойка (модуль 600)').length).toBe(1);
-    expect(screen.getAllByTitle('Стиральная машина').length).toBe(1);
-    // Духовой шкаф — в колонне у перегородки санузла
-    expect(screen.getAllByTitle('Духовой шкаф').length).toBe(1);
+    expect(document.querySelector('.variant-switch button.active').textContent).toBe('Bathroom on the right');
+    // Kitchen in a line along the top wall plus a branch along the bathroom face.
+    // The sink is LINEAR and under the fixed sash of the window — the corner one gave way
+    // to the right order of zones.
+    expect(screen.getAllByTitle('Worktop / cabinet 600').length).toBe(1);
+    expect(screen.getAllByTitle('Sink (600 module)').length).toBe(1);
+    expect(screen.getAllByTitle('Washing machine').length).toBe(1);
+    // The oven — in a column by the bathroom partition
+    expect(screen.getAllByTitle('Oven').length).toBe(1);
   });
 
-  it('показывает полный расчёт лестницы с обеими формулами', () => {
+  it('shows the full stair calculation with both formulas', () => {
     render(<App />);
-    ['Угол наклона', 'Высота ступени h', 'Ширина ступени', 'Ширина проступи s',
-      'Блонделя 2h + s', 'Удобства h + s'].forEach((label) => {
+    ['Slope angle', 'Riser height h', 'Step width', 'Tread depth s',
+      'Blondel 2h + s', 'Comfort h + s'].forEach((label) => {
       expect(screen.getByText(label)).toBeTruthy();
     });
-    // Ширина ступени — проектные 800
-    const row = screen.getByText('Ширина ступени').closest('tr');
-    expect(within(row).getByText('800 мм')).toBeTruthy();
+    // Step width — the design 800
+    const row = screen.getByText('Step width').closest('tr');
+    expect(within(row).getByText('800 mm')).toBeTruthy();
   });
 
-  it('рисует существующие узлы, включая стояк и оба ввода газа', () => {
+  it('draws the existing nodes, including the stack and both gas inlets', () => {
     render(<App />);
-    expect(screen.getAllByTitle('Стояк канализации, 100-я труба').length).toBeGreaterThan(0);
-    expect(screen.getAllByTitle('Ввод газа к плите').length).toBeGreaterThan(0);
-    expect(screen.getAllByTitle('Ввод газа к котлу').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('Sewer stack, 100 mm pipe').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('Gas inlet to the hob').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('Gas inlet to the boiler').length).toBeGreaterThan(0);
   });
 });
 
-describe('Слои', () => {
-  it('скрытие слоя «Оборудование» убирает приборы с плана', () => {
+describe('Layers', () => {
+  it('hiding the “Equipment” layer removes fixtures from the plan', () => {
     render(<App />);
-    expect(screen.getAllByTitle('Холодильник').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('Refrigerator').length).toBeGreaterThan(0);
 
-    const row = screen.getByText('Оборудование').closest('.layer-row');
-    fireEvent.click(within(row).getByTitle('Скрыть слой'));
+    const row = screen.getByText('Equipment').closest('.layer-row');
+    fireEvent.click(within(row).getByTitle('Hide layer'));
 
-    expect(screen.queryAllByTitle('Холодильник')).toHaveLength(0);
+    expect(screen.queryAllByTitle('Refrigerator')).toHaveLength(0);
   });
 
-  it('«Скрыть все» гасит слои, повторное нажатие возвращает', () => {
+  it('“Hide all” turns the layers off, pressing again brings them back', () => {
     render(<App />);
-    const toggle = screen.getByText('Скрыть все');
+    const toggle = screen.getByText('Hide all');
     fireEvent.click(toggle);
-    expect(screen.queryAllByTitle('Холодильник')).toHaveLength(0);
+    expect(screen.queryAllByTitle('Refrigerator')).toHaveLength(0);
 
-    fireEvent.click(screen.getByText('Показать все'));
-    expect(screen.getAllByTitle('Холодильник').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText('Show all'));
+    expect(screen.getAllByTitle('Refrigerator').length).toBeGreaterThan(0);
   });
 
-  it('состояние слоёв переживает перемонтирование (localStorage)', () => {
+  it('layer state survives remounting (localStorage)', () => {
     const first = render(<App />);
-    const row = screen.getByText('Оборудование').closest('.layer-row');
-    fireEvent.click(within(row).getByTitle('Скрыть слой'));
+    const row = screen.getByText('Equipment').closest('.layer-row');
+    fireEvent.click(within(row).getByTitle('Hide layer'));
     first.unmount();
 
     render(<App />);
-    expect(screen.queryAllByTitle('Холодильник')).toHaveLength(0);
+    expect(screen.queryAllByTitle('Refrigerator')).toHaveLength(0);
   });
 });
 
-describe('Проверки перед заливкой', () => {
-  it('вкладка «Проверки» показывает предупреждение о неподтверждённых привязках', () => {
+describe('Pre-pour checks', () => {
+  it('the “Checks” tab shows a warning about unconfirmed references', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: /Проверки/ }));
-    expect(screen.getByText(/привязок не подтверждено замером/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Checks/ }));
+    expect(screen.getByText(/reference points not confirmed by measurement/)).toBeTruthy();
   });
 
-  it('уменьшение стяжки до 55 мм даёт ошибку по защитному слою над трубой', () => {
+  it('reducing the screed to 55 mm gives an error about the cover over the pipe', () => {
     render(<App />);
-    const input = screen.getByLabelText(/Стяжка, мм/i, { selector: 'input' });
+    const input = screen.getByLabelText(/^Screed, mm$/i, { selector: 'input' });
     fireEvent.change(input, { target: { value: '55' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Проверки/ }));
-    expect(screen.getByText('Мало бетона над трубой тёплого пола')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Checks/ }));
+    expect(screen.getByText('Not enough concrete over the heating pipe')).toBeTruthy();
   });
 });
 
-describe('Переключение вариантов планировки', () => {
+describe('Switching layout variants', () => {
   const hallArea = (container) => {
     const row = [...container.querySelectorAll('.mini-table tr')]
-      .find((tr) => tr.textContent.startsWith('Прихожая-котельная'));
+      .find((tr) => tr.textContent.startsWith('Hall / boiler room'));
     return parseFloat(row.querySelector('.num').textContent);
   };
 
-  it('переключение вариантов меняет расстановку кухни', () => {
+  it('switching variants changes the kitchen placement', () => {
     render(<App />);
-    // В правом варианте духовка ушла на боковую ветку у перегородки санузла,
-    // а посудомойка стала УЗКОЙ — 450 вместо 600: этим и высвободились
-    // те 150 мм, на которые уехал весь фронт влево от угла
-    expect(screen.getAllByTitle('Духовой шкаф').length).toBe(1);
-    expect(screen.getAllByTitle('Посудомойка 450').length).toBe(1);
-    expect(screen.queryAllByTitle('Посудомойка 600')).toHaveLength(0);
+    // In the right variant the oven moved to the side branch by the bathroom partition,
+    // and the dishwasher became NARROW — 450 instead of 600: that is what freed
+    // the 150 mm by which the whole front moved left from the corner
+    expect(screen.getAllByTitle('Oven').length).toBe(1);
+    expect(screen.getAllByTitle('Dishwasher 450').length).toBe(1);
+    expect(screen.queryAllByTitle('Dishwasher 600')).toHaveLength(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Санузел слева, кухня углом' }));
-    // Левый вариант перестраивает кухню целиком, но приборы те же
-    expect(screen.getAllByTitle('Мойка (модуль 600)').length).toBe(1);
-    expect(screen.getAllByTitle('Духовой шкаф').length).toBe(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Bathroom on the left, corner kitchen' }));
+    // The left variant rebuilds the whole kitchen, but the fixtures are the same
+    expect(screen.getAllByTitle('Sink (600 module)').length).toBe(1);
+    expect(screen.getAllByTitle('Oven').length).toBe(1);
   });
 
-  it('в обоих вариантах сумма площадей остаётся 30,25 м²', () => {
+  it('in both variants the sum of areas stays 30.25 m²', () => {
     render(<App />);
-    expect(screen.getByText('30.25 м²')).toBeTruthy();
+    expect(screen.getByText('30.25 m²')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Санузел слева, кухня углом' }));
-    expect(screen.getByText('30.25 м²')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Bathroom on the left, corner kitchen' }));
+    expect(screen.getByText('30.25 m²')).toBeTruthy();
   });
 
-  it('прихожая не зависит от варианта — её держат котёл и ввод газа', () => {
+  it('the hall does not depend on the variant — it is held by the boiler and the gas inlet', () => {
     const { container } = render(<App />);
     const before = hallArea(container);
-    fireEvent.click(screen.getByRole('button', { name: 'Санузел слева, кухня углом' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bathroom on the left, corner kitchen' }));
     expect(hallArea(container)).toBeCloseTo(before, 2);
   });
 
-  it('выбор варианта переживает перемонтирование', () => {
+  it('the chosen variant survives remounting', () => {
     const first = render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Санузел слева, кухня углом' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bathroom on the left, corner kitchen' }));
     first.unmount();
 
     render(<App />);
     expect(document.querySelector('.variant-switch button.active').textContent)
-      .toBe('Санузел слева, кухня углом');
+      .toBe('Bathroom on the left, corner kitchen');
   });
 });
 
-describe('Редактирование мышкой и полями', () => {
-  it('перегородки отрисованы как ручки перетаскивания', () => {
+describe('Editing with the mouse and fields', () => {
+  it('partitions are drawn as drag handles', () => {
     const { container } = render(<App />);
-    // Санузел справа: две его грани + две грани прихожей
+    // Bathroom on the right: its two faces + two faces of the hall
     expect(container.querySelectorAll('.ph-grip').length).toBe(4);
 
-    // Слева санузел отрывается от стен, появляется третья грань
-    fireEvent.click(screen.getByRole('button', { name: 'Санузел слева, кухня углом' }));
+    // On the left the bathroom detaches from the walls, a third face appears
+    fireEvent.click(screen.getByRole('button', { name: 'Bathroom on the left, corner kitchen' }));
     expect(container.querySelectorAll('.ph-grip').length).toBe(5);
   });
 
-  it('лестница имеет область захвата и ручки размера', () => {
+  it('the stair has a grab area and size handles', () => {
     render(<App />);
-    const stair = screen.getByTitle(/Лестница на мансарду/);
+    const stair = screen.getByTitle(/Stair to the attic/);
     expect(stair).toBeTruthy();
     fireEvent.mouseDown(stair);
     expect(document.querySelectorAll('.rz').length).toBeGreaterThan(0);
   });
 
-  it('изменение ширины прихожей меняет её площадь', () => {
+  it('changing the hall width changes its area', () => {
     const { container } = render(<App />);
-    // Название помещения есть и на плане, и в таблице — берём строку таблицы
+    // The room name is both on the plan and in the table — take the table row
     const hallArea = () => {
       const row = [...container.querySelectorAll('.mini-table tr')]
-        .find((tr) => tr.textContent.startsWith('Прихожая-котельная'));
+        .find((tr) => tr.textContent.startsWith('Hall / boiler room'));
       return parseFloat(row.querySelector('.num').textContent);
     };
 
     const before = hallArea();
     fireEvent.change(
-      screen.getByLabelText(/Прихожая, ширина м/i, { selector: 'input' }),
+      screen.getByLabelText(/Hall, width m/i, { selector: 'input' }),
       { target: { value: '2.40' } }
     );
     expect(hallArea()).toBeGreaterThan(before);
   });
 
-  it('прибор можно растянуть через поля размера', () => {
+  it('a fixture can be stretched through the size fields', () => {
     render(<App />);
-    fireEvent.mouseDown(screen.getByTitle('Холодильник'));
+    fireEvent.mouseDown(screen.getByTitle('Refrigerator'));
 
-    const widthField = screen.getByLabelText(/Ширина, м/i, { selector: 'input' });
+    const widthField = screen.getByLabelText(/^Width, m$/i, { selector: 'input' });
     fireEvent.change(widthField, { target: { value: '0.80' } });
 
     expect(screen.getByText(/800 × 650/)).toBeTruthy();
-    expect(screen.getByText('Вернуть каталожный габарит')).toBeTruthy();
+    expect(screen.getByText('Restore catalogue size')).toBeTruthy();
   });
 });
 
-describe('Слой «Электрика»', () => {
+describe('The “Electrics” layer', () => {
   const hideLayer = (name) => {
     const row = [...document.querySelectorAll('.layer-row')]
       .find((r) => r.textContent.includes(name));
     fireEvent.click(row.querySelector('button'));
   };
 
-  it('розетки и светильники живут на слое электрики, а не оборудования', () => {
+  it('sockets and luminaires live on the electrics layer, not on equipment', () => {
     render(<App />);
-    expect(screen.getAllByTitle('Блок 4 розетки').length).toBeGreaterThan(0);
-    expect(screen.getAllByTitle('Светильник общий (плафон)').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('4-gang socket block').length).toBeGreaterThan(0);
+    expect(screen.getAllByTitle('General luminaire (ceiling light)').length).toBeGreaterThan(0);
 
-    hideLayer('Электрика');
-    expect(screen.queryAllByTitle('Блок 4 розетки')).toHaveLength(0);
-    expect(screen.queryAllByTitle('Светильник общий (плафон)')).toHaveLength(0);
-    // Мебель при этом на месте
-    expect(screen.getAllByTitle('Холодильник').length).toBeGreaterThan(0);
+    hideLayer('Electrics');
+    expect(screen.queryAllByTitle('4-gang socket block')).toHaveLength(0);
+    expect(screen.queryAllByTitle('General luminaire (ceiling light)')).toHaveLength(0);
+    // The furniture stays in place
+    expect(screen.getAllByTitle('Refrigerator').length).toBeGreaterThan(0);
   });
 
-  it('скрытие оборудования не трогает электрику', () => {
+  it('hiding equipment does not touch the electrics', () => {
     render(<App />);
-    hideLayer('Оборудование');
-    expect(screen.queryAllByTitle('Холодильник')).toHaveLength(0);
-    expect(screen.getAllByTitle('Блок 4 розетки').length).toBeGreaterThan(0);
+    hideLayer('Equipment');
+    expect(screen.queryAllByTitle('Refrigerator')).toHaveLength(0);
+    expect(screen.getAllByTitle('4-gang socket block').length).toBeGreaterThan(0);
   });
 });
 
-describe('Обход мебели тёплым полом', () => {
-  it('диван и лавки стоят на ножках — труба идёт под ними', () => {
+describe('Heating routed around furniture', () => {
+  it('the sofa and benches stand on legs — the pipe runs under them', () => {
     render(<App />);
-    fireEvent.mouseDown(screen.getAllByTitle('Диван')[0]);
-    const box = screen.getByLabelText(/Не класть тёплый пол под прибором/i);
+    fireEvent.mouseDown(screen.getAllByTitle('Sofa')[0]);
+    const box = screen.getByLabelText(/Do not lay heating under the fixture/i);
     expect(box.checked).toBe(false);
   });
 
-  it('кухонные шкафы исключены из поля пола', () => {
+  it('kitchen cabinets are excluded from the floor field', () => {
     render(<App />);
-    fireEvent.mouseDown(screen.getAllByTitle('Холодильник')[0]);
-    expect(screen.getByLabelText(/Не класть тёплый пол под прибором/i).checked).toBe(true);
+    fireEvent.mouseDown(screen.getAllByTitle('Refrigerator')[0]);
+    expect(screen.getByLabelText(/Do not lay heating under the fixture/i).checked).toBe(true);
   });
 
-  it('переключатель меняет полезную площадь и требуемый съём', () => {
+  it('the toggle changes the usable area and the required output', () => {
     const { container } = render(<App />);
     const living = () => {
-      fireEvent.click(screen.getByRole('button', { name: /^Петли$/ }));
+      fireEvent.click(screen.getByRole('button', { name: /^Loops$/ }));
       const row = [...container.querySelectorAll('.mini-table tr')]
-        .find((tr) => tr.textContent.startsWith('Зал'));
+        .find((tr) => tr.textContent.startsWith('Living room'));
       return row.textContent;
     };
     const before = living();
 
-    fireEvent.click(screen.getByRole('button', { name: /^План$/ }));
-    fireEvent.mouseDown(screen.getAllByTitle('Диван')[0]);
-    fireEvent.click(screen.getByLabelText(/Не класть тёплый пол под прибором/i));
+    fireEvent.click(screen.getByRole('button', { name: /^Plan$/ }));
+    fireEvent.mouseDown(screen.getAllByTitle('Sofa')[0]);
+    fireEvent.click(screen.getByLabelText(/Do not lay heating under the fixture/i));
 
     expect(living()).not.toBe(before);
   });
 });
 
-describe('Каталог', () => {
-  it('добавляет прибор на план по клику', () => {
+describe('Catalogue', () => {
+  it('adds a fixture to the plan on click', () => {
     render(<App />);
-    // Берём позицию, которой ещё нет в стартовой расстановке
-    expect(screen.queryAllByTitle('Тумба ТВ')).toHaveLength(0);
+    // Take an item that is not in the starting placement yet
+    expect(screen.queryAllByTitle('TV unit')).toHaveLength(0);
 
-    fireEvent.click(screen.getByRole('button', { name: /^Каталог$/ }));
-    fireEvent.click(screen.getByText('Тумба ТВ').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /^Catalogue$/ }));
+    fireEvent.click(screen.getByText('TV unit').closest('button'));
 
-    fireEvent.click(screen.getByRole('button', { name: /^План$/ }));
-    expect(screen.getAllByTitle('Тумба ТВ').length).toBe(1);
+    fireEvent.click(screen.getByRole('button', { name: /^Plan$/ }));
+    expect(screen.getAllByTitle('TV unit').length).toBe(1);
   });
 });
 
 
-describe('граница плана и панели', () => {
-  it('панель не ужимается ниже минимума — иначе ломаются поля в две колонки', () => {
+describe('plan and panel divider', () => {
+  it('the panel does not shrink below the minimum — otherwise the two-column fields break', () => {
     expect(clampSidebar(50, 1600)).toBe(SIDEBAR.min);
   });
 
-  it('панель не съедает план целиком', () => {
-    // На 1100 px минимум плана бьёт абсолютный потолок панели
+  it('the panel does not eat the whole plan', () => {
+    // At 1100 px the plan minimum beats the absolute panel ceiling
     expect(clampSidebar(5000, 1100)).toBe(1100 - SIDEBAR.planMin);
   });
 
-  it('абсолютный потолок держится даже на широком мониторе', () => {
+  it('the absolute ceiling holds even on a wide monitor', () => {
     expect(clampSidebar(5000, 4000)).toBe(SIDEBAR.max);
   });
 
-  it('на узком окне минимум панели важнее минимума плана', () => {
-    // 600 px ширины: обоим минимумам не хватит места, панель побеждает —
-    // без неё пользоваться нечем, план хотя бы прокручивается
+  it('on a narrow window the panel minimum matters more than the plan minimum', () => {
+    // 600 px of width: there is not enough room for both minimums, the panel wins —
+    // without it there is nothing to work with, the plan can at least be scrolled
     expect(clampSidebar(400, 600)).toBe(SIDEBAR.min);
   });
 
-  it('исходная ширина проходит без изменений', () => {
+  it('the original width passes unchanged', () => {
     expect(clampSidebar(SIDEBAR.default, 1600)).toBe(SIDEBAR.default);
   });
 
-  it('разделитель отрисован и доступен с клавиатуры', () => {
+  it('the divider is drawn and reachable from the keyboard', () => {
     render(<App />);
     const sep = document.querySelector('.splitter');
     expect(sep).toBeTruthy();
@@ -337,7 +337,7 @@ describe('граница плана и панели', () => {
     expect(sep.getAttribute('tabindex')).toBe('0');
   });
 
-  it('ширина панели восстанавливается из localStorage', () => {
+  it('the panel width is restored from localStorage', () => {
     localStorage.setItem('floor_sidebar_w', '520');
     render(<App />);
     const aside = document.querySelector('.sidebar');

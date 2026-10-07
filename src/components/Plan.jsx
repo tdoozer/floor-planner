@@ -18,7 +18,7 @@ import {
   wallRect
 } from '../calc/geometry.js';
 
-// Иконки узлов рисуем текстом — так они попадают в html2canvas без внешних шрифтов.
+// Node icons are drawn as text so they reach html2canvas without external fonts.
 const NODE_GLYPH = {
   gas_point: 'G',
   boiler: '▣',
@@ -40,15 +40,15 @@ const NODE_COLOR = {
   electrical_panel: '#ca8a04',
   vent_duct: '#0891b2',
   manifold: '#dc2626',
-  // Закладные — сталь в бетоне, поэтому серо-стальной
+  // Embedded plates are steel in concrete, hence steel-grey
   embed: '#475569'
 };
 
-// Цвета контуров тёплого пола — чтобы их можно было различить на плане
+// Heating loop colours — so that they can be told apart on the plan
 const LOOP_COLORS = ['#dc2626', '#ea580c', '#0891b2', '#7c3aed', '#16a34a'];
 
-// Цвет трубы по ходу петли: подача горячая (красная) → обратка остывшая (синяя).
-// Промежуточные значения идут через фиолетовый, чтобы переход читался.
+// Pipe colour along the loop: supply hot (red) → return cooled (blue).
+// Intermediate values go through purple so that the transition reads.
 function pipeColor(t) {
   const hot = [220, 38, 38];
   const cold = [37, 99, 235];
@@ -83,17 +83,17 @@ const Plan = forwardRef(function Plan(
 
   const walls = useMemo(() => buildWalls(layout), [layout]);
 
-  // Цвет группы освещения: выключатель и лампы, которыми он управляет,
-  // красятся одинаково. Проходная пара берёт цвет своего напарника —
-  // иначе одна и та же лампа выглядела бы принадлежащей двум группам.
+  // Lighting group colour: a switch and the lamps it controls
+  // are painted the same. A two-way pair takes the colour of its partner —
+  // otherwise the same lamp would look as if it belonged to two groups.
   //
-  // У двухклавишного групп ДВЕ, и цвет у каждой свой: сам выключатель
-  // рисуется двумя цветами по диагонали, иначе непонятно, какая клавиша
-  // к каким лампам. Клавиши пары совпадают по порядку.
+  // A two-gang switch has TWO groups, each with its own colour: the switch itself
+  // is drawn in two colours along the diagonal, otherwise it is unclear which gang
+  // goes with which lamps. The gangs of a pair match in order.
   const lightGroupColor = useMemo(() => {
     const PALETTE = ['#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c', '#0d9488'];
-    const map = {}; // id → цвет (для ламп и для первой клавиши выключателя)
-    const second = {}; // id выключателя → цвет второй клавиши
+    const map = {}; // id → colour (for lamps and for the first gang of the switch)
+    const second = {}; // switch id → colour of the second gang
     let next = 0;
 
     const switches = equipment.filter((e) => getFixture(e.catalogId)?.gangs);
@@ -102,8 +102,8 @@ const Plan = forwardRef(function Plan(
     switches.forEach((sw) => {
       const pair = sw.pairWith && switches.find((o) => o.id === sw.pairWith);
       gangsOf(sw).forEach((ids, i) => {
-        // Цвет клавиши берём у уже покрашенной лампы этой же группы —
-        // так напарник по проходной схеме получает те же цвета
+        // The gang colour is taken from an already painted lamp of the same group —
+        // so the partner in a two-way circuit gets the same colours
         const inherited = ids.map((id) => map[id]).find(Boolean);
         const color = inherited || PALETTE[next++ % PALETTE.length];
         ids.forEach((id) => { map[id] ??= color; });
@@ -115,8 +115,8 @@ const Plan = forwardRef(function Plan(
     return { map, second };
   }, [equipment]);
 
-  // Цепочки проёмов по наружным стенам: от угла до окна, окно, до следующего.
-  // Габаритный размер 5500 снят — он и так известен, а место занимал.
+  // Opening chains along the outer walls: from the corner to the window, the window, to the next one.
+  // The overall 5500 dimension was dropped — it is already known and took up space.
   const openingChains = useMemo(() => {
     const SIDES = [
       { wallId: 'w-n', horizontal: true, off: -0.4, below: false },
@@ -173,7 +173,7 @@ const Plan = forwardRef(function Plan(
       .map((c) => ({ id: c.id, dia: c.dia, ...drainRoute(c, at) }));
   }, [allConnections, riser]);
 
-  // Изолинии высоты прохода под маршем — где какой прибор поместится
+  // Headroom contours under the flight — which fixture fits where
   const headroomLines = useMemo(() => {
     if (!stair) return [];
     const slope = stair.totalRise / stair.risers / stair.tread;
@@ -188,14 +188,14 @@ const Plan = forwardRef(function Plan(
     [warnings, layers]
   );
 
-  const strokeM = 1 / pxPerMeter; // 1 пиксель в метрах — постоянная толщина линий
+  const strokeM = 1 / pxPerMeter; // 1 pixel in metres — constant line thickness
 
-  // Перетаскиваемые перегородки: двинул — пересчитались помещения, площади и смета.
+  // Draggable partitions: move one and the rooms, areas and estimate are recalculated.
   const partitionHandles = partitionHandleDefs(layout);
 
-  // Столешница ВЫВОДИТСЯ из расстановки, а не хранится: двинули посудомойку —
-  // фронт пересчитался сам. Рисуется пунктиром: это плоскость на отметке 900,
-  // а не предмет на полу, и она перекрывает приборы под собой.
+  // The worktop is DERIVED from the placement, not stored: move the dishwasher and
+  // the front recalculates itself. Drawn dashed: it is a plane at level 900,
+  // not an object on the floor, and it overlaps the appliances under it.
   const worktop = useMemo(
     () => buildWorktop(layout, equipment),
     [layout, equipment]
@@ -225,10 +225,10 @@ const Plan = forwardRef(function Plan(
         </defs>
         <rect x={0} y={0} width={INNER_W} height={INNER_D} fill="url(#grid)" />
 
-        {/* --- Помещения --- */}
+        {/* --- Rooms --- */}
         {rooms.map((room) => {
           const area = polygonArea(room.polygon);
-          // Подпись зала ставим в его широкой части, иначе она попадает на вырез
+          // The living-room label goes in its wide part, otherwise it lands on the cut-out
           let label;
           if (room.id !== 'living') {
             label = {
@@ -251,13 +251,13 @@ const Plan = forwardRef(function Plan(
                 {room.name}
               </text>
               <text x={label.x} y={label.y + 0.14} textAnchor="middle" fontSize={0.17} fill="#475569">
-                {area.toFixed(2)} м²
+                {area.toFixed(2)} m²
               </text>
             </g>
           );
         })}
 
-        {/* --- Стены --- */}
+        {/* --- Walls --- */}
         {layers.architecture.visible && (
           <g>
             {walls.map((w) => {
@@ -303,7 +303,7 @@ const Plan = forwardRef(function Plan(
                           x={r.x + r.w / 2} y={r.y - 0.06} textAnchor="middle"
                           fontSize={0.11} fill="#64748b" fontWeight="600"
                         >
-                          глухое
+                          fixed
                         </text>
                       )}
                     </>
@@ -337,7 +337,7 @@ const Plan = forwardRef(function Plan(
           </g>
         )}
 
-        {/* --- Столешница: пунктирный контур на отметке 900 --- */}
+        {/* --- Worktop: dashed outline at level 900 --- */}
         {layers.equipment.visible && worktop && (
           <g className="worktop">
             <polygon
@@ -347,7 +347,7 @@ const Plan = forwardRef(function Plan(
               strokeDasharray={`${strokeM * 7} ${strokeM * 5}`}
               strokeLinejoin="round"
             />
-            {/* Вырезы под врезные приборы — мойку и панель */}
+            {/* Cut-outs for built-in appliances — the sink and the hob */}
             {worktop.cutouts.map((c) => (
               <rect
                 key={c.id}
@@ -363,12 +363,12 @@ const Plan = forwardRef(function Plan(
               y={worktop.depth - 0.12}
               fontSize={0.13} fill="#b45309" fontWeight="600" opacity={0.85}
             >
-              столешница {(worktop.top * 1000).toFixed(0)}
+              worktop {(worktop.top * 1000).toFixed(0)}
             </text>
           </g>
         )}
 
-        {/* --- Лестница --- */}
+        {/* --- Stair --- */}
         {layers.architecture.visible && stair && (
           <g>
             <rect
@@ -394,7 +394,7 @@ const Plan = forwardRef(function Plan(
               fill="#334155"
             />
 
-            {/* Кромка СУЩЕСТВУЮЩЕГО проёма — всё выше неё требует его сдвига */}
+            {/* Edge of the EXISTING opening — everything above it requires moving it */}
             <line
               x1={stair.x - 0.25} y1={stair.existingOpeningTopY}
               x2={stair.x + stair.width + 0.1} y2={stair.existingOpeningTopY}
@@ -404,10 +404,10 @@ const Plan = forwardRef(function Plan(
               x={stair.x + stair.width / 2} y={stair.existingOpeningTopY - 0.06}
               textAnchor="middle" fontSize={0.12} fill="#dc2626" fontWeight="700"
             >
-              проём сейчас
+              opening now
             </text>
 
-            {/* Заход снизу и площадка наверху — по метру, требование заказчика */}
+            {/* Approach from below and landing at the top — 1 m each, the owner's requirement */}
             <g fill="#0f766e" stroke="#0f766e">
               <rect
                 x={stair.x} y={stair.y + stair.length}
@@ -418,7 +418,7 @@ const Plan = forwardRef(function Plan(
                 x={stair.x + stair.width / 2} y={stair.y + stair.length + 0.22}
                 textAnchor="middle" fontSize={0.13} stroke="none" fontWeight="600"
               >
-                заход {((INNER_D - stair.y - stair.length) * 1000).toFixed(0)}
+                approach {((INNER_D - stair.y - stair.length) * 1000).toFixed(0)}
               </text>
               <rect
                 x={stair.x} y={0} width={stair.width} height={Math.max(0, stair.y)}
@@ -428,11 +428,11 @@ const Plan = forwardRef(function Plan(
                 x={stair.x + stair.width / 2} y={stair.y - 0.1}
                 textAnchor="middle" fontSize={0.13} stroke="none" fontWeight="600"
               >
-                площадка {(stair.y * 1000).toFixed(0)}
+                landing {(stair.y * 1000).toFixed(0)}
               </text>
             </g>
 
-            {/* Изолинии высоты прохода под маршем */}
+            {/* Headroom contours under the flight */}
             {headroomLines.map((l) => (
               <g key={l.h}>
                 <line
@@ -440,14 +440,14 @@ const Plan = forwardRef(function Plan(
                   stroke="#b45309" strokeWidth={strokeM * 1.2} strokeDasharray="0.08 0.06"
                 />
                 <text x={stair.x - 0.18} y={l.y + 0.05} textAnchor="end" fontSize={0.12} fill="#b45309" fontWeight="600">
-                  {l.h.toFixed(1)} м
+                  {l.h.toFixed(1)} m
                 </text>
               </g>
             ))}
           </g>
         )}
 
-        {/* --- Трассы электрики: только под прямым углом, пучком --- */}
+        {/* --- Electrical routes: right angles only, in a bundle --- */}
         {layers.electrical.visible && electrical?.routes?.length > 0 && (
           <g>
             {electrical.routes.map((r) => (
@@ -465,12 +465,12 @@ const Plan = forwardRef(function Plan(
           </g>
         )}
 
-        {/* --- Петли тёплого пола --- */}
+        {/* --- Underfloor heating loops --- */}
         {layers.heating.visible && loops && (
           <g>
-            {/* Краевая зона: полоса вдоль наружных стен, где трасса идёт чаще.
-                Там от окон и стен падает холод, и там же допустима более
-                высокая температура поверхности. */}
+            {/* Edge zone: a strip along the outer walls where the run is denser.
+                    Cold falls from the windows and walls there, and a higher
+                    surface temperature is permitted there too. */}
             <g>
               <rect x={0} y={0} width={INNER_W} height={EDGE_ZONE.width}
                 fill="#f97316" fillOpacity={0.07} />
@@ -504,10 +504,10 @@ const Plan = forwardRef(function Plan(
                 x={INNER_W / 2} y={EDGE_ZONE.width - 0.12}
                 textAnchor="middle" fontSize={0.13} fill="#c2410c" fontWeight="700"
               >
-                краевая зона {(EDGE_ZONE.width * 1000).toFixed(0)} · шаг {(EDGE_ZONE.spacing * 1000).toFixed(0)}
+                edge zone {(EDGE_ZONE.width * 1000).toFixed(0)} · pitch {(EDGE_ZONE.spacing * 1000).toFixed(0)}
               </text>
             </g>
-            {/* Пятна, под которые труба не заходит */}
+            {/* Patches the pipe does not enter */}
             {loops.byRoom.flatMap((r) =>
               r.exclusions.map((e, i) => (
                 <rect
@@ -519,9 +519,9 @@ const Plan = forwardRef(function Plan(
               ))
             )}
 
-            {/* Труба раскрашена по ходу петли: подача горячая, обратка холодная.
-                При встречной укладке рядом всегда оказываются красный и синий —
-                это и есть то самое чередование. */}
+            {/* The pipe is coloured along the loop: supply hot, return cold.
+                    With counterflow laying a red and a blue run always sit side by side —
+                    that is the alternation. */}
             {loops.byRoom.flatMap((r) =>
               r.loopPaths.flatMap((pts, i) =>
                 pathSegments(pts).map((s, j) => (
@@ -536,8 +536,8 @@ const Plan = forwardRef(function Plan(
               )
             )}
 
-            {/* Подводки от коллектора — только под прямым углом, пучком.
-                Каждая труба идёт в своей полосе, диагоналей нет. */}
+            {/* Feeds from the manifold — right angles only, in a bundle.
+                    Each pipe runs in its own lane, no diagonals. */}
             {loops.byRoom.flatMap((r) =>
               r.loopPaths.map((pts, i) => {
                 const route = loops.supplyByLoop?.[`${r.id}-${i}`];
@@ -565,13 +565,13 @@ const Plan = forwardRef(function Plan(
                 fontSize={0.13} fontWeight="700"
                 fill={LOOP_COLORS[i % LOOP_COLORS.length]}
               >
-                {r.loops > 1 ? `${r.name.slice(0, 3)}-${i + 1}` : r.name.slice(0, 3)} · {r.perLoop.toFixed(0)} м
+                {r.loops > 1 ? `${r.name.slice(0, 3)}-${i + 1}` : r.name.slice(0, 3)} · {r.perLoop.toFixed(0)} m
               </text>
             ) : null))}
           </g>
         )}
 
-        {/* --- Трассы слива --- */}
+        {/* --- Drain routes --- */}
         {layers.plumbing.visible && showDrainRoutes && drainRoutes.map((r) => (
           <g key={`route-${r.id}`}>
             <polyline
@@ -585,12 +585,12 @@ const Plan = forwardRef(function Plan(
               y={(r.points[0].y + r.points[1].y) / 2}
               fontSize={0.12} fill="#0f766e" fontWeight="600"
             >
-              Ø{r.dia} · {r.length.toFixed(2)} м
+              Ø{r.dia} · {r.length.toFixed(2)} m
             </text>
           </g>
         ))}
 
-        {/* --- Точки подключения --- */}
+        {/* --- Connection points --- */}
         {layers.equipment.visible && showConnections && allConnections.map((c) => (
           <g key={c.id}>
             <circle cx={c.x} cy={c.y} r={0.055} fill="#fff"
@@ -599,7 +599,7 @@ const Plan = forwardRef(function Plan(
           </g>
         ))}
 
-        {/* --- Маркеры предупреждений --- */}
+        {/* --- Warning markers --- */}
         {warnPoints.map((w) => (
           <g key={`warn-${w.id}`}>
             <circle
@@ -622,14 +622,14 @@ const Plan = forwardRef(function Plan(
             stroke="#2563eb" strokeWidth={strokeM * 2.5} strokeDasharray="0.1 0.08" />
         )}
 
-        {/* --- Размерные линии --- */}
+        {/* --- Dimension lines --- */}
         {layers.dimensions.visible && (
           <g stroke="#64748b" fill="#334155">
-            {/* Габарит 5500 × 5500 снят: он известен и съедал место,
-                из-за чего боковые цепочки не помещались в поле. */}
+            {/* The 5500 × 5500 overall size was dropped: it is known and ate space,
+                    so the side chains did not fit in the field. */}
 
-            {/* Цепочка проёмов: от угла до окна, само окно, до следующего.
-                Это то, чем реально пользуются на площадке. */}
+            {/* Opening chain: from the corner to the window, the window itself, to the next one.
+                    This is what is actually used on site. */}
             {openingChains.map((ch) => (
               <g key={ch.wallId} stroke="#0f766e" fill="#0f766e">
                 {ch.horizontal ? (
@@ -671,7 +671,7 @@ const Plan = forwardRef(function Plan(
               </g>
             ))}
 
-            {/* Цепочка сверху — членится только когда санузел справа */}
+            {/* Top chain — split only when the bathroom is on the right */}
             <line x1={0} y1={-0.55} x2={INNER_W} y2={-0.55} strokeWidth={strokeM} />
             {layout.variant === 'bathRight' && (
               <>
@@ -685,7 +685,7 @@ const Plan = forwardRef(function Plan(
               </>
             )}
 
-            {/* Цепочка справа: глубина санузла в варианте «справа» */}
+            {/* Right chain: bathroom depth in the “right” variant */}
             {layout.variant === 'bathRight' && (
               <>
                 <line x1={INNER_W + 0.55} y1={0} x2={INNER_W + 0.55} y2={INNER_D} strokeWidth={strokeM} />
@@ -699,14 +699,14 @@ const Plan = forwardRef(function Plan(
               </>
             )}
 
-            {/* Цепочка снизу: прихожая | зал */}
+            {/* Bottom chain: hall | living room */}
             <line x1={0} y1={INNER_D + 0.55} x2={INNER_W} y2={INNER_D + 0.55} strokeWidth={strokeM} />
             <line x1={layout.hallX} y1={INNER_D + 0.48} x2={layout.hallX} y2={INNER_D + 0.62} strokeWidth={strokeM} />
             <text x={layout.hallX / 2} y={INNER_D + 0.75} textAnchor="middle" fontSize={0.15} stroke="none">
               {(layout.hallX * 1000).toFixed(0)}
             </text>
 
-            {/* Цепочка слева: санузел (если он слева) и прихожая */}
+            {/* Left chain: bathroom (if it is on the left) and hall */}
             <line x1={-0.55} y1={0} x2={-0.55} y2={INNER_D} strokeWidth={strokeM} />
             <line x1={-0.62} y1={layout.hallY} x2={-0.48} y2={layout.hallY} strokeWidth={strokeM} />
             <text
@@ -730,7 +730,7 @@ const Plan = forwardRef(function Plan(
         )}
       </svg>
 
-      {/* --- Ручки перегородок: тянутся мышкой, за ними едут помещения --- */}
+      {/* --- Partition handles: dragged with the mouse, the rooms follow --- */}
       {layers.architecture.visible && !layers.architecture.locked && partitionHandles.map((h) => {
         const p = toPx(h.x, h.y);
         const horizontal = h.axis === 'y';
@@ -760,12 +760,12 @@ const Plan = forwardRef(function Plan(
             }}
             style={{ zIndex: 35 }}
           >
-            <div className={`ph-grip ${horizontal ? 'h' : 'v'}`} title={`${h.label} — тяните мышкой`} />
+            <div className={`ph-grip ${horizontal ? 'h' : 'v'}`} title={`${h.label} — drag with the mouse`} />
           </Rnd>
         );
       })}
 
-      {/* --- Лестница: перетаскивается и растягивается --- */}
+      {/* --- Stair: dragged and stretched --- */}
       {layers.architecture.visible && stair && (() => {
         const p = toPx(stair.x, stair.y);
         return (
@@ -774,8 +774,8 @@ const Plan = forwardRef(function Plan(
             id={stair.id}
             label={
               stair.locked
-                ? `${stair.name} — позиция зафиксирована: заход и выход по 1 м`
-                : `${stair.name} — тяните за края, чтобы сделать марш положе`
+                ? `${stair.name} — position fixed: 1 m approach and landing`
+                : `${stair.name} — drag the edges to make the flight shallower`
             }
             color="rgba(37, 99, 235, 0.05)"
             confirmed={stair.confirmed}
@@ -784,8 +784,8 @@ const Plan = forwardRef(function Plan(
             widthPx={stair.width * pxPerMeter}
             heightPx={stair.length * pxPerMeter}
             rotation={0}
-            // Положение марша определено заходом снизу и площадкой сверху
-            // по 1 м. Двигать его — значит ломать это условие молча.
+            // The flight position is set by the approach from below and the landing above,
+            // 1 m each. Moving it would silently break that condition.
             locked={stair.locked || layers.architecture.locked}
             selected={selectedId === stair.id}
             pxPerMeter={pxPerMeter}
@@ -799,7 +799,7 @@ const Plan = forwardRef(function Plan(
         );
       })()}
 
-      {/* --- Инженерные узлы --- */}
+      {/* --- Utility nodes --- */}
       {nodes.map((node) => {
         const layer = layers[node.layer];
         if (!layer || !layer.visible) return null;
@@ -831,9 +831,9 @@ const Plan = forwardRef(function Plan(
         );
       })}
 
-      {/* --- Оборудование и электроточки ---
-           Каждый предмет живёт на слое своей категории: розетки, выключатели
-           и светильники — на «Электрике», остальное — на «Оборудовании». */}
+      {/* --- Equipment and electrical points ---
+               Each item lives on the layer of its category: sockets, switches
+               and luminaires on “Electrics”, the rest on “Equipment”. */}
       {equipment.map((item) => {
         const spec = getFixture(item.catalogId);
         if (!spec) return null;
@@ -848,8 +848,8 @@ const Plan = forwardRef(function Plan(
             kind={layerId === 'electrical' ? 'electrical' : 'equipment'}
             id={item.id}
             label={spec.name}
-            // Выключатель и его лампы одного цвета: иначе на плане не видно,
-            // что чем включается
+            // A switch and its lamps share one colour: otherwise the plan does not show
+            // what turns on what
             color={lightGroupColor.map[item.id] ?? spec.color}
             color2={lightGroupColor.second[item.id]}
             left={p.left}
@@ -860,7 +860,7 @@ const Plan = forwardRef(function Plan(
             locked={layer.locked}
             selected={selectedId === item.id}
             pxPerMeter={pxPerMeter}
-            // Электроточка — значок, а не предмет: тянуть её за угол незачем
+            // An electrical point is an icon, not an object: no need to drag it by the corner
             resizable={layerId !== 'electrical'}
             onSelect={() => onSelect(item.id)}
             onMove={(x, y) => onUpdateEquipment(item.id, { x, y })}

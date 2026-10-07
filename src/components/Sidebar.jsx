@@ -30,7 +30,7 @@ import {
   stairOptions
 } from '../calc/geometry.js';
 
-// Строка расчёта: значение, целевой диапазон и отметка соответствия
+// Calculation row: value, target range and a compliance mark
 function CalcRow({ label, value, target, ok }) {
   return (
     <tr className={ok ? '' : 'calc-off'}>
@@ -50,7 +50,7 @@ const SEVERITY_ICON = {
 };
 
 function mm(v) {
-  return `${Math.round(v)} мм`;
+  return `${Math.round(v)} mm`;
 }
 
 export default function Sidebar({
@@ -95,54 +95,54 @@ export default function Sidebar({
   const lv = floorLevels(project.levels, project.screed);
   const rooms = buildRooms(project.layout);
   const floorArea = rooms.reduce((s, r) => s + polygonArea(r.polygon), 0);
-  // 75 = существующие 25 + новые 50; 125 = 25 + 100
+  // 75 = existing 25 + new 50; 125 = 25 + 100
   const insOptions = insulationOptions(project.screed, project.levels, floorArea, [75, 100, 125, 150]);
 
   return (
     <aside className="sidebar" style={width ? { width, flexBasis: width } : undefined}>
       <header className="sidebar-head">
-        <h1>Первый этаж 5,5 × 5,5</h1>
-        <p className="sub">Модернизация · подготовка к заливке стяжки</p>
+        <h1>Ground floor 5.5 × 5.5</h1>
+        <p className="sub">Renovation · preparing for the screed pour</p>
         <div className="row-btns">
-          <button onClick={onExportPng} title="Снимок видимых слоёв">
+          <button onClick={onExportPng} title="Snapshot of the visible layers">
             <Download size={15} /> PNG
           </button>
-          <button onClick={onExportPdf} title="Чертёж видимых слоёв на A4">
+          <button onClick={onExportPdf} title="Drawing of the visible layers on A4">
             <FileText size={15} /> PDF
           </button>
-          <button onClick={onReset} className="danger" title="Вернуть исходную планировку">
+          <button onClick={onReset} className="danger" title="Restore the original layout">
             <RefreshCw size={15} />
           </button>
         </div>
-        {/* Экспорт падал молча: html2canvas спотыкался о градиент и просто
-            ничего не делал. Теперь ошибка видна. */}
+        {/* Export used to fail silently: html2canvas tripped on a gradient and just
+                did nothing. Now the error is visible. */}
         {exportError && <p className="panel-note error-text">{exportError}</p>}
       </header>
 
       <nav className="tabs">
         <button className={tab === 'plan' ? 'active' : ''} onClick={() => setTab('plan')}>
-          План
+          Plan
         </button>
         <button className={tab === 'catalog' ? 'active' : ''} onClick={() => setTab('catalog')}>
-          Каталог
+          Catalogue
         </button>
         <button className={tab === 'heat' ? 'active' : ''} onClick={() => setTab('heat')}>
-          Тепло
+          Heat
         </button>
         <button className={tab === 'loops' ? 'active' : ''} onClick={() => setTab('loops')}>
-          Петли
+          Loops
         </button>
         <button className={tab === 'boiler' ? 'active' : ''} onClick={() => setTab('boiler')}>
-          Котельная
+          Boiler room
         </button>
         <button className={tab === 'estimate' ? 'active' : ''} onClick={() => setTab('estimate')}>
-          Смета
+          Estimate
         </button>
         <button className={tab === 'view' ? 'active' : ''} onClick={() => setTab('view')}>
           3D
         </button>
         <button className={tab === 'checks' ? 'active' : ''} onClick={() => setTab('checks')}>
-          Проверки
+          Checks
           {errors > 0 && <span className="pill error">{errors}</span>}
           {errors === 0 && warns > 0 && <span className="pill warn">{warns}</span>}
         </button>
@@ -152,7 +152,7 @@ export default function Sidebar({
         {tab === 'plan' && (
           <>
             <section className="panel">
-              <div className="panel-head"><span>Вариант планировки</span></div>
+              <div className="panel-head"><span>Layout variant</span></div>
               <div className="variant-switch">
                 {VARIANT_IDS.map((id) => (
                   <button
@@ -170,14 +170,14 @@ export default function Sidebar({
             <LayerPanel layers={layers} onUpdateLayer={onUpdateLayer} />
 
             <section className="panel">
-              <div className="panel-head"><span>Отображение</span></div>
+              <div className="panel-head"><span>Display</span></div>
               <label className="check">
                 <input
                   type="checkbox"
                   checked={showConnections}
                   onChange={(e) => setShowConnections(e.target.checked)}
                 />
-                Точки подключения приборов
+                Fixture connection points
               </label>
               <label className="check">
                 <input
@@ -185,24 +185,24 @@ export default function Sidebar({
                   checked={showDrainRoutes}
                   onChange={(e) => setShowDrainRoutes(e.target.checked)}
                 />
-                Трассы слива до стояка
+                Drain routes to the stack
               </label>
             </section>
 
             <section className="panel">
-              <div className="panel-head"><span>Площади и разбивка</span></div>
+              <div className="panel-head"><span>Areas and breakdown</span></div>
               <table className="mini-table">
                 <tbody>
                   {rooms.map((r) => (
                     <tr key={r.id}>
                       <td>{r.name}</td>
-                      <td className="num">{polygonArea(r.polygon).toFixed(2)} м²</td>
+                      <td className="num">{polygonArea(r.polygon).toFixed(2)} m²</td>
                     </tr>
                   ))}
                   <tr className="total">
-                    <td>Всего в свету</td>
+                    <td>Total clear area</td>
                     <td className="num">
-                      {rooms.reduce((s, r) => s + polygonArea(r.polygon), 0).toFixed(2)} м²
+                      {rooms.reduce((s, r) => s + polygonArea(r.polygon), 0).toFixed(2)} m²
                     </td>
                   </tr>
                 </tbody>
@@ -212,7 +212,7 @@ export default function Sidebar({
                 {project.layout.variant === 'bathLeft' ? (
                   <>
                     <label>
-                      Санузел, ширина м
+                      Bathroom, width m
                       <input
                         type="number" step="0.05"
                         min={LAYOUT_LIMITS.bathW[0]} max={LAYOUT_LIMITS.bathW[1]}
@@ -221,7 +221,7 @@ export default function Sidebar({
                       />
                     </label>
                     <label>
-                      Санузел, глубина м
+                      Bathroom, depth m
                       <input
                         type="number" step="0.05"
                         value={(project.layout.bathBottom - project.layout.bathTop).toFixed(2)}
@@ -231,7 +231,7 @@ export default function Sidebar({
                       />
                     </label>
                     <label>
-                      Отступ от верхней стены м
+                      Offset from top wall m
                       <input
                         type="number" step="0.05"
                         min={LAYOUT_LIMITS.bathTop[0]} max={LAYOUT_LIMITS.bathTop[1]}
@@ -247,7 +247,7 @@ export default function Sidebar({
                 ) : (
                   <>
                     <label>
-                      Санузел, ширина м
+                      Bathroom, width m
                       <input
                         type="number" step="0.05"
                         min={INNER_W - LAYOUT_LIMITS.bathX[1]} max={INNER_W - LAYOUT_LIMITS.bathX[0]}
@@ -256,7 +256,7 @@ export default function Sidebar({
                       />
                     </label>
                     <label>
-                      Санузел, глубина м
+                      Bathroom, depth m
                       <input
                         type="number" step="0.05"
                         min={LAYOUT_LIMITS.bathY[0]} max={LAYOUT_LIMITS.bathY[1]}
@@ -267,7 +267,7 @@ export default function Sidebar({
                   </>
                 )}
                 <label>
-                  Прихожая, ширина м
+                  Hall, width m
                   <input
                     type="number" step="0.05"
                     min={LAYOUT_LIMITS.hallX[0]} max={LAYOUT_LIMITS.hallX[1]}
@@ -276,7 +276,7 @@ export default function Sidebar({
                   />
                 </label>
                 <label>
-                  Прихожая, глубина м
+                  Hall, depth m
                   <input
                     type="number" step="0.05"
                     min={INNER_D - LAYOUT_LIMITS.hallY[1]} max={INNER_D - LAYOUT_LIMITS.hallY[0]}
@@ -286,21 +286,21 @@ export default function Sidebar({
                 </label>
               </div>
               <p className="panel-note">
-                Перегородки гипсокартонные — их можно тянуть прямо на плане за синие
-                полосы. Точных размеров пока нет, поэтому все четыре величины
-                предположительные.
+                Plasterboard partitions — drag them straight on the plan by the blue
+                strips. There are no exact dimensions yet, so all four values
+                are assumptions.
               </p>
             </section>
 
             <section className="panel">
-              <div className="panel-head"><span>Пирог пола по грунту</span></div>
+              <div className="panel-head"><span>Floor build-up on the ground</span></div>
               <div className="stack-viz">
                 {stack.layers.map((l) => (
                   <div
                     key={l.id}
                     className="stack-layer"
                     style={{ height: `${Math.max(6, l.thickness / 3)}px`, background: l.color }}
-                    title={`${l.name} — ${l.thickness} мм`}
+                    title={`${l.name} — ${l.thickness} mm`}
                   />
                 ))}
               </div>
@@ -309,11 +309,11 @@ export default function Sidebar({
                   {stack.layers.map((l) => (
                     <tr key={l.id}>
                       <td>{l.name}</td>
-                      <td className="num">{l.thickness} мм</td>
+                      <td className="num">{l.thickness} mm</td>
                     </tr>
                   ))}
                   <tr className="total">
-                    <td>Подъём от основания</td>
+                    <td>Rise from the base</td>
                     <td className="num">{mm(stack.total)}</td>
                   </tr>
                 </tbody>
@@ -321,28 +321,28 @@ export default function Sidebar({
 
               <div className="field-grid">
                 <label>
-                  ЭППС, мм
+                  XPS, mm
                   <input
                     type="number" step="10" value={project.screed.insulation}
                     onChange={(e) => onUpdateScreed({ insulation: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Стяжка, мм
+                  Screed, mm
                   <input
                     type="number" step="5" value={project.screed.screedTotal}
                     onChange={(e) => onUpdateScreed({ screedTotal: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Щебень, мм
+                  Crushed stone, mm
                   <input
                     type="number" step="10" value={project.screed.gravel}
                     onChange={(e) => onUpdateScreed({ gravel: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Покрытие, мм
+                  Finish, mm
                   <input
                     type="number" step="1" value={project.screed.finishThickness}
                     onChange={(e) => onUpdateScreed({ finishThickness: Number(e.target.value) })}
@@ -350,20 +350,20 @@ export default function Sidebar({
                 </label>
               </div>
               <div className="panel-head" style={{ marginTop: 10 }}>
-                <span>Выбор толщины ЭППС</span>
+                <span>Choosing the XPS thickness</span>
               </div>
               <table className="mini-table calc-table">
                 <tbody>
                   <tr className="head-row">
-                    <td>ЭППС</td>
-                    <td className="num">вниз, Вт</td>
-                    <td className="calc-target">песка</td>
+                    <td>XPS</td>
+                    <td className="num">down, W</td>
+                    <td className="calc-target">of sand</td>
                   </tr>
                   {insOptions.map((o) => (
                     <tr key={o.insulation} className={o.insulation === project.screed.insulation ? 'calc-current' : ''}>
                       <td>
                         <button className="link-btn" onClick={() => onUpdateScreed({ insulation: o.insulation })}>
-                          {o.insulation} мм
+                          {o.insulation} mm
                         </button>
                       </td>
                       <td className="num">{o.watts.toFixed(0)}</td>
@@ -373,28 +373,28 @@ export default function Sidebar({
                 </tbody>
               </table>
               <p className="panel-note">
-                Поток вниз в поле пола, упрощённо и без периметра — периметр закрывает
-                торцевой утеплитель, там перепад вдвое больше. Разница между 75 и 125 мм —
-                единицы ватт на весь этаж, зато <b>каждые 50 мм утеплителя — это 50 мм
-                песка, который не нужно возить и трамбовать</b>.
+                Downward flux through the floor field, simplified and without the perimeter — the perimeter is covered
+                by the edge insulation, where the temperature drop is twice as large. The difference between 75 and 125 mm is
+                a few watts for the whole floor, but <b>every 50 mm of insulation is 50 mm of
+                sand that does not have to be hauled and compacted</b>.
               </p>
             </section>
 
             <section className="panel">
-              <div className="panel-head"><span>Засыпка подполья и отметки</span></div>
+              <div className="panel-head"><span>Sub-floor fill and levels</span></div>
               <table className="mini-table">
                 <tbody>
-                  <tr><td>Пирог пола</td><td className="num">{mm(lv.pie)}</td></tr>
-                  <tr><td>Уплотнение</td><td className="num">{lv.compactLayers} сл.</td></tr>
+                  <tr><td>Floor build-up</td><td className="num">{mm(lv.pie)}</td></tr>
+                  <tr><td>Compaction</td><td className="num">{lv.compactLayers} lay.</td></tr>
                   <tr className={Math.abs(lv.floorDelta) > 5 ? 'calc-off' : ''}>
-                    <td>Пол сместится на</td>
+                    <td>Floor will shift by</td>
                     <td className="num">
                       {lv.floorDelta > 0 ? '+' : ''}{mm(lv.floorDelta)}
                     </td>
                   </tr>
-                  <tr><td>Высота помещения</td><td className="num">{mm(lv.clearHeight)}</td></tr>
+                  <tr><td>Room height</td><td className="num">{mm(lv.clearHeight)}</td></tr>
                   <tr className="total">
-                    <td>От пола до пола</td>
+                    <td>Floor to floor</td>
                     <td className="num">{mm(lv.floorToFloor)}</td>
                   </tr>
                 </tbody>
@@ -402,42 +402,42 @@ export default function Sidebar({
 
               <div className="field-grid">
                 <label>
-                  Глубина подполья, мм
+                  Sub-floor depth, mm
                   <input
                     type="number" step="10" value={project.levels.crawlDepth}
                     onChange={(e) => onUpdateLevels({ crawlDepth: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Засыпка песка, мм
+                  Sand fill, mm
                   <input
                     type="number" step="10" value={project.levels.sandFill}
                     onChange={(e) => onUpdateLevels({ sandFill: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  ЭППС по торцу, мм
+                  Edge XPS, mm
                   <input
                     type="number" step="10" value={project.levels.edgeInsulation}
                     onChange={(e) => onUpdateLevels({ edgeInsulation: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Заглубление торца, мм
+                  Edge depth below, mm
                   <input
                     type="number" step="50" value={project.levels.edgeInsulationDepth}
                     onChange={(e) => onUpdateLevels({ edgeInsulationDepth: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Верх торца ниже пола, мм
+                  Edge top below floor, mm
                   <input
                     type="number" step="5" value={project.levels.edgeTop}
                     onChange={(e) => onUpdateLevels({ edgeTop: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Лента у стяжки, мм
+                  Strip at the screed, mm
                   <input
                     type="number" step="1" value={project.levels.edgeStrip ?? 0}
                     onChange={(e) => onUpdateLevels({ edgeStrip: Number(e.target.value) })}
@@ -446,12 +446,12 @@ export default function Sidebar({
               </div>
 
               <p className="panel-note">
-                Профиль ступенчатый: толстая плита идёт только ниже стяжки, где за
-                стеной холодный грунт. На высоте самой стяжки разрыв держит лента —
-                плита в {project.levels.edgeInsulation} мм отняла бы столько же
-                от комнаты с каждой стороны, и такую полку не закрыть плинтусом.
-                Керамогранит кладётся на стяжку до самой стены, лента подрезается
-                после облицовки.
+                The profile is stepped: the thick board runs only below the screed, where there is
+                cold ground behind the wall. At screed height the gap is held by a strip —
+                a {project.levels.edgeInsulation} mm board would take the same amount
+                off the room on each side, and such a ledge cannot be hidden by a skirting board.
+                Porcelain tile is laid on the screed right up to the wall, and the strip is trimmed
+                after the tiling.
               </p>
 
               <EdgeDetail screed={project.screed} levels={project.levels} />
@@ -462,7 +462,7 @@ export default function Sidebar({
                     edgeInsulation: 100, edgeInsulationDepth: 500, edgeTop: 0, edgeStrip: 10
                   })}
                 >
-                  Заложить торцевой ЭППС 100 мм на 500 вниз
+                  Fit edge XPS 100 mm, 500 down
                 </button>
               )}
               {Math.abs(lv.floorDelta) > 5 && (
@@ -470,53 +470,53 @@ export default function Sidebar({
                   className="link-btn"
                   onClick={() => onUpdateLevels({ sandFill: Math.round(lv.sandForNoChange) })}
                 >
-                  Подобрать засыпку {mm(lv.sandForNoChange)} — пол останется на месте
+                  Pick a fill of {mm(lv.sandForNoChange)} — the floor will stay in place
                 </button>
               )}
               <p className="panel-note">
-                Подполье засыпается целиком, сплошная стяжка. Песок уплотняется слоями
-                не толще {project.levels.compactLayer} мм с проливкой — просадка рыхлого
-                низа рвёт стяжку вместе с трубой ТП. Утепление торца плиты по внутренней
-                грани фундамента приклеивается <b>до засыпки</b>: потом туда не добраться.
+                The sub-floor is filled completely, then a continuous screed is poured. The sand is compacted in layers
+                no thicker than {project.levels.compactLayer} mm and watered — settlement of the loose
+                bottom tears the screed together with the heating pipe. The slab-edge insulation on the inner
+                face of the foundation is glued <b>before the fill</b>: you cannot get there afterwards.
               </p>
             </section>
 
             {sc && (
               <section className="panel">
-                <div className="panel-head"><span>Лестница вдоль правой стены</span></div>
+                <div className="panel-head"><span>Stair along the right wall</span></div>
                 <table className="mini-table calc-table">
                   <tbody>
                     <CalcRow
-                      label="Угол наклона" value={`${sc.angleDeg.toFixed(1)}°`}
+                      label="Slope angle" value={`${sc.angleDeg.toFixed(1)}°`}
                       target={`≤ ${STAIR_NORMS.maxAngleDeg}°`} ok={sc.angleOk}
                     />
                     <CalcRow
-                      label="Высота ступени h" value={mm(sc.risePerStep * 1000)}
+                      label="Riser height h" value={mm(sc.risePerStep * 1000)}
                       target={`≤ ${mm(STAIR_NORMS.maxRise * 1000)}`} ok={sc.riseOk}
                     />
                     <CalcRow
-                      label="Ширина ступени" value={mm(sc.width * 1000)}
+                      label="Step width" value={mm(sc.width * 1000)}
                       target={`≥ ${mm(STAIR_NORMS.minWidth * 1000)}`} ok={sc.widthOk}
                     />
                     <CalcRow
-                      label="Ширина проступи s" value={mm(sc.tread * 1000)}
+                      label="Tread depth s" value={mm(sc.tread * 1000)}
                       target={`≥ ${mm(STAIR_NORMS.minTread * 1000)}`} ok={sc.treadOk}
                     />
                     <CalcRow
-                      label="Блонделя 2h + s" value={mm(sc.blondel * 1000)}
+                      label="Blondel 2h + s" value={mm(sc.blondel * 1000)}
                       target={`${mm(STAIR_NORMS.blondel[0] * 1000)}…${mm(STAIR_NORMS.blondel[1] * 1000)}`}
                       ok={sc.blondelOk}
                     />
                     <CalcRow
-                      label="Удобства h + s" value={mm(sc.comfort * 1000)}
+                      label="Comfort h + s" value={mm(sc.comfort * 1000)}
                       target={`≈ ${mm(STAIR_NORMS.comfort * 1000)}`} ok={sc.comfortOk}
                     />
                     <CalcRow
-                      label="Проекция марша" value={`${sc.actualRun.toFixed(2)} м`}
-                      target={`нужно ${sc.requiredRun.toFixed(2)}`} ok={sc.fits}
+                      label="Flight projection" value={`${sc.actualRun.toFixed(2)} m`}
+                      target={`need ${sc.requiredRun.toFixed(2)}`} ok={sc.fits}
                     />
                     <tr className="total">
-                      <td>Сдвиг проёма</td>
+                      <td>Opening shift</td>
                       <td className="num" colSpan={2}>
                         {mm(Math.max(0, project.stair.existingOpeningTopY - project.stair.y) * 1000)}
                       </td>
@@ -524,20 +524,20 @@ export default function Sidebar({
                   </tbody>
                 </table>
                 <p className="panel-note">
-                  Ориентиры норм — предположения до сверки с актуальным текстом СП.
-                  Существующий марш: ширина ступени {mm(project.stair.existingWidth * 1000)},
-                  проекция {mm(project.stair.existingRun * 1000)}, проступь{' '}
+                  The reference norms are assumptions until checked against the current text of the building code.
+                  Existing flight: step width {mm(project.stair.existingWidth * 1000)},
+                  projection {mm(project.stair.existingRun * 1000)}, tread{' '}
                   {mm((project.stair.existingRun / (project.stair.risers - 1)) * 1000)}.
                 </p>
 
                 <div className="panel-head" style={{ marginTop: 10 }}>
-                  <span>Подбор при проекции {opts.maxRun.toFixed(2)} м</span>
+                  <span>Options at a projection of {opts.maxRun.toFixed(2)} m</span>
                 </div>
                 <table className="mini-table calc-table">
                   <tbody>
                     {opts.options.filter((o) => o.risers >= 14 && o.risers <= 18).map((o) => (
                       <tr key={o.risers} className={o.allOk ? '' : 'calc-off'}>
-                        <td>{o.risers} ступ.</td>
+                        <td>{o.risers} steps</td>
                         <td className="num">
                           {mm(o.risePerStep * 1000)} × {mm(o.tread * 1000)}
                         </td>
@@ -558,40 +558,40 @@ export default function Sidebar({
                       y: project.stair.minLanding
                     })}
                   >
-                    Применить {opts.best.risers} подступенков
+                    Apply {opts.best.risers} risers
                   </button>
                 )}
                 <p className="panel-note">
-                  Сейчас марш упирается в перекрытие на отметке{' '}
-                  {project.stair.existingOpeningTopY.toFixed(2)} м — красная штриховая линия
-                  на плане. Тяните лестницу за верхний край вверх: проступь растёт,
-                  а строка «сдвиг проёма» показывает, сколько перекрытия над санузлом
-                  придётся разобрать.
+                  Right now the flight meets the floor slab at level{' '}
+                  {project.stair.existingOpeningTopY.toFixed(2)} m — the red dashed line
+                  on the plan. Drag the stair by its top edge upwards: the tread grows,
+                  and the “opening shift” row shows how much of the slab above the bathroom
+                  has to be removed.
                 </p>
                 <div className="field-grid">
                   <label>
-                    Подступенков
+                    Risers
                     <input
                       type="number" value={project.stair.risers}
                       onChange={(e) => onUpdateStair({ risers: Math.max(2, Number(e.target.value)) })}
                     />
                   </label>
                   <label>
-                    Проступь, м
+                    Tread, m
                     <input
                       type="number" step="0.01" value={project.stair.tread}
                       onChange={(e) => onUpdateStair({ tread: Number(e.target.value) })}
                     />
                   </label>
                   <label>
-                    Ширина марша, м
+                    Flight width, m
                     <input
                       type="number" step="0.05" value={project.stair.width}
                       onChange={(e) => onUpdateStair({ width: Number(e.target.value) })}
                     />
                   </label>
                   <label>
-                    Длина марша, м
+                    Flight length, m
                     <input
                       type="number" step="0.1" value={project.stair.length}
                       onChange={(e) => onUpdateStair({ length: Number(e.target.value) })}
@@ -599,8 +599,8 @@ export default function Sidebar({
                   </label>
                 </div>
                 <p className="panel-note">
-                  Оранжевые изолинии на плане — высота прохода под маршем: у нижней
-                  ступени низко, ближе к верху почти полная высота.
+                  The orange contours on the plan show the headroom under the flight: low
+                  at the bottom step, almost full height towards the top.
                 </p>
               </section>
             )}
@@ -632,8 +632,8 @@ export default function Sidebar({
               </section>
             ))}
             <p className="panel-note">
-              Каждый прибор приносит собственные точки подключения. Слив автоматически
-              трассируется до стояка и проверяется на уклон 2 см/м в пределах пирога пола.
+              Each fixture brings its own connection points. The drain is routed to the stack
+              automatically and checked for a 2 cm/m slope within the floor build-up.
             </p>
           </>
         )}
@@ -664,10 +664,10 @@ export default function Sidebar({
         {tab === 'checks' && (
           <section className="panel">
             <div className="panel-head">
-              <span>Проверки перед заливкой</span>
+              <span>Pre-pour checks</span>
               <span className="muted">{warnings.length}</span>
             </div>
-            {warnings.length === 0 && <p className="panel-note">Конфликтов не найдено.</p>}
+            {warnings.length === 0 && <p className="panel-note">No conflicts found.</p>}
             {warnings.map((w) => (
               <div
                 key={w.id}
@@ -687,11 +687,11 @@ export default function Sidebar({
           </section>
         )}
 
-        {/* Свойства выбранного объекта — показываем всегда, когда что-то выбрано */}
+        {/* Properties of the selected object — shown whenever something is selected */}
         {selected && (
           <section className="panel selected-panel">
             <div className="panel-head">
-              <span>Выбрано</span>
+              <span>Selected</span>
               {selected.kind === 'equipment' && (
                 <button className="icon-btn danger" onClick={() => onDeleteObject(selected.data.id)}>
                   <Trash2 size={15} />
@@ -714,14 +714,14 @@ export default function Sidebar({
             {selected.kind === 'stair' && (
               <div className="field-grid">
                 <label>
-                  X, м
+                  X, m
                   <input
                     type="number" step="0.05" value={selected.data.x}
                     onChange={(e) => onUpdateStair({ x: Number(e.target.value) })}
                   />
                 </label>
                 <label>
-                  Y, м
+                  Y, m
                   <input
                     type="number" step="0.05" value={selected.data.y}
                     onChange={(e) => onUpdateStair({ y: Number(e.target.value) })}
@@ -750,39 +750,39 @@ function SelectedEquipment({ item, project, onUpdate }) {
     <>
       <div className="sel-name">{spec.name}</div>
       <div className="sel-dims">
-        {Math.round(size.w * 1000)} × {Math.round(size.d * 1000)} × {Math.round(spec.h * 1000)} мм
-        {resized && <> · из каталога {Math.round(spec.w * 1000)} × {Math.round(spec.d * 1000)}</>}
+        {Math.round(size.w * 1000)} × {Math.round(size.d * 1000)} × {Math.round(spec.h * 1000)} mm
+        {resized && <> · catalogue {Math.round(spec.w * 1000)} × {Math.round(spec.d * 1000)}</>}
       </div>
       <div className="field-grid">
         <label>
-          X, м
+          X, m
           <input type="number" step="0.01" value={item.x.toFixed(2)}
             onChange={(e) => onUpdate({ x: Number(e.target.value) })} />
         </label>
         <label>
-          Y, м
+          Y, m
           <input type="number" step="0.01" value={item.y.toFixed(2)}
             onChange={(e) => onUpdate({ y: Number(e.target.value) })} />
         </label>
         <label>
-          Ширина, м
+          Width, m
           <input type="number" step="0.01" min="0.15" value={size.w.toFixed(2)}
             onChange={(e) => onUpdate({ w: Number(e.target.value) })} />
         </label>
         <label>
-          Глубина, м
+          Depth, m
           <input type="number" step="0.01" min="0.15" value={size.d.toFixed(2)}
             onChange={(e) => onUpdate({ d: Number(e.target.value) })} />
         </label>
         <label>
-          Поворот, °
+          Rotation, °
           <input type="number" step="15" value={item.rotation || 0}
             onChange={(e) => onUpdate({ rotation: Number(e.target.value) })} />
         </label>
       </div>
       {resized && (
         <button className="link-btn" onClick={() => onUpdate({ w: undefined, d: undefined })}>
-          Вернуть каталожный габарит
+          Restore catalogue size
         </button>
       )}
       <label className="check">
@@ -791,26 +791,26 @@ function SelectedEquipment({ item, project, onUpdate }) {
           checked={excludes}
           onChange={(e) => onUpdate({ floorExclusion: e.target.checked })}
         />
-        Не класть тёплый пол под прибором
+        Do not lay heating under the fixture
       </label>
       <p className="panel-note" style={{ marginTop: 2 }}>
         {excludes
-          ? 'Пятно вычитается из поля ТП: площадь уходит, а нагрузка остаётся.'
-          : 'Труба идёт под прибором — так и надо для мебели на ножках с зазором от 50 мм.'}
+          ? 'The footprint is subtracted from the heating field: the area is lost but the load stays.'
+          : 'The pipe runs under the fixture — fine for furniture on legs with a gap of 50 mm or more.'}
         {spec.exclusionNote && <> {spec.exclusionNote}.</>}
       </p>
 
       {head !== null && (
         <p className={`headroom ${head < 1.9 ? 'low' : ''}`}>
-          Высота под маршем в этой точке: <b>{head.toFixed(2)} м</b>
+          Headroom under the flight at this point: <b>{head.toFixed(2)} m</b>
         </p>
       )}
       {spec.connections.length > 0 && (
         <ul className="conn-list">
           {spec.connections.map((c, i) => (
             <li key={i}>
-              {c.kind === 'drain' ? `Слив Ø${c.dia}` : c.kind.toUpperCase()}
-              {c.critical && <span className="tag">критично по высоте</span>}
+              {c.kind === 'drain' ? `Drain Ø${c.dia}` : c.kind.toUpperCase()}
+              {c.critical && <span className="tag">height-critical</span>}
             </li>
           ))}
         </ul>
@@ -823,23 +823,23 @@ function SelectedNode({ node, onUpdate }) {
   return (
     <>
       <div className="sel-name">{node.name}</div>
-      {node.existing && <div className="tag existing">Существующий узел — двигать нельзя</div>}
-      {node.confirmed === false && <div className="tag draft">Привязка не подтверждена замером</div>}
+      {node.existing && <div className="tag existing">Existing node — do not move</div>}
+      {node.confirmed === false && <div className="tag draft">Position not confirmed by measurement</div>}
       <div className="field-grid">
         <label>
-          X, м
+          X, m
           <input type="number" step="0.01" value={node.x.toFixed(2)}
             onChange={(e) => onUpdate({ x: Number(e.target.value) })} />
         </label>
         <label>
-          Y, м
+          Y, m
           <input type="number" step="0.01" value={node.y.toFixed(2)}
             onChange={(e) => onUpdate({ y: Number(e.target.value) })} />
         </label>
       </div>
       {node.type === 'sewer_riser' && (
         <label className="full-field">
-          Отметка лотка стояка, м (ниже чистого пола — отрицательная)
+          Stack invert level, m (below the finished floor — negative)
           <input type="number" step="0.01" value={node.invert ?? -0.35}
             onChange={(e) => onUpdate({ invert: Number(e.target.value) })} />
         </label>
@@ -850,7 +850,7 @@ function SelectedNode({ node, onUpdate }) {
           checked={node.confirmed === true}
           onChange={(e) => onUpdate({ confirmed: e.target.checked })}
         />
-        Привязка подтверждена замером
+        Position confirmed by measurement
       </label>
       {node.note && <p className="panel-note">{node.note}</p>}
     </>

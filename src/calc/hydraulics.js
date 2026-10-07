@@ -7,7 +7,7 @@
 // это важно: в ламинаре и теплоотдача хуже, и потери считаются иначе.
 
 export const PIPE = {
-  outer: 0.016, // м
+  outer: 0.016, // m
   wall: 0.002,
   get inner() {
     return this.outer - 2 * this.wall;

@@ -17,7 +17,7 @@ import { pointInPolygon, polygonArea, polygonBounds } from './geometry.js';
 export const WALL_MARGIN = 0.1;
 export const OBSTACLE_MARGIN = 0.05;
 
-export const ALPHA = 10.8; // Вт/(м²·К), теплоотдача поверхности пола
+export const ALPHA = 10.8; // W/(m²·K), floor surface heat transfer
 
 // Ограничение температуры поверхности пола по назначению помещения
 export const MAX_FLOOR_TEMP = { living: 26, bath: 31, hall: 29 };
@@ -386,7 +386,7 @@ export function roomLoops({
   const workable = candidates.filter((c) => c.enough);
   const chosen = preferredSpacing
     ? candidates.find((c) => c.spacing === preferredSpacing)
-    : // Самый широкий шаг из покрывающих потребность, но не грубее 200 мм
+    : // The widest pitch that covers the demand, but not coarser than 200 mm
       workable.filter((c) => c.spacing <= 0.2).sort((a, b) => b.spacing - a.spacing)[0]
         || workable[0]
         || candidates[0];

@@ -19,15 +19,15 @@
 import { BOILER, CLIMATE, ENVELOPE } from './climate.js';
 import { COOLANT } from './coolant.js';
 
-export const INNER_W = 5.5; // по внутренним стенам
+export const INNER_W = 5.5; // between inner walls
 export const INNER_D = 5.5;
 
-export const WALL_OUTER = 0.4; // толщина наружной стены, черновая
-export const WALL_GYPSUM = 0.1; // гипсокартонная перегородка
+export const WALL_OUTER = 0.4; // outer wall thickness, rough
+export const WALL_GYPSUM = 0.1; // plasterboard partition
 
 // Высоты, м
-export const CLEAR_HEIGHT = 2.7; // чистый пол → низ перекрытия, черновая
-export const FLOOR_TO_FLOOR = 3.0; // пол 1 этажа → пол мансарды, со слов заказчика
+export const CLEAR_HEIGHT = 2.7; // finished floor → underside of slab, rough
+export const FLOOR_TO_FLOOR = 3.0; // ground floor → attic floor, per the owner
 
 // ---------------------------------------------------------------------------
 // Разбивка помещений. Несколько чисел задают ВСЮ планировку — они редактируются
@@ -49,9 +49,9 @@ export const DEFAULT_LAYOUT = {
   bathX: INNER_W - BATH_SIZE, // 3.70
   bathY: BATH_SIZE, // 1.80
   // bathLeft: санузел у западной стены, по умолчанию в левом ВЕРХНЕМ углу
-  bathW: BATH_SIZE, // правая грань
-  bathTop: 0, // верхняя грань
-  bathBottom: BATH_SIZE, // нижняя грань
+  bathW: BATH_SIZE, // right face
+  bathTop: 0, // top face
+  bathBottom: BATH_SIZE, // bottom face
   // ЗАМЕРЕНО: ширина прихожей 2000 мм
   hallX: 2.0,
   // ЗАМЕРЕНО косвенно: глухое окно 1400…2300 от левого нижнего угла,
@@ -79,12 +79,12 @@ export function normalizeLayout(l) {
 
 // Слои — паттерн из landscape-app: { visible, locked }
 export const LAYER_DEFS = [
-  { id: 'architecture', name: 'Архитектура', color: '#334155', hint: 'Стены, окна, двери, лестница' },
-  { id: 'plumbing', name: 'Сантехника', color: '#0891b2', hint: 'Стояк, выпуски, трассы, уклоны' },
-  { id: 'heating', name: 'Тёплый пол', color: '#dc2626', hint: 'Петли, коллектор, котёл' },
-  { id: 'electrical', name: 'Электрика', color: '#ca8a04', hint: 'Щит, розетки, свет, трассы' },
-  { id: 'equipment', name: 'Оборудование', color: '#7c3aed', hint: 'Техника, сантехприборы, мебель' },
-  { id: 'dimensions', name: 'Размеры', color: '#64748b', hint: 'Размерные линии и отметки' }
+  { id: 'architecture', name: 'Architecture', color: '#334155', hint: 'Walls, windows, doors, stair' },
+  { id: 'plumbing', name: 'Plumbing', color: '#0891b2', hint: 'Stack, outlets, routes, slopes' },
+  { id: 'heating', name: 'Underfloor heating', color: '#dc2626', hint: 'Loops, manifold, boiler' },
+  { id: 'electrical', name: 'Electrics', color: '#ca8a04', hint: 'Panel, sockets, lighting, routes' },
+  { id: 'equipment', name: 'Equipment', color: '#7c3aed', hint: 'Appliances, sanitary fixtures, furniture' },
+  { id: 'dimensions', name: 'Dimensions', color: '#64748b', hint: 'Dimension lines and levels' }
 ];
 
 export const DEFAULT_LAYERS = LAYER_DEFS.reduce((acc, l) => {
@@ -105,28 +105,28 @@ const OUTER_WALLS = [
 
 const HALL_ROOM = {
   id: 'hall',
-  name: 'Прихожая-котельная',
+  name: 'Hall / boiler room',
   targetTemp: 18,
   maxFloorTemp: 29,
-  finish: 'Керамогранит',
+  finish: 'Porcelain tile',
   fill: '#fefce8'
 };
 
 const BATH_ROOM = {
   id: 'bath',
-  name: 'Санузел',
+  name: 'Bathroom',
   targetTemp: 24,
   maxFloorTemp: 31,
-  finish: 'Керамогранит',
+  finish: 'Porcelain tile',
   fill: '#ecfeff'
 };
 
 const LIVING_ROOM = {
   id: 'living',
-  name: 'Зал (кухня-гостиная)',
+  name: 'Living room (kitchen-living)',
   targetTemp: 20,
   maxFloorTemp: 26,
-  finish: 'Ламинат / кварцвинил',
+  finish: 'Laminate / quartz vinyl',
   fill: '#f8fafc'
 };
 
@@ -253,22 +253,22 @@ export function partitionHandleDefs(rawLayout) {
   const layout = normalizeLayout(rawLayout);
   const { variant, bathX, bathY, bathW, bathTop, bathBottom, hallX, hallY } = layout;
   const hall = [
-    { key: 'hallX', axis: 'x', x: hallX, y: hallY, len: INNER_D - hallY, label: 'Прихожая ←→' },
-    { key: 'hallY', axis: 'y', x: 0, y: hallY, len: hallX, label: 'Прихожая ↑↓' }
+    { key: 'hallX', axis: 'x', x: hallX, y: hallY, len: INNER_D - hallY, label: 'Hall ←→' },
+    { key: 'hallY', axis: 'y', x: 0, y: hallY, len: hallX, label: 'Hall ↑↓' }
   ];
 
   if (variant === 'bathLeft') {
     return [
-      { key: 'bathW', axis: 'x', x: bathW, y: bathTop, len: bathBottom - bathTop, label: 'Санузел ←→' },
-      { key: 'bathTop', axis: 'y', x: 0, y: bathTop, len: bathW, label: 'Санузел, верх ↑↓' },
-      { key: 'bathBottom', axis: 'y', x: 0, y: bathBottom, len: bathW, label: 'Санузел, низ ↑↓' },
+      { key: 'bathW', axis: 'x', x: bathW, y: bathTop, len: bathBottom - bathTop, label: 'Bathroom ←→' },
+      { key: 'bathTop', axis: 'y', x: 0, y: bathTop, len: bathW, label: 'Bathroom, top ↑↓' },
+      { key: 'bathBottom', axis: 'y', x: 0, y: bathBottom, len: bathW, label: 'Bathroom, bottom ↑↓' },
       ...hall
     ];
   }
 
   return [
-    { key: 'bathX', axis: 'x', x: bathX, y: 0, len: bathY, label: 'Санузел ←→' },
-    { key: 'bathY', axis: 'y', x: bathX, y: bathY, len: INNER_W - bathX, label: 'Санузел ↑↓' },
+    { key: 'bathX', axis: 'x', x: bathX, y: 0, len: bathY, label: 'Bathroom ←→' },
+    { key: 'bathY', axis: 'y', x: bathX, y: bathY, len: INNER_W - bathX, label: 'Bathroom ↑↓' },
     ...hall
   ];
 }
@@ -348,32 +348,32 @@ const OPENINGS_BATH_LEFT = [
 // наверху, на втором этаже.
 export const STAIR = {
   id: 'stair',
-  name: 'Лестница на мансарду',
+  name: 'Stair to the attic',
   layer: 'architecture',
   // ПОЗИЦИЯ ЗАФИКСИРОВАНА заказчиком и не двигается.
   // Ширина ступени 800: 900 не оставляли прохода между диваном и маршем.
   // Заход снизу и площадка сверху по 1 м — этим и определено положение.
   x: INNER_W - 0.8,
-  y: 1.0, // верх марша: выше нельзя — наверху нужен метр площадки
+  y: 1.0, // top of the flight: no higher — a metre of landing is needed upstairs
   width: 0.8,
-  locked: true, // не перетаскивается и не меняет размер
-  length: 3.4, // проекция: от 4.40 до 1.00
+  locked: true, // is not dragged and does not change size
+  length: 3.4, // projection: from 4.40 to 1.00
   totalRise: FLOOR_TO_FLOOR,
   // 15 подступенков — решение заказчика. Подъём 3000 / 15 = 200 мм,
   // проступь 3400 / 14 = 243 мм. Блондель 2h + s = 643 при пределе 650,
   // формула удобства h + s = 443 при 450. Проходит обе.
   risers: 15,
   tread: 3.4 / 14,
-  existingRun: 2.6, // ЗАМЕРЕНО
-  existingRisers: 17, // у существующего марша, отсюда его проступь 162 мм
-  existingWidth: 0.7, // ЗАМЕРЕНО: ширина ступени сейчас 700
-  existingOpeningTopY: 1.8, // = 4.40 − 2.60, кромка существующего проёма
+  existingRun: 2.6, // MEASURED
+  existingRisers: 17, // of the existing flight, hence its 162 mm tread
+  existingWidth: 0.7, // MEASURED: the step width is 700 now
+  existingOpeningTopY: 1.8, // = 4.40 − 2.60, edge of the existing opening
   existingBottomY: INNER_D - 1.1,
-  minApproach: 1.0, // свободное место перед нижней ступенью
-  minLanding: 1.0, // площадка наверху, на втором этаже
+  minApproach: 1.0, // free space in front of the bottom step
+  minLanding: 1.0, // landing at the top, on the second floor
   confirmed: false,
-  note: 'Подъём вдоль правой стены. Заход снизу и площадка сверху — не менее 1 м каждый. ' +
-    'Удлинить марш можно только вверх, сдвигая проём над санузлом.'
+  note: 'The flight rises along the right wall. The approach below and the landing above are at least 1 m each. ' +
+    'The flight can only be lengthened upwards, by moving the opening over the bathroom.'
 };
 
 // ---------------------------------------------------------------------------
@@ -382,59 +382,59 @@ export const STAIR = {
 // ---------------------------------------------------------------------------
 export const NODES = [
   {
-    id: 'boiler', type: 'boiler', name: 'Котёл газовый двухконтурный', layer: 'heating',
+    id: 'boiler', type: 'boiler', name: 'Gas boiler, dual-circuit', layer: 'heating',
     // ЗАМЕРЕНО: 300 от левого нижнего угла, ширина 400 → занимает 4.80…5.20
     x: 0.03, y: 4.8, w: 0.32, d: 0.4, confirmed: true, existing: true,
     mountHeight: 1.5,
-    power: { nominal: 24, minModulation: 8 }, // кВт — уточнить по паспорту
-    note: 'СУЩЕСТВУЕТ. На ЛЕВОЙ стене сразу на входе, глухое окно — за ним. ' +
-      'Точная привязка по стене и мощность не подтверждены, нужен паспорт.'
+    power: { nominal: 24, minModulation: 8 }, // kW — to be checked against the data sheet
+    note: 'EXISTS. On the LEFT wall right at the entrance, the fixed window is behind it. ' +
+      'The exact position along the wall and the output are not confirmed, a data sheet is needed.'
   },
   {
-    id: 'gas-boiler', type: 'gas_point', name: 'Ввод газа к котлу', layer: 'plumbing',
+    id: 'gas-boiler', type: 'gas_point', name: 'Gas inlet to the boiler', layer: 'plumbing',
     x: 0.05, y: 4.95, w: 0.14, d: 0.14, confirmed: false, existing: true,
-    note: 'СУЩЕСТВУЕТ. Якорит положение котла.'
+    note: 'EXISTS. Anchors the boiler position.'
   },
   {
-    id: 'flue', type: 'flue', name: 'Коаксиальный дымоход', layer: 'heating',
+    id: 'flue', type: 'flue', name: 'Coaxial flue', layer: 'heating',
     x: 0.04, y: 4.14, w: 0.14, d: 0.14, confirmed: false, existing: true
   },
   {
     // ЗАМЕРЕНО СО СЛОВ ЗАКАЗЧИКА: ввод в самом углу, почти под верхом мойки.
     // Перенести нельзя — он заложен в проект газоснабжения дома.
-    id: 'gas-hob', type: 'gas_point', name: 'Ввод газа к плите', layer: 'plumbing',
+    id: 'gas-hob', type: 'gas_point', name: 'Gas inlet to the hob', layer: 'plumbing',
     // ЗАМЕРЕНО: в самом углу у перегородки санузла, отметка 750 от пола.
     x: 3.54, y: 0.04, w: 0.14, d: 0.14, mountHeight: 0.75,
     confirmed: true, existing: true,
-    note: 'СУЩЕСТВУЕТ, перенос невозможен: заложен в проект газа по дому. ' +
-      'В углу под угловой мойкой, отметка 750. До панели под окном — 1,8 м, ' +
-      'то есть подводка длинная и идёт за шкафами: нужна жёсткая труба ' +
-      'с гибкой вставкой только у панели и ревизионные лючки по трассе.'
+    note: 'EXISTS, cannot be moved: it is built into the gas design of the house. ' +
+      'In the corner under the corner sink, level 750. To the hob under the window it is 1.8 m, ' +
+      'so the feed is long and runs behind the cabinets: a rigid pipe is needed ' +
+      'with a flexible insert only at the hob and inspection hatches along the route.'
   },
   {
     // ЗАМЕРЕНО: 850 от правого верхнего угла, у правой стены. Труба «сотка».
-    id: 'sewer-riser', type: 'sewer_riser', name: 'Стояк канализации, 100-я труба', layer: 'plumbing',
+    id: 'sewer-riser', type: 'sewer_riser', name: 'Sewer stack, 100 mm pipe', layer: 'plumbing',
     x: 5.34, y: 0.77, w: 0.16, d: 0.16, confirmed: true, existing: true,
-    dia: 110, // наружный, мм. Для чугуна Ø100 внутр. наружный ~118 — проверить
-    invert: -0.35, // отметка лотка от чистого пола, м — НЕ ЗАМЕРЕНА
-    note: 'СУЩЕСТВУЕТ, привязка замерена: 850 от правого верхнего угла. ' +
-      'Все сливы считаются с уклоном 2 см/м к этой точке. ' +
-      'Отметка лотка пока предположительная — именно она решает судьбу вариантов.'
+    dia: 110, // outer, mm. For cast iron Ø100 inner the outer is ~118 — to be checked
+    invert: -0.35, // invert level from the finished floor, m — NOT MEASURED
+    note: 'EXISTS, position measured: 850 from the top right corner. ' +
+      'All drains are calculated with a 2 cm/m slope towards this point. ' +
+      'The invert level is still an assumption — it is exactly what decides the fate of the variants.'
   },
   {
-    id: 'water-inlet', type: 'water_inlet', name: 'Ввод холодной воды', layer: 'plumbing',
+    id: 'water-inlet', type: 'water_inlet', name: 'Cold water inlet', layer: 'plumbing',
     x: 0.08, y: 5.25, w: 0.14, d: 0.14, confirmed: false, existing: true
   },
   {
     // ЩИТ СНАРУЖИ ДОМА, примерно за котлом (котёл на левой стене, 4.80…5.20).
     // Значит внутрь заходит один ввод сквозь левую стену, а внутренний
     // распределительный щиток нужен свой — иначе каждую группу тянуть на улицу.
-    id: 'panel', type: 'electrical_panel', name: 'Ввод от наружного щита', layer: 'electrical',
+    id: 'panel', type: 'electrical_panel', name: 'Feed from the outdoor panel', layer: 'electrical',
     x: 0.02, y: 4.85, w: 0.1, d: 0.3, confirmed: false, existing: true,
     outside: true, mountHeight: 1.6,
-    note: 'Основной щит СНАРУЖИ, за котлом. Внутрь идёт один ввод через левую ' +
-      'стену. Внутренний распределительный щиток ставится рядом — от него ' +
-      'расходятся группы. Трассы считаются от этой точки.'
+    note: 'The main panel is OUTSIDE, behind the boiler. One feed comes in through the left ' +
+      'wall. An internal distribution board is placed next to it — the groups ' +
+      'branch off from it. Routes are calculated from this point.'
   },
   // ------------------------------------------------------------------
   // ЗАКЛАДНЫЕ ПЛАСТИНЫ ПОД БЕТОННУЮ СТОЛЕШНИЦУ.
@@ -452,26 +452,26 @@ export const NODES = [
   ...Array.from({ length: 6 }, (_, i) => ({
     id: `emb-n${i + 1}`,
     type: 'embed',
-    name: `Закладная фронта ${((0.15 + i * 0.6) * 1000).toFixed(0)}`,
+    name: `Front embed ${((0.15 + i * 0.6) * 1000).toFixed(0)}`,
     layer: 'architecture',
     x: 0.15 + i * 0.6, y: 0.48, w: 0.12, d: 0.12,
     confirmed: false, existing: false,
-    note: 'Шаг 600 по верхнему фронту. Стойка ставится на стык секций'
+    note: 'Pitch 600 along the top front. The post stands on a joint between sections'
   })),
   {
-    id: 'emb-corner', type: 'embed', name: 'Закладная: угол под мойкой',
+    id: 'emb-corner', type: 'embed', name: 'Embed: corner under the sink',
     layer: 'architecture', x: 3.44, y: 0.44, w: 0.12, d: 0.12,
     confirmed: false, existing: false,
-    note: 'Самая нагруженная точка: мойка с водой. За диагональю мойки мёртвая зона'
+    note: 'The most loaded point: the sink with water. Behind the sink diagonal is a dead zone'
   },
   ...Array.from({ length: 3 }, (_, i) => ({
     id: `emb-s${i + 1}`,
     type: 'embed',
-    name: `Закладная боковой ветки ${((0.9 + i * 0.42) * 1000).toFixed(0)}`,
+    name: `Side branch embed ${((0.9 + i * 0.42) * 1000).toFixed(0)}`,
     layer: 'architecture',
     x: 3.0, y: 0.9 + i * 0.42, w: 0.12, d: 0.12,
     confirmed: false, existing: false,
-    note: 'Боковая ветка у перегородки санузла'
+    note: 'Side branch by the bathroom partition'
   })),
   // ЗАДНЯЯ линия закладных — её не хватало.
   // Стойки нужны ПАРАМИ: при глубине столешницы 600 от одной линии опор
@@ -480,20 +480,20 @@ export const NODES = [
   ...Array.from({ length: 6 }, (_, i) => ({
     id: `emb-b${i + 1}`,
     type: 'embed',
-    name: `Закладная у стены ${((0.66 + i * 0.6) * 1000).toFixed(0)}`,
+    name: `Wall embed ${((0.66 + i * 0.6) * 1000).toFixed(0)}`,
     layer: 'architecture',
     x: 0.66 + i * 0.6, y: 0.04, w: 0.12, d: 0.12,
     confirmed: false, existing: false,
-    note: 'Задняя стойка пары, у стены. Шаг 600, от правой грани холодильника'
+    note: 'Rear post of the pair, at the wall. Pitch 600, from the right face of the fridge'
   })),
   {
-    id: 'emb-s4', type: 'embed', name: 'Закладная боковой ветки, у перегородки',
+    id: 'emb-s4', type: 'embed', name: 'Side branch embed, at the partition',
     layer: 'architecture', x: 3.6, y: 1.5, w: 0.12, d: 0.12,
     confirmed: false, existing: false,
-    note: 'Пара к боковой ветке со стороны перегородки санузла'
+    note: 'Pair to the side branch on the bathroom partition side'
   },
   {
-    id: 'vent', type: 'vent_duct', name: 'Вытяжка санузла', layer: 'plumbing',
+    id: 'vent', type: 'vent_duct', name: 'Bathroom extract', layer: 'plumbing',
     x: 3.98, y: 0.08, w: 0.14, d: 0.14, confirmed: false, existing: true,
     flow: 50, duct: 100, mountHeight: 2.5
   },
@@ -503,7 +503,7 @@ export const NODES = [
     // за холодильником подходит: там наружная стена и короткий вывод.
     // Критично не «где», а «на какой высоте»: под потолком, продукты сгорания
     // и влажный воздух поднимаются вверх.
-    id: 'vent-kitchen', type: 'vent_duct', name: 'Вытяжной канал кухни', layer: 'plumbing',
+    id: 'vent-kitchen', type: 'vent_duct', name: 'Kitchen extract duct', layer: 'plumbing',
     // НАД ПЛИТОЙ, а не в углу за холодильником. Заказчик не планирует второе
     // отверстие наружу под зонт — значит канал должен быть один и работать
     // на две роли: в него включается зонт, а рядом ставится решётка
@@ -511,18 +511,18 @@ export const NODES = [
     // продукты сгорания и пар ловятся у источника, а не по объёму комнаты.
     x: 3.0, y: 0.04, w: 0.16, d: 0.16, confirmed: false, existing: false,
     flow: 90, duct: 100, mountHeight: 2.5,
-    note: 'ПРОЕКТИРУЕТСЯ, ОДИН канал на зонт и на общеобмен. Ставить над ' +
-      'варочной панелью: там наружная стена рядом, вывод получается 200–300 мм. ' +
-      'Тройник: зонт плюс решётка, чтобы вытяжка работала и с выключенным зонтом.'
+    note: 'PLANNED, ONE duct for the hood and for general extract. Place it above ' +
+      'the hob: the outer wall is close there, the run comes to 200–300 mm. ' +
+      'A tee: hood plus grille, so that extraction works with the hood switched off too.'
   },
   {
-    id: 'manifold', type: 'manifold', name: 'Коллектор тёплого пола', layer: 'heating',
+    id: 'manifold', type: 'manifold', name: 'Underfloor heating manifold', layer: 'heating',
     // В промежутке между котлом (низ 4.80) и глухим окном (верх 4.10):
     // ровно 700 мм свободной стены. Коллектор на 4 контура ≈ 300 мм,
     // с кранами и воздухоотводчиком ≈ 500 — влезает с запасом.
     x: 0.03, y: 4.2, w: 0.12, d: 0.55, confirmed: false, existing: false,
-    note: 'ПРОЕКТИРУЕТСЯ. Между котлом и окном, 700 мм свободной стены. ' +
-      'Шкаф накладной — в наружную стену не утопить.'
+    note: 'PLANNED. Between the boiler and the window, 700 mm of free wall. ' +
+      'A surface-mounted cabinet — it cannot be recessed into the outer wall.'
   }
 ];
 
@@ -745,9 +745,9 @@ const EQUIPMENT_BATH_RIGHT = [
   // Общий свет гостиной. НАД ДИВАНОМ СВЕТИЛЬНИКОВ НЕТ:
   // источник над головой слепит, когда откидываешься, и светит в макушку,
   // когда читаешь. Свет ставится ПЕРЕД диваном, а у самого дивана — торшер.
-  { id: 'el-l1', catalogId: 'light', x: 2.5, y: 3.4, rotation: 0 }, // проход от прихожей
-  { id: 'el-l2', catalogId: 'light', x: 3.6, y: 4.0, rotation: 0 }, // перед диваном, 400 мм от края
-  { id: 'el-l3', catalogId: 'light', x: 0.7, y: 2.9, rotation: 0 }, // западная часть зала
+  { id: 'el-l1', catalogId: 'light', x: 2.5, y: 3.4, rotation: 0 }, // passage from the hall
+  { id: 'el-l2', catalogId: 'light', x: 3.6, y: 4.0, rotation: 0 }, // in front of the sofa, 400 mm from the edge
+  { id: 'el-l3', catalogId: 'light', x: 0.7, y: 2.9, rotation: 0 }, // west part of the living room
 
   // --- Свет: прихожая, санузел, лестница ---
   { id: 'el-l-hall', catalogId: 'light', x: 1.0, y: 4.3, rotation: 0 },
@@ -869,12 +869,12 @@ const FLOOR_EXCLUSION_ZONES_BATH_RIGHT = [
 export const VARIANTS = {
   bathRight: {
     id: 'bathRight',
-    name: 'Санузел справа',
-    short: 'Справа',
+    name: 'Bathroom on the right',
+    short: 'Right',
     description:
-      'Санузел 1800 × 1800 в правом верхнем углу, вплотную к существующему стояку. ' +
-      'Кухня одной линией по верхней стене, мойка под окном. Дверь из прихожей — ' +
-      'на правой стене, как сейчас. Трассы слива короткие, запас по уклону большой.',
+      'Bathroom 1800 × 1800 in the top right corner, right against the existing stack. ' +
+      'Kitchen in one line along the top wall, sink under the window. The door from the hall is ' +
+      'on the right wall, as now. Drain runs are short, the slope margin is large.',
     layout: { variant: 'bathRight', bathX: INNER_W - BATH_SIZE, bathY: BATH_SIZE, hallX: 2.0, hallY: 3.2 },
     openings: OPENINGS_BATH_RIGHT,
     equipment: EQUIPMENT_BATH_RIGHT,
@@ -885,13 +885,13 @@ export const VARIANTS = {
   },
   bathLeft: {
     id: 'bathLeft',
-    name: 'Санузел слева, кухня углом',
-    short: 'Слева',
+    name: 'Bathroom on the left, corner kitchen',
+    short: 'Left',
     description:
-      'Санузел 1800 × 1800 у западной стены, в левом верхнем углу. Дверь из прихожей ' +
-      'в зал перенесена с правой стены на верхнюю. Кухня углом по верхней и правой ' +
-      'стене, мойка в углу у стояка, нижние шкафы уходят под лестницу. Санузел ' +
-      'уезжает от стояка — уклон слива унитаза становится узким местом.',
+      'Bathroom 1800 × 1800 by the west wall, in the top left corner. The door from the hall ' +
+      'to the living room is moved from the right wall to the top one. Corner kitchen along the top and right ' +
+      'walls, sink in the corner by the stack, base cabinets run under the stair. The bathroom ' +
+      'moves away from the stack — the toilet drain slope becomes the bottleneck.',
     layout: {
       variant: 'bathLeft',
       bathW: BATH_SIZE,
@@ -903,7 +903,7 @@ export const VARIANTS = {
     openings: OPENINGS_BATH_LEFT,
     equipment: EQUIPMENT_BATH_LEFT,
     floorExclusionZones: [
-      { id: 'kitchen-top', x: 2.3, y: 0, w: 3.2, d: 0.6, note: 'Кухня по верхней стене' }
+      { id: 'kitchen-top', x: 2.3, y: 0, w: 3.2, d: 0.6, note: 'Kitchen along the top wall' }
     ],
     nodeOverrides: {
       // Вытяжка идёт за санузлом — существующий канал придётся переносить
@@ -934,11 +934,11 @@ export const VARIANT_IDS = Object.keys(VARIANTS);
 // мансарды не надо. Но окно короткое — пока панели сняты.
 // ---------------------------------------------------------------------------
 export const CEILING = {
-  structure: 'joists', // балки, снизу подшив, сверху доски пола мансарды
-  currentFinish: 'pvc', // ПВХ-панели по балкам — демонтируются
+  structure: 'joists', // joists, lining below, attic floorboards above
+  currentFinish: 'pvc', // PVC panels on the joists — to be demolished
   subfloor: false,
-  cavityFilled: false, // межбалочное пространство пустое
-  joistDepth: 0.18, // высота балки, м — НЕ ЗАМЕРЕНО, типовая
+  cavityFilled: false, // the space between the joists is empty
+  joistDepth: 0.18, // joist height, m — NOT MEASURED, typical
   // Мансарда ОТАПЛИВАЕТСЯ (две спальни с радиаторами), поэтому утеплитель
   // между этажами нужен НЕ для тепла, а только для звука.
   insulationPurpose: 'acoustic',
@@ -961,20 +961,20 @@ export const LEVELS = {
   //   ────────────────────────────────
   //   до существующей поверхности 422  ← располагаемая высота
   crawlDepth: 422,
-  crawlMeasuredToBoards: 350, // как замеряли
+  crawlMeasuredToBoards: 350, // how it was measured
   boardThickness: 40,
-  existingOverlay: 32, // ЭППС 25 + ДВП + линолеум поверх досок
-  sandFill: 73, // остаток на выравнивание — подобрано, чтобы пол не поднялся
-  compactLayer: 200, // максимальный слой уплотнения за проход
+  existingOverlay: 32, // XPS 25 + fibreboard + linoleum on top of the boards
+  sandFill: 73, // remainder for levelling — chosen so that the floor does not rise
+  compactLayer: 200, // maximum compaction layer per pass
 
   // Песок в подполе НЕРАВНОМЕРНЫЙ и НЕ УПЛОТНЁН. Отсюда два следствия:
   // 1) 350 — среднее, а пирог должен уместиться в САМОМ МЕЛКОМ месте;
   // 2) уплотнять придётся существующий песок, а не только досыпку.
   crawlUneven: true,
   crawlCompacted: false,
-  crawlProfileMeasured: false, // профиль по точкам не снят — только среднее
-  clearHeightNow: 2700, // от существующего пола до низа перекрытия
-  floorToFloorNow: FLOOR_TO_FLOOR * 1000, // до чистого пола мансарды
+  crawlProfileMeasured: false, // profile not surveyed point by point — only the average
+  clearHeightNow: 2700, // from the existing floor to the underside of the slab
+  floorToFloorNow: FLOOR_TO_FLOOR * 1000, // up to the finished attic floor
   // ЭППС по внутренней грани фундамента. 100 мм — та же плита, что в поле:
   // в рознице ходовые толщины 50 и 100, а 80 почти не встречается.
   edgeInsulation: 100,
@@ -999,7 +999,7 @@ export const LEVELS = {
   // до стены, поэтому плитка кладётся до самой стены, а лента после
   // облицовки подрезается и уходит под плинтус.
   edgeStrip: 10,
-  edgeStripMaterial: 'демпферная лента ППЭ'
+  edgeStripMaterial: 'PE foam damper strip'
 };
 
 // Пирог пола по грунту, мм. Правится в UI.
@@ -1014,16 +1014,16 @@ export const SCREED = {
   waterproofing: 2,
   // 100 новых + переиспользованный старый вторым слоем
   insulation: 125,
-  screedTotal: 70, // стяжка над утеплителем
+  screedTotal: 70, // screed above the insulation
   pipeOd: 16,
-  pipeCoverMin: 45, // минимум бетона над трубой
-  finishThickness: 12, // чистовое покрытие
+  pipeCoverMin: 45, // minimum concrete above the pipe
+  finishThickness: 12, // finish covering
   // СТАРЫЙ утеплитель, лежащий сейчас на досках под ДВП и линолеумом:
   // ТЕХНОНИКОЛЬ ТЕХНОПЛЕКС. Толщина 20 ИЛИ 30 — заказчик не помнит,
   // принято 25 как середина. ЗАМЕРИТЬ при вскрытии: это прямо влияет
   // на отметку чистого пола.
   insulationReused: 25,
-  reusedBrand: 'ТЕХНОНИКОЛЬ ТЕХНОПЛЕКС',
+  reusedBrand: 'TECHNONICOL TECHNOPLEX',
   reusedThicknessKnown: false,
   // Прочность ТЕХНОПЛЕКСа на сжатие при 10 % — от 100 до 250 кПа
   // в зависимости от модификации. Нагрузка от стяжки с плиткой и мебелью
@@ -1068,7 +1068,7 @@ export function contentRevision(obj) {
 
 export function makeInitialProject(variantId = 'bathRight') {
   const base = {
-    meta: { name: 'Floor Planner — 1 этаж', revision: 0, updatedAt: new Date().toISOString() },
+    meta: { name: 'Floor Planner — ground floor', revision: 0, updatedAt: new Date().toISOString() },
     layout: { ...DEFAULT_LAYOUT },
     openings: [],
     stair: { ...STAIR },

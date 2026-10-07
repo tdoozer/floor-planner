@@ -37,9 +37,9 @@ export function expansionRatio(coolant) {
 // Мансардные радиаторы СЮДА НЕ ВХОДЯТ — они вне объёма работ.
 export function systemVolume({
   pipeM,
-  boilerL = 3, // теплообменник и внутренняя гидравлика котла
+  boilerL = 3, // heat exchanger and internal hydraulics of the boiler
   manifoldL = 1.2,
-  connectionM = 1.4 // подводки котёл — коллектор, туда и обратно
+  connectionM = 1.4 // boiler — manifold connections, there and back
 }) {
   const loopsL = pipeM * pipeVolumeLPerM();
   const connL = connectionM * (Math.PI * (CONNECTION.innerMm / 2000) ** 2 * 1000);
@@ -60,7 +60,7 @@ export function expansionCheck({
   volumeL,
   coolant,
   vesselL,
-  prechargeBar = 1.0, // предварительное давление бака = давлению заполнения
+  prechargeBar = 1.0, // vessel precharge = fill pressure
   reliefBar = 3.0
 }) {
   const ratio = expansionRatio(coolant);
@@ -95,43 +95,43 @@ export function boilerRoomParts({ loops, coolant, boiler }) {
   const toxic = !!coolant?.toxic;
 
   const builtIn = [
-    { id: 'pump', name: 'Циркуляционный насос', why: 'график из паспорта: 4,76 м при 368 л/ч, запас ×3,5' },
-    { id: 'vessel', name: `Расширительный бак ${boiler.expansionVesselL} л`, why: 'проверен на гликоль' },
-    { id: 'relief', name: 'Предохранительный клапан 3 бар', why: 'входит в группу безопасности котла' },
-    { id: 'airvent', name: 'Автоматический воздухоотводчик', why: 'на насосе котла' },
-    { id: 'gauge', name: 'Манометр', why: 'на лицевой панели' },
-    { id: 'dhw', name: 'Трёхходовой клапан ГВС', why: 'двухконтурный котёл' },
-    { id: 'ntc', name: 'Датчики NTC подачи и обратки', why: 'на них и работает F06' }
+    { id: 'pump', name: 'Circulation pump', why: 'data sheet curve: 4.76 m at 368 l/h, margin ×3.5' },
+    { id: 'vessel', name: `Expansion vessel ${boiler.expansionVesselL} l`, why: 'checked for glycol' },
+    { id: 'relief', name: 'Pressure relief valve 3 bar', why: 'part of the boiler safety group' },
+    { id: 'airvent', name: 'Automatic air vent', why: 'on the boiler pump' },
+    { id: 'gauge', name: 'Pressure gauge', why: 'on the front panel' },
+    { id: 'dhw', name: 'DHW three-way valve', why: 'dual-circuit boiler' },
+    { id: 'ntc', name: 'NTC sensors on supply and return', why: 'F06 works on them' }
   ];
 
   const required = [
     {
-      id: 'ball-supply', name: 'Кран шаровой 3/4" с американкой', qty: 2, unit: 'шт',
-      why: 'подача и обратка котла — снять котёл, не сливая систему'
+      id: 'ball-supply', name: 'Ball valve 3/4" with union', qty: 2, unit: 'pcs',
+      why: 'boiler supply and return — remove the boiler without draining the system'
     },
     {
-      id: 'strainer', name: 'Фильтр косой сетчатый 3/4"', qty: 1, unit: 'шт',
-      why: 'на ОБРАТКЕ перед котлом. Стяжка новая, окалины и мусора будет много'
+      id: 'strainer', name: 'Y-strainer 3/4"', qty: 1, unit: 'pcs',
+      why: 'on the RETURN before the boiler. The screed is new, there will be a lot of scale and debris'
     },
     {
-      id: 'ball-manifold', name: 'Кран шаровой 3/4" на коллектор', qty: 2, unit: 'шт',
-      why: 'отсечь коллектор отдельно от котла'
+      id: 'ball-manifold', name: 'Ball valve 3/4" for the manifold', qty: 2, unit: 'pcs',
+      why: 'isolate the manifold separately from the boiler'
     },
     {
-      id: 'thermo', name: 'Термометр накладной 0–80 °C', qty: 2, unit: 'шт',
-      why: 'подача и обратка коллектора. По разнице видно, работает ли контур — это главный прибор наладки'
+      id: 'thermo', name: 'Strap-on thermometer 0–80 °C', qty: 2, unit: 'pcs',
+      why: 'manifold supply and return. The difference shows whether the loop works — this is the main commissioning instrument'
     },
     {
-      id: 'safety-stat', name: 'Термостат аварийный накладной, уставка 55 °C', qty: 1, unit: 'шт',
-      why: 'ВТОРАЯ защита стяжки. При прямом подключении между котлом и бетоном нет ничего, кроме параметра F06'
+      id: 'safety-stat', name: 'Strap-on emergency thermostat, set to 55 °C', qty: 1, unit: 'pcs',
+      why: 'the SECOND screed protection. With a direct connection there is nothing between the boiler and the concrete except the F06 parameter'
     },
     {
-      id: 'outdoor', name: 'Датчик наружной температуры', qty: 1, unit: 'шт',
-      why: 'без него кривая Kt не работает вообще, а она заложена в расчёт'
+      id: 'outdoor', name: 'Outdoor temperature sensor', qty: 1, unit: 'pcs',
+      why: 'without it the Kt curve does not work at all, and it is built into the calculation'
     },
     {
-      id: 'eurocone', name: 'Евроконус 16 × 2,0 → 3/4"', qty: loops * 2, unit: 'шт',
-      why: 'подача и обратка каждого контура'
+      id: 'eurocone', name: 'Euroconus 16 × 2.0 → 3/4"', qty: loops * 2, unit: 'pcs',
+      why: 'supply and return of each loop'
     }
   ];
 
@@ -140,17 +140,17 @@ export function boilerRoomParts({ loops, coolant, boiler }) {
   const makeup = toxic
     ? {
         id: 'makeup-manual',
-        name: 'Ручной насос опрессовщик + бак готовой смеси',
-        mode: 'разрывная, ручная',
+        name: 'Manual test pump + tank of ready-mixed fluid',
+        mode: 'broken-line, manual',
         why:
-          'Встроенный кран подпитки от ГВС ЗАГЛУШИТЬ и опломбировать. ' +
-          'Теплоноситель ядовит, а подпитка водой ещё и разбавляет состав.'
+          'PLUG and seal the built-in DHW make-up valve. ' +
+          'The coolant is toxic, and make-up with water also dilutes the mixture.'
       }
     : {
         id: 'makeup-auto',
-        name: 'Узел подпитки с обратным клапаном',
-        mode: 'от водопровода',
-        why: 'на воде допустима автоматическая подпитка'
+        name: 'Make-up unit with a non-return valve',
+        mode: 'from the mains',
+        why: 'automatic make-up is acceptable on water'
       };
 
   return { builtIn, required, makeup, toxic };

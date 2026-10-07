@@ -8,31 +8,31 @@
 
 import { INNER_D, INNER_W, buildRooms, buildWalls } from '../data/project.js';
 import { polygonArea, wallVector } from './geometry.js';
-import { PRICEBOOK_META, lineCost, packOf } from '../data/pricebook.ru.js';
+import { PRICEBOOK_META, lineCost, packOf } from '../data/pricebook.js';
 import { buildWorktop } from '../data/worktop.js';
 import { stairFabrication, worktopFabrication } from './fabrication.js';
 
 // Коэффициенты запаса
 export const WASTE = {
-  insulation: 1.05, // подрезка плит
-  waterproofing: 1.25, // перехлёсты и заворот на стены
-  mesh: 1.1, // перехлёст карт
-  pipe: 1.08, // запас на подводки и ошибки
-  sandCompaction: 1.15, // насыпной объём против уплотнённого
+  insulation: 1.05, // trimming of boards
+  waterproofing: 1.25, // overlaps and turn-up onto the walls
+  mesh: 1.1, // overlap of sheets
+  pipe: 1.08, // allowance for feeds and mistakes
+  sandCompaction: 1.15, // loose volume against compacted
   gravelCompaction: 1.2
 };
 
 // Плотности и нормы расхода
 export const RATES = {
-  screedDensity: 2000, // кг/м³ цементно-песчаной стяжки
-  cementPerM3: 400, // кг цемента М500 на 1 м³ раствора М300
-  sandPerM3: 1.1, // м³ песка на 1 м³ раствора
-  fibrePerM3: 0.9, // кг полипропиленовой фибры
-  plasticiserPerCement: 0.01, // л на кг цемента
-  tiesPerMetre: 2, // хомутов на погонный метр трубы
-  bagCement: 25, // кг в мешке
-  meshSheet: 6, // м² в карте 2 × 3
-  insulationSheet: 0.684 // м² в плите 1180 × 580
+  screedDensity: 2000, // kg/m³ of cement-sand screed
+  cementPerM3: 400, // kg of M500 cement per 1 m³ of M300 mortar
+  sandPerM3: 1.1, // m³ of sand per 1 m³ of mortar
+  fibrePerM3: 0.9, // kg of polypropylene fibre
+  plasticiserPerCement: 0.01, // l per kg of cement
+  tiesPerMetre: 2, // ties per running metre of pipe
+  bagCement: 25, // kg in a bag
+  meshSheet: 6, // m² in a 2 × 3 sheet
+  insulationSheet: 0.684 // m² in a 1180 × 580 board
 };
 
 const up = (v) => Math.ceil(v);
@@ -49,7 +49,7 @@ function electricalItems(electrical) {
 
   const cable = electrical.byCircuit.reduce(
     (acc, g) => {
-      const key = g.cable === '3×1,5' ? 'light' : 'power';
+      const key = g.cable === '3×1.5' ? 'light' : 'power';
       acc[key] += g.cableM;
       return acc;
     },
@@ -65,75 +65,75 @@ function electricalItems(electrical) {
 
   return [
     {
-      group: 'Электрика', name: 'Кабель ВВГнг-LS 3×2,5', price: 'cable_25',
-      qty: cable.power * 1.1, unit: 'м', note: 'силовые группы, с запасом 10 %'
+      group: 'Electrics', name: 'Cable VVGng-LS 3×2.5', price: 'cable_25',
+      qty: cable.power * 1.1, unit: 'm', note: 'power groups, with a 10 % allowance'
     },
     {
-      group: 'Электрика', name: 'Кабель ВВГнг-LS 3×1,5', price: 'cable_15',
-      qty: cable.light * 1.1, unit: 'м', note: 'освещение, с запасом 10 %'
+      group: 'Electrics', name: 'Cable VVGng-LS 3×1.5', price: 'cable_15',
+      qty: cable.light * 1.1, unit: 'm', note: 'lighting, with a 10 % allowance'
     },
     {
-      group: 'Электрика', name: 'Гофра', price: 'conduit',
-      qty: electrical.inFloorM * 1.1, unit: 'м',
-      note: 'ТОЛЬКО в стяжке. Свет идёт по перекрытию открыто, там гофры нет'
+      group: 'Electrics', name: 'Conduit', price: 'conduit',
+      qty: electrical.inFloorM * 1.1, unit: 'm',
+      note: 'ONLY in the screed. Lighting runs openly along the slab, no conduit there'
     },
     {
-      group: 'Электрика', name: 'Подрозетник', price: 'back_box',
-      qty: boxes, unit: 'шт', note: 'под каждую розетку и выключатель'
+      group: 'Electrics', name: 'Back box', price: 'back_box',
+      qty: boxes, unit: 'pcs', note: 'for every socket and switch'
     },
     {
-      group: 'Электрика', name: 'Коробка распределительная', price: 'junction_box',
-      qty: Math.max(4, Math.ceil(boxes / 4)), unit: 'шт', note: 'по помещениям'
+      group: 'Electrics', name: 'Junction box', price: 'junction_box',
+      qty: Math.max(4, Math.ceil(boxes / 4)), unit: 'pcs', note: 'per room'
     },
     {
-      group: 'Электрика', name: 'Розетка с рамкой', price: 'socket',
-      qty: socketCount, unit: 'шт', note: `${byId.socket4 ?? 0} из них блоки на 4`
+      group: 'Electrics', name: 'Socket with frame', price: 'socket',
+      qty: socketCount, unit: 'pcs', note: `${byId.socket4 ?? 0} of them 4-gang blocks`
     },
     {
-      group: 'Электрика', name: 'Розетка IP44', price: 'socket_ip44',
-      qty: byId.socket_ip44 ?? 0, unit: 'шт', note: 'санузел'
+      group: 'Electrics', name: 'Socket IP44', price: 'socket_ip44',
+      qty: byId.socket_ip44 ?? 0, unit: 'pcs', note: 'bathroom'
     },
     {
-      group: 'Электрика', name: 'Выключатель', price: 'switch',
-      qty: switchCount, unit: 'шт', note: `${byId.switch2 ?? 0} двухклавишных`
+      group: 'Electrics', name: 'Switch', price: 'switch',
+      qty: switchCount, unit: 'pcs', note: `${byId.switch2 ?? 0} two-gang`
     },
     {
-      group: 'Электрика', name: 'Выключатель проходной', price: 'switch_way',
-      qty: wayCount + 1, unit: 'шт', note: 'подсветка лестницы, плюс парный на мансарде'
+      group: 'Electrics', name: 'Two-way switch', price: 'switch_way',
+      qty: wayCount + 1, unit: 'pcs', note: 'stair lighting, plus its pair in the attic'
     },
     {
-      group: 'Электрика', name: 'Выключатель двухклавишный проходной', price: 'switch2_way',
-      qty: way2Count, unit: 'шт',
-      note: 'зал двумя группами из двух мест. Между самой парой нужны ЧЕТЫРЕ ' +
-        'перекидные жилы плюс земля: либо 5×1,5, либо два кабеля 3×1,5'
+      group: 'Electrics', name: 'Two-gang two-way switch', price: 'switch2_way',
+      qty: way2Count, unit: 'pcs',
+      note: 'living room in two groups from two places. Between the pair itself FOUR ' +
+        'strapping cores plus earth are needed: either 5×1.5, or two cables 3×1.5'
     },
     {
-      group: 'Электрика', name: 'Автомат модульный', price: 'breaker',
-      qty: electrical.breakers, unit: 'шт',
+      group: 'Electrics', name: 'Modular breaker', price: 'breaker',
+      qty: electrical.breakers, unit: 'pcs',
       note: electrical.byCircuit
-        .map((g) => `${g.label} ${g.breaker} А`)
+        .map((g) => `${g.label} ${g.breaker} A`)
         .join(', ')
     },
     {
-      group: 'Электрика', name: 'УЗО / дифавтомат', price: 'rcd',
-      qty: electrical.byCircuit.filter((g) => g.rcd).length, unit: 'шт',
-      note: 'на все розеточные группы; санузел со стиральной — 10 мА, остальные 30'
+      group: 'Electrics', name: 'RCD / RCBO', price: 'rcd',
+      qty: electrical.byCircuit.filter((g) => g.rcd).length, unit: 'pcs',
+      note: 'on all socket groups; bathroom with washing machine — 10 mA, the rest 30'
     },
     {
-      group: 'Электрика', name: 'Щиток внутренний', price: 'panel_box',
-      qty: 1, unit: 'шт', note: 'основной щит снаружи, этот распределительный'
+      group: 'Electrics', name: 'Internal board', price: 'panel_box',
+      qty: 1, unit: 'pcs', note: 'the main board is outside, this one is for distribution'
     },
     {
-      group: 'Освещение', name: 'Светильник накладной с плафоном', price: 'light_plafond',
-      qty: byId.light ?? 0, unit: 'шт', note: 'общий свет, угол 110°'
+      group: 'Lighting', name: 'Surface-mounted luminaire with shade', price: 'light_plafond',
+      qty: byId.light ?? 0, unit: 'pcs', note: 'general light, 110° angle'
     },
     {
-      group: 'Освещение', name: 'Спот поворотный', price: 'light_spot',
-      qty: byId.light_work ?? 0, unit: 'шт', note: 'рабочий свет кухни, угол 30°'
+      group: 'Lighting', name: 'Adjustable spot', price: 'light_spot',
+      qty: byId.light_work ?? 0, unit: 'pcs', note: 'kitchen task light, 30° angle'
     },
     {
-      group: 'Освещение', name: 'Подвес над столом', price: 'light_pendant',
-      qty: byId.light_pendant ?? 0, unit: 'шт', note: '750–800 над столешницей'
+      group: 'Lighting', name: 'Pendant over the worktop', price: 'light_pendant',
+      qty: byId.light_pendant ?? 0, unit: 'pcs', note: '750–800 above the worktop'
     }
   ].filter((i) => i.qty > 0);
 }
@@ -155,11 +155,11 @@ export function stairItems(stair) {
   if (!stair) return [];
 
   const f = stairFabrication(stair);
-  const run = stair.length; // проекция, м
-  const rise = stair.totalRise; // подъём, м
+  const run = stair.length; // projection, m
+  const rise = stair.totalRise; // rise, m
   const steps = f.treads;
   const width = stair.width;
-  const slope = f.stringers.cutLen / 1000; // длина марша по поручню
+  const slope = f.stringers.cutLen / 1000; // flight length along the handrail
 
   // Зашивка сбоку: треугольник от нижней ступени до грани санузла
   const boxRun = Math.min(run, 2.6);
@@ -168,95 +168,95 @@ export function stairItems(stair) {
 
   return [
     {
-      group: 'Лестница', name: `Профтруба ${f.stringers.label} — косоуры`,
-      price: 'tube_120x60', qty: f.stockBars * 6, unit: 'м',
-      note: `рез ${f.stringers.cutLen.toFixed(0)} мм × ${f.stringers.count} = ` +
-        `${f.stringers.totalM.toFixed(2)} м из ${f.stockBars} хлыстов по 6 м. ` +
-        'Сечение по ПРОГИБУ: L/295, а не по прочности'
+      group: 'Stair', name: `Rectangular tube ${f.stringers.label} — stringers`,
+      price: 'tube_120x60', qty: f.stockBars * 6, unit: 'm',
+      note: `cut ${f.stringers.cutLen.toFixed(0)} mm × ${f.stringers.count} = ` +
+        `${f.stringers.totalM.toFixed(2)} m from ${f.stockBars} bars of 6 m. ` +
+        'Section chosen by DEFLECTION: L/295, not by strength'
     },
     {
-      group: 'Лестница', name: `Уголок ${f.platforms.label} — площадки под ступени`,
-      price: 'angle_63', qty: f.platforms.totalM * 1.1, unit: 'м',
-      note: `${f.platforms.count} отрезков по ${f.platforms.len} мм, по два на ступень`
+      group: 'Stair', name: `Angle ${f.platforms.label} — tread supports`,
+      price: 'angle_63', qty: f.platforms.totalM * 1.1, unit: 'm',
+      note: `${f.platforms.count} pieces of ${f.platforms.len} mm, two per step`
     },
     {
-      group: 'Лестница', name: 'Лист 4 мм — треугольные косынки',
-      price: 'steel_sheet4', qty: f.gusset.areaM2 * 1.25 + 0.11, unit: 'м²',
-      note: `${f.gusset.count} треугольников ${f.gusset.base.toFixed(0)} × ` +
-        `${f.gusset.height.toFixed(0)} (катеты = проступь и подступенок), ` +
-        `${f.gusset.massKg.toFixed(0)} кг. Плюс пятки и верхние накладки`
+      group: 'Stair', name: 'Sheet 4 mm — triangular gussets',
+      price: 'steel_sheet4', qty: f.gusset.areaM2 * 1.25 + 0.11, unit: 'm²',
+      note: `${f.gusset.count} triangles ${f.gusset.base.toFixed(0)} × ` +
+        `${f.gusset.height.toFixed(0)} (legs = tread and riser), ` +
+        `${f.gusset.massKg.toFixed(0)} kg. Plus the heels and top plates`
     },
     {
-      group: 'Лестница', name: 'Закладная под пятку косоура 250×120×6',
-      price: 'embed_stair', qty: f.stringers.count, unit: 'шт',
-      note: 'труба режется ГОРИЗОНТАЛЬНО и варится по всему периметру реза. ' +
-        'СТАВИТЬ ДО ЗАЛИВКИ: в стяжку с трубой ТП сверлить нельзя'
+      group: 'Stair', name: 'Embed plate for the stringer heel 250×120×6',
+      price: 'embed_stair', qty: f.stringers.count, unit: 'pcs',
+      note: 'the tube is cut HORIZONTALLY and welded around the whole cut. ' +
+        'FIT BEFORE THE POUR: you cannot drill into a screed with a heating pipe'
     },
     {
-      group: 'Лестница', name: 'Болт М12 сквозной — верхний узел',
-      price: 'bolt_m12', qty: 6, unit: 'шт',
-      note: 'перекрытие ДЕРЕВЯННОЕ — сквозной болт с широкой шайбой, а не анкер. ' +
-        'Узел зависит от ригеля проёма: направление балок и опирание НЕ ЗАМЕРЕНЫ'
+      group: 'Stair', name: 'Through bolt M12 — top connection',
+      price: 'bolt_m12', qty: 6, unit: 'pcs',
+      note: 'the slab is WOODEN — a through bolt with a wide washer, not an anchor. ' +
+        'The connection depends on the opening beam: joist direction and bearing are NOT MEASURED'
     },
     {
-      group: 'Лестница', name: 'Грунт-эмаль по металлу',
-      price: 'metal_paint', qty: 1.5, unit: 'л',
-      note: 'два слоя по всему каркасу, включая скрытые грани'
+      group: 'Stair', name: 'Metal primer-enamel',
+      price: 'metal_paint', qty: 1.5, unit: 'l',
+      note: 'two coats over the whole frame, including hidden faces'
     },
     {
-      group: 'Лестница', name: 'Болт М8×60 с гайкой и шайбами',
-      price: 'bolt_m8', qty: steps * STAIR_STEEL.boltsPerTread, unit: 'шт',
-      note: `${STAIR_STEEL.boltsPerTread} на ступень, снизу через уголок в проступь`
+      group: 'Stair', name: 'Bolt M8×60 with nut and washers',
+      price: 'bolt_m8', qty: steps * STAIR_STEEL.boltsPerTread, unit: 'pcs',
+      note: `${STAIR_STEEL.boltsPerTread} per step, from below through the angle into the tread`
     },
     {
-      group: 'Лестница', name: 'Прокладка резиновая под ступень',
-      price: 'rubber_pad', qty: steps * STAIR_STEEL.boltsPerTread, unit: 'шт',
-      note: 'ГЛАВНОЕ против скрипа и ударного шума: дерево не касается стали'
+      group: 'Stair', name: 'Rubber gasket under the step',
+      price: 'rubber_pad', qty: steps * STAIR_STEEL.boltsPerTread, unit: 'pcs',
+      note: 'MAIN protection against squeaks and impact noise: wood does not touch steel'
     },
     {
-      group: 'Лестница', name: 'Клей столярный D3 — склейка проступей',
-      price: 'wood_glue', qty: 1.5, unit: 'кг',
-      note: 'доска пола идёт в дело, но шпунт срезать и кромки отфуговать'
+      group: 'Stair', name: 'Wood glue D3 — gluing up the treads',
+      price: 'wood_glue', qty: 1.5, unit: 'kg',
+      note: 'the floor board is reused, but cut off the tongue and joint the edges'
     },
     {
-      group: 'Лестница', name: 'Фанера 3 мм на пласть проступей',
-      price: 'ply3', qty: steps * width * 0.28 * 1.2, unit: 'м²',
-      note: 'НЕ доводить до переднего канта: там она отслоится от ног'
+      group: 'Stair', name: 'Plywood 3 mm on the tread face',
+      price: 'ply3', qty: steps * width * 0.28 * 1.2, unit: 'm²',
+      note: 'do NOT take it to the front nosing: it will peel off under feet'
     },
     {
-      group: 'Лестница', name: 'Фанера 12 мм — подступенки',
-      price: 'ply12', qty: steps * width * 0.2 * 1.15, unit: 'м²',
-      note: 'закрывают кладовую от пыли и вида через ступени'
+      group: 'Stair', name: 'Plywood 12 mm — risers',
+      price: 'ply12', qty: steps * width * 0.2 * 1.15, unit: 'm²',
+      note: 'they close the pantry from dust and from view through the steps'
     },
     {
-      group: 'Лестница', name: 'Масло или лак по дереву',
-      price: 'wood_oil', qty: 1.5, unit: 'л',
-      note: 'матовое с противоскользящей добавкой — лак скользит'
+      group: 'Stair', name: 'Wood oil or varnish',
+      price: 'wood_oil', qty: 1.5, unit: 'l',
+      note: 'matt with an anti-slip additive — varnish is slippery'
     },
     {
-      group: 'Лестница', name: 'ГКЛ 12,5 — зашивка сбоку и кладовая',
-      price: 'gkl', qty: boxArea * 1.2, unit: 'м²',
-      note: 'боковая стенка марша и фронт кладовой'
+      group: 'Stair', name: 'Plasterboard 12.5 — side cladding and pantry',
+      price: 'gkl', qty: boxArea * 1.2, unit: 'm²',
+      note: 'side wall of the flight and the pantry front'
     },
     {
-      group: 'Лестница', name: 'Профиль каркаса зашивки',
-      price: 'gkl_frame', qty: boxArea * 3, unit: 'м',
-      note: 'обрешётка под ГКЛ по косоуру'
+      group: 'Stair', name: 'Cladding frame profile',
+      price: 'gkl_frame', qty: boxArea * 3, unit: 'm',
+      note: 'battens for plasterboard along the stringer'
     },
     {
-      group: 'Лестница', name: 'Дверца кладовой под маршем',
-      price: 'cupboard_door', qty: 2, unit: 'шт',
-      note: 'доступ к стиральной машине и хранению'
+      group: 'Stair', name: 'Pantry door under the flight',
+      price: 'cupboard_door', qty: 2, unit: 'pcs',
+      note: 'access to the washing machine and storage'
     },
     {
-      group: 'Лестница', name: 'Поручень деревянный',
-      price: 'handrail', qty: slope * 1.1, unit: 'м',
-      note: 'марш закрыт с двух сторон, поэтому балясины не нужны — только поручень'
+      group: 'Stair', name: 'Wooden handrail',
+      price: 'handrail', qty: slope * 1.1, unit: 'm',
+      note: 'the flight is closed on both sides, so balusters are not needed — only a handrail'
     },
     {
-      group: 'Лестница', name: 'Кронштейн поручня',
-      price: 'handrail_bracket', qty: 4, unit: 'шт',
-      note: 'шаг не более 1,2 м'
+      group: 'Stair', name: 'Handrail bracket',
+      price: 'handrail_bracket', qty: 4, unit: 'pcs',
+      note: 'pitch no more than 1.2 m'
     }
   ];
 }
@@ -276,75 +276,75 @@ function panelItems(plan) {
 
   const rows = [
     {
-      group: 'Щиты', name: 'Щит на 24 модуля, внутренний', price: 'panel_24',
-      qty: 1, unit: 'шт',
-      note: `занято ${plan.indoor.used}, свободно ${plan.indoor.free}. Вся группировка ` +
-        'уезжает с улицы внутрь: электронные дифавтоматы работают от −25 °C, ' +
-        'а расчётная наружная −27'
+      group: 'Boards', name: 'Board for 24 modules, internal', price: 'panel_24',
+      qty: 1, unit: 'pcs',
+      note: `used ${plan.indoor.used}, free ${plan.indoor.free}. The whole grouping ` +
+        'moves from outside to inside: electronic RCBOs work down to −25 °C, ' +
+        'and the design outdoor temperature is −27'
     },
     {
-      group: 'Щиты', name: 'Выключатель нагрузки 2P 40 А', price: 'isolator_2p',
-      qty: 1, unit: 'шт', note: 'ввод щита: обесточить дом, не выходя на улицу'
+      group: 'Boards', name: 'Load switch 2P 40 A', price: 'isolator_2p',
+      qty: 1, unit: 'pcs', note: 'board feed: de-energise the house without going outside'
     },
     {
-      group: 'Щиты', name: 'Дифавтомат C16 / 30 мА', price: 'rcbo_30ma',
-      qty: rcbo30.length, unit: 'шт',
+      group: 'Boards', name: 'RCBO C16 / 30 mA', price: 'rcbo_30ma',
+      qty: rcbo30.length, unit: 'pcs',
       note: rcbo30.map((d) => d.label.split(' — ')[0]).join(', ') +
-        '. По одному на группу, а не общее УЗО на всех: дом подолгу пустой, ' +
-        'и «выбило одно — погасло всё» дороже разницы в цене'
+        '. One per group, not a common RCD for all: the house stands empty for long periods, ' +
+        'and “one tripped — everything went dark” costs more than the price difference'
     },
     {
-      group: 'Щиты', name: 'Дифавтомат C16 / 10 мА', price: 'rcbo_10ma',
-      qty: rcbo10.length, unit: 'шт',
-      note: 'санузел и стиральная — мокрая зона, там 10 мА, а не общие 30'
+      group: 'Boards', name: 'RCBO C16 / 10 mA', price: 'rcbo_10ma',
+      qty: rcbo10.length, unit: 'pcs',
+      note: 'bathroom and washing machine — a wet zone, 10 mA there, not the common 30'
     },
     {
-      group: 'Щиты', name: 'Дифавтомат C6 / 30 мА', price: 'rcbo_30ma',
-      qty: rcboSmall.length, unit: 'шт',
-      note: 'котёл через ИБП. Номинал 6 А, потому что за ним всего 130 Вт'
+      group: 'Boards', name: 'RCBO C6 / 30 mA', price: 'rcbo_30ma',
+      qty: rcboSmall.length, unit: 'pcs',
+      note: 'boiler through the UPS. Rated 6 A because behind it there is only 130 W'
     },
     {
-      group: 'Щиты', name: 'Автомат C10 на свет', price: 'breaker',
-      qty: plain.length, unit: 'шт',
-      note: 'без УЗО намеренно: при аварии в розетках свет остаётся, ' +
-        'а в пустом доме это важнее'
+      group: 'Boards', name: 'Breaker C10 for lighting', price: 'breaker',
+      qty: plain.length, unit: 'pcs',
+      note: 'no RCD on purpose: if the sockets fault, the light stays on, ' +
+        'and in an empty house that matters more'
     },
     {
-      group: 'Щиты', name: 'Реле напряжения с автовозвратом', price: 'voltage_relay',
-      qty: 1, unit: 'шт',
-      note: 'ЗАМЕНА РММ47 в уличном щите. Тот сбрасывает автомат и оставляет ' +
-        'выключенным до ручного взвода. Менять НЕ срочно: делается тем же ' +
-        'заходом, что и сборка щита'
+      group: 'Boards', name: 'Voltage relay with auto-reset', price: 'voltage_relay',
+      qty: 1, unit: 'pcs',
+      note: 'REPLACES the RMM47 in the outdoor board. That one trips the breaker and leaves it ' +
+        'off until it is re-armed by hand. NOT urgent to replace: done in the same ' +
+        'visit as assembling the board'
     },
     {
-      group: 'Щиты', name: 'УЗО 2P 63 А / 300 мА тип S', price: 'rcd_300s',
-      qty: 1, unit: 'шт',
-      note: 'ДОКУПИТЬ в уличный щит. Тип S обязателен: без выдержки времени ' +
-        'выбивало бы вместе с групповыми 30 мА. Встаёт на три модуля, ' +
-        'освободившиеся от снятых групповых аппаратов'
+      group: 'Boards', name: 'RCD 2P 63 A / 300 mA type S', price: 'rcd_300s',
+      qty: 1, unit: 'pcs',
+      note: 'BUY ADDITIONALLY for the outdoor board. Type S is mandatory: without a time delay it ' +
+        'would trip together with the 30 mA group devices. Takes three modules ' +
+        'freed by the removed group devices'
     },
     {
-      group: 'Щиты', name: 'Кабель ВВГнг-LS 3×6 от уличного щита', price: 'cable_6',
-      qty: 10, unit: 'м', note: 'ввод в дом, до щита в прихожей'
+      group: 'Boards', name: 'Cable VVGng-LS 3×6 from the outdoor board', price: 'cable_6',
+      qty: 10, unit: 'm', note: 'feed into the house, to the board in the hall'
     },
     {
-      group: 'Щиты', name: 'ИБП Штиль SW500L 500 ВА / 400 Вт', price: 'ups_sw500l',
-      qty: 1, unit: 'шт',
-      note: 'online, чистая синусоида, ЗУ 5 А, шина 24 В. Выход — ОДНА розетка ' +
-        'Schuko, отсюда и щиток после него. Только в помещении: от +5 °C'
+      group: 'Boards', name: 'UPS Shtil SW500L 500 VA / 400 W', price: 'ups_sw500l',
+      qty: 1, unit: 'pcs',
+      note: 'online, pure sine wave, 5 A charger, 24 V bus. The output is ONE ' +
+        'Schuko socket, hence the board after it. Indoors only: from +5 °C'
     },
     {
-      group: 'Щиты', name: 'АКБ AGM 12 В 100 А·ч', price: 'agm_100',
-      qty: 2, unit: 'шт',
-      note: 'две в серию на шину 24 В. Ампер-часы при этом НЕ удваиваются: ' +
-        'банк остаётся 100 А·ч. Автономия 12,9 ч, заряд обратно 24 ч'
+      group: 'Boards', name: 'AGM battery 12 V 100 Ah', price: 'agm_100',
+      qty: 2, unit: 'pcs',
+      note: 'two in series on the 24 V bus. Amp-hours do NOT double: ' +
+        'the bank stays 100 Ah. Run time 12.9 h, recharge 24 h'
     },
     {
-      group: 'Щиты', name: 'Полка-стойка под АКБ на стяжку', price: 'battery_rack',
-      qty: 1, unit: 'шт',
-      note: 'ниша под окном прихожей 900 × 1100. Опирать на стяжку, а не вешать ' +
-        'на газобетон: 60 кг. Зазор от пола — под батареями тёплый пол, ' +
-        'а срок службы AGM на каждые +10 °C падает вдвое'
+      group: 'Boards', name: 'Battery rack standing on the screed', price: 'battery_rack',
+      qty: 1, unit: 'pcs',
+      note: 'the niche under the hall window 900 × 1100. Rest it on the screed, do not hang ' +
+        'it on aerated concrete: 60 kg. Gap from the floor — there is underfloor heating under the batteries, ' +
+        'and AGM life halves for every +10 °C'
     }
   ];
   return rows.filter((r) => r.qty > 0);
@@ -357,50 +357,50 @@ function emergencyItems(ep) {
   if (!ep) return [];
   return [
     {
-      group: 'Аварийное питание', name: 'Бокс DIN на 8 модулей', price: 'panel_din8',
-      qty: 1, unit: 'шт',
-      note: `у ИБП на выходе ОДНА розетка Schuko, а веток ${ep.branches.length}. ` +
-        `Занято ${ep.modulesUsed} модулей, ${ep.modulesFree} в запасе`
+      group: 'Emergency power', name: 'DIN enclosure for 8 modules', price: 'panel_din8',
+      qty: 1, unit: 'pcs',
+      note: `the UPS has ONE Schuko socket at the output, but ${ep.branches.length} branches. ` +
+        `${ep.modulesUsed} modules used, ${ep.modulesFree} spare`
     },
     {
-      group: 'Аварийное питание', name: 'Автомат 6 А на ветку', price: 'breaker',
-      qty: ep.branches.filter((b) => !b.rcd).length, unit: 'шт',
-      note: 'котёл, роутер, свет котельной — каждый свой, чтобы авария ' +
-        'в одной ветке не доходила до остальных'
+      group: 'Emergency power', name: 'Breaker 6 A per branch', price: 'breaker',
+      qty: ep.branches.filter((b) => !b.rcd).length, unit: 'pcs',
+      note: 'boiler, router, boiler-room light — each its own, so that a fault ' +
+        'in one branch does not reach the others'
     },
     {
-      group: 'Аварийное питание', name: `Автомат B${ep.socket.rating} А на розетку`,
-      price: 'breaker_b1', qty: 1, unit: 'шт',
-      note: `подобран НЕ по кабелю, а по остатку инвертора: ${ep.socket.spareW} Вт = ` +
-        `${ep.socket.spareA.toFixed(2)} А. Пропускает зарядку и ноутбук, чайник ` +
-        'отсекает мгновенно. Характеристика B, не C'
+      group: 'Emergency power', name: `Breaker B${ep.socket.rating} A for the socket`,
+      price: 'breaker_b1', qty: 1, unit: 'pcs',
+      note: `chosen NOT by the cable but by what is left of the inverter: ${ep.socket.spareW} W = ` +
+        `${ep.socket.spareA.toFixed(2)} A. Lets a charger and a laptop through, cuts off a kettle ` +
+        'instantly. Characteristic B, not C'
     },
     {
-      group: 'Аварийное питание', name: 'Дифавтомат 10 мА на розетку', price: 'rcbo_10ma',
-      qty: 1, unit: 'шт',
-      note: 'единственная ветка с неизвестным содержимым — ловит утечку ' +
-        'сама, не тревожа общее УЗО котла'
+      group: 'Emergency power', name: 'RCBO 10 mA for the socket', price: 'rcbo_10ma',
+      qty: 1, unit: 'pcs',
+      note: 'the only branch with unknown content — it catches a leakage ' +
+        'itself without disturbing the common boiler RCD'
     },
     {
-      group: 'Аварийное питание', name: 'Светильник класса II над котлом',
-      price: 'light_classii', qty: 1, unit: 'шт',
-      note: 'заземляемых частей нет — утечку на землю создать не может'
+      group: 'Emergency power', name: 'Class II luminaire above the boiler',
+      price: 'light_classii', qty: 1, unit: 'pcs',
+      note: 'no earthed parts — it cannot produce an earth leakage'
     },
     {
-      group: 'Аварийное питание', name: 'Розетка аварийная с маркировкой',
-      price: 'socket_marked', qty: 1, unit: 'шт',
-      note: 'отдельный цвет и надпись: не чайник'
+      group: 'Emergency power', name: 'Marked emergency socket',
+      price: 'socket_marked', qty: 1, unit: 'pcs',
+      note: 'a distinct colour and label: not for a kettle'
     },
     {
-      group: 'Аварийное питание', name: 'Кабель ВВГнг-LS 3×1,5 на ветки',
-      price: 'cable_15', qty: 18, unit: 'м',
-      note: 'щиток → свет котельной, → аварийная розетка в зале, с запасом'
+      group: 'Emergency power', name: 'Cable VVGng-LS 3×1.5 for the branches',
+      price: 'cable_15', qty: 18, unit: 'm',
+      note: 'board → boiler-room light, → emergency socket in the living room, with an allowance'
     },
     {
-      group: 'Аварийное питание', name: 'Светильник с БАП', price: 'light_bap',
-      qty: 3, unit: 'шт',
-      note: 'лестница, зал и площадка мансарды. НЕ от ИБП: свой аккумулятор, ' +
-        'обычная линия освещения, зажигается сам. Кабель через дом не нужен'
+      group: 'Emergency power', name: 'Luminaire with battery backup', price: 'light_bap',
+      qty: 3, unit: 'pcs',
+      note: 'stair, living room and attic landing. NOT from the UPS: own battery, ' +
+        'ordinary lighting line, comes on by itself. No cable across the house is needed'
     }
   ];
 }
@@ -412,34 +412,34 @@ function lowVoltageItems(lv) {
   const utp = lv.utpM * 1.05;
   return [
     {
-      group: 'Слаботочка', name: 'Кабель UTP cat.6, медь', price: 'utp_cat6',
-      qty: utp, unit: 'м',
-      note: `${lv.utpLinks} линии: приставка, телевизор, точка доступа мансарды, ` +
-        'входная дверь. ТОЛЬКО медь — омеднённый алюминий не тянет PoE и ломается'
+      group: 'Low-voltage', name: 'UTP cat.6 cable, copper', price: 'utp_cat6',
+      qty: utp, unit: 'm',
+      note: `${lv.utpLinks} links: set-top box, TV, attic access point, ` +
+        'front door. ONLY copper — copper-clad aluminium does not carry PoE and breaks'
     },
     {
-      group: 'Слаботочка', name: 'Гофра Ø20 с протяжкой', price: 'conduit20',
-      qty: lv.conduitM, unit: 'м',
-      note: 'по перекрытию, НЕ в стяжке. Гофра тут не про огонь, а про то, ' +
-        'чтобы через десять лет перетянуть кабель, не вскрывая дом'
+      group: 'Low-voltage', name: 'Conduit Ø20 with pull cord', price: 'conduit20',
+      qty: lv.conduitM, unit: 'm',
+      note: 'along the slab, NOT in the screed. The conduit here is not about fire but about being able ' +
+        'to re-pull the cable in ten years without opening up the house'
     },
     {
-      group: 'Слаботочка', name: 'Розетка RJ45 двойная', price: 'rj45_socket',
-      qty: 1, unit: 'шт', note: 'за телевизором: приставка и сам телевизор'
+      group: 'Low-voltage', name: 'Double RJ45 socket', price: 'rj45_socket',
+      qty: 1, unit: 'pcs', note: 'behind the TV: set-top box and the TV itself'
     },
     {
-      group: 'Слаботочка', name: 'Модуль RJ45 / коннектор', price: 'rj45_keystone',
-      qty: lv.utpLinks * 2, unit: 'шт', note: 'по два на линию, с обоих концов'
+      group: 'Low-voltage', name: 'RJ45 module / connector', price: 'rj45_keystone',
+      qty: lv.utpLinks * 2, unit: 'pcs', note: 'two per link, one at each end'
     },
     {
-      group: 'Слаботочка', name: 'Патч-корд', price: 'patch_cord',
-      qty: 4, unit: 'шт', note: 'роутер — розетки, приставка — розетка'
+      group: 'Low-voltage', name: 'Patch cord', price: 'patch_cord',
+      qty: 4, unit: 'pcs', note: 'router — sockets, set-top box — socket'
     },
     {
-      group: 'Слаботочка', name: 'Акустический кабель 2×2,5', price: 'speaker_cable',
-      qty: 16, unit: 'м',
-      note: 'ЗАДЕЛ под стерео: две колонки по бокам от телевизора, ' +
-        'в гофре внутри зашивки марша. Тянуть до заделки ГКЛ'
+      group: 'Low-voltage', name: 'Speaker cable 2×2.5', price: 'speaker_cable',
+      qty: 16, unit: 'm',
+      note: 'PROVISION for stereo: two speakers either side of the TV, ' +
+        'in conduit inside the flight boxing. Pull before the plasterboard is closed'
     }
   ];
 }
@@ -454,34 +454,34 @@ function worktopItems(worktop, screed) {
 
   return [
     {
-      group: 'Столешница', name: 'Смесь и арматура для заливки', price: 'worktop_concrete',
-      qty: worktop.area, unit: 'м²',
-      note: `${f.slabT.toFixed(0)} мм по стальному каркасу, масса плиты ≈ ${massKg.toFixed(0)} кг, ` +
-        `на стойку ${f.loadPerPostKg.toFixed(0)} кг`
+      group: 'Worktop', name: 'Mix and reinforcement for the pour', price: 'worktop_concrete',
+      qty: worktop.area, unit: 'm²',
+      note: `${f.slabT.toFixed(0)} mm on a steel frame, slab mass ≈ ${massKg.toFixed(0)} kg, ` +
+        `${f.loadPerPostKg.toFixed(0)} kg per post`
     },
     {
-      group: 'Столешница', name: `Уголок ${f.angle.label} — рама и стойки`,
-      price: 'worktop_frame', qty: f.angleTotalM * 1.08, unit: 'м',
-      note: `продольные ${f.longitudinalM.toFixed(1)} + поперечины ${f.crossM.toFixed(1)} + ` +
-        `стойки ${f.postM.toFixed(1)}. ${f.frontPosts} спереди шагом ${f.framePitch} ` +
-        `и ${f.backPosts} сзади шагом ${f.backPitch}, все по ${f.postLen.toFixed(0)} мм`
+      group: 'Worktop', name: `Angle ${f.angle.label} — frame and posts`,
+      price: 'worktop_frame', qty: f.angleTotalM * 1.08, unit: 'm',
+      note: `longitudinal ${f.longitudinalM.toFixed(1)} + cross members ${f.crossM.toFixed(1)} + ` +
+        `posts ${f.postM.toFixed(1)}. ${f.frontPosts} at the front at a pitch of ${f.framePitch} ` +
+        `and ${f.backPosts} at the back at a pitch of ${f.backPitch}, all ${f.postLen.toFixed(0)} mm long`
     },
     {
-      group: 'Столешница', name: 'Закладная пластина под стойки столешницы',
-      price: 'embed_plate', qty: 16, unit: 'шт',
-      note: `нужно ${f.embed.count} (${f.frontPosts} спереди + ${f.backPosts} сзади), ` +
-        'берём 16 С ИЗБЫТКОМ: закладная стоит 275 ₽, а выбор задней опоры ' +
-        'можно отложить — она ставится ДО ЗАЛИВКИ, решение принимается потом'
+      group: 'Worktop', name: 'Embed plate for the worktop posts',
+      price: 'embed_plate', qty: 16, unit: 'pcs',
+      note: `${f.embed.count} needed (${f.frontPosts} at the front + ${f.backPosts} at the back), ` +
+        'we take 16 WITH A SURPLUS: an embed costs 275 ₽, and the choice of rear support ' +
+        'can be postponed — it is placed BEFORE THE POUR, the decision is taken later'
     },
     {
-      group: 'Столешница', name: 'Зашивка стойки ЛДСП', price: 'worktop_post',
-      qty: f.posts, unit: 'шт',
-      note: 'стойки встают на стык секций, где сходятся боковины шкафов'
+      group: 'Worktop', name: 'Post cladding, chipboard', price: 'worktop_post',
+      qty: f.posts, unit: 'pcs',
+      note: 'posts stand on the joints of the sections, where the cabinet sides meet'
     },
     {
-      group: 'Столешница', name: 'Пропитка для бетона', price: 'worktop_seal',
-      qty: Math.max(1, worktop.area / 8), unit: 'л',
-      note: 'бетон на кухне без пропитки берёт пятна от вина и масла необратимо'
+      group: 'Worktop', name: 'Concrete sealer', price: 'worktop_seal',
+      qty: Math.max(1, worktop.area / 8), unit: 'l',
+      note: 'unsealed concrete in a kitchen takes wine and oil stains irreversibly'
     }
   ];
 }
@@ -494,35 +494,35 @@ function boilerRoomItems(plan, coolant) {
 
   const items = [
     {
-      group: 'Котельная', name: 'Кран шаровой 3/4" с американкой', price: 'ball_valve_20',
-      qty: 4, unit: 'шт',
-      note: '2 на котёл + 2 на коллектор: снимается любой узел без слива системы'
+      group: 'Boiler room', name: 'Ball valve 3/4" with union', price: 'ball_valve_20',
+      qty: 4, unit: 'pcs',
+      note: '2 for the boiler + 2 for the manifold: any unit can be removed without draining the system'
     },
     {
-      group: 'Котельная', name: 'Фильтр косой сетчатый 3/4"', price: 'strainer_20',
-      qty: 1, unit: 'шт',
-      note: 'на ОБРАТКЕ перед котлом. Стяжка новая — окалины и мусора будет много'
+      group: 'Boiler room', name: 'Y-strainer 3/4"', price: 'strainer_20',
+      qty: 1, unit: 'pcs',
+      note: 'on the RETURN before the boiler. The screed is new — there will be a lot of scale and debris'
     },
     {
-      group: 'Котельная', name: 'Термометр накладной 0–80 °C', price: 'thermometer',
-      qty: 2, unit: 'шт',
-      note: 'подача и обратка коллектора. По разнице видно, работает ли контур'
+      group: 'Boiler room', name: 'Strap-on thermometer 0–80 °C', price: 'thermometer',
+      qty: 2, unit: 'pcs',
+      note: 'manifold supply and return. The difference shows whether the loop works'
     },
     {
-      group: 'Котельная', name: 'Термостат аварийный накладной, 55 °C', price: 'safety_stat',
-      qty: 1, unit: 'шт',
-      note: 'ВТОРАЯ защита стяжки: при прямом подключении между котлом и бетоном ' +
-        'нет ничего, кроме параметра F06'
+      group: 'Boiler room', name: 'Strap-on emergency thermostat, 55 °C', price: 'safety_stat',
+      qty: 1, unit: 'pcs',
+      note: 'the SECOND screed protection: with a direct connection there is nothing between ' +
+        'the boiler and the concrete except the F06 parameter'
     },
     {
-      group: 'Котельная', name: 'Датчик наружной температуры', price: 'outdoor_sensor',
-      qty: 1, unit: 'шт',
-      note: 'без него погодозависимая кривая Kt не работает вообще'
+      group: 'Boiler room', name: 'Outdoor temperature sensor', price: 'outdoor_sensor',
+      qty: 1, unit: 'pcs',
+      note: 'without it the weather-compensated Kt curve does not work at all'
     },
     {
-      group: 'Котельная', name: 'Труба подводки 3/4" с фитингами', price: 'pipe_20',
-      qty: 3, unit: 'м',
-      note: `котёл — коллектор, 700 мм по стене; скорость ${plan.connection.velocity.toFixed(2)} м/с`
+      group: 'Boiler room', name: 'Feed pipe 3/4" with fittings', price: 'pipe_20',
+      qty: 3, unit: 'm',
+      note: `boiler — manifold, 700 mm along the wall; velocity ${plan.connection.velocity.toFixed(2)} m/s`
     }
   ];
 
@@ -530,9 +530,9 @@ function boilerRoomItems(plan, coolant) {
   // и вода вдобавок разбавляет состав — значит подпитка только ручная.
   if (plan.toxic) {
     items.push({
-      group: 'Котельная', name: 'Насос опрессовочный ручной с баком', price: 'test_pump',
-      qty: 1, unit: 'шт',
-      note: 'разрывная подпитка ГОТОВОЙ смесью. Встроенный кран от ГВС заглушить'
+      group: 'Boiler room', name: 'Manual pressure-test pump with tank', price: 'test_pump',
+      qty: 1, unit: 'pcs',
+      note: 'broken-line make-up with READY-MIXED fluid. Plug the built-in DHW fill valve'
     });
   }
 
@@ -542,10 +542,10 @@ function boilerRoomItems(plan, coolant) {
   if (conc && coolant?.expired !== false) {
     const litres = plan.volume.totalL * (conc.concentrate / 100);
     items.push({
-      group: 'Котельная', name: 'Антифриз-концентрат на замену', price: 'coolant_conc',
-      qty: litres, unit: 'л',
-      note: `${conc.concentrate} % концентрата на ${conc.water} % воды = ${conc.freeze} °C. ` +
-        `Система первого этажа ${plan.volume.totalL.toFixed(0)} л; мансардный контур сверху`
+      group: 'Boiler room', name: 'Antifreeze concentrate for replacement', price: 'coolant_conc',
+      qty: litres, unit: 'l',
+      note: `${conc.concentrate} % concentrate to ${conc.water} % water = ${conc.freeze} °C. ` +
+        `Ground-floor system ${plan.volume.totalL.toFixed(0)} l; the attic circuit comes on top`
     });
   }
 
@@ -588,121 +588,121 @@ export function floorEstimate({
 
   const items = [
     {
-      group: 'Основание',
-      name: 'Песок для засыпки подполья',
+      group: 'Base',
+      name: 'Sand for filling the sub-floor',
       price: 'sand_fill',
       qty: sandInPlace * WASTE.sandCompaction,
-      unit: 'м³',
-      note: `${levels.sandFill} мм в уплотнённом виде, ${up(levels.sandFill / levels.compactLayer)} слоя`
+      unit: 'm³',
+      note: `${levels.sandFill} mm compacted, ${up(levels.sandFill / levels.compactLayer)} layers`
     },
     {
-      group: 'Основание',
-      name: 'Щебень фракция 20–40',
+      group: 'Base',
+      name: 'Crushed stone 20–40',
       price: 'gravel',
       qty: gravelInPlace * WASTE.gravelCompaction,
-      unit: 'м³',
-      note: `${screed.gravel} мм подготовки`
+      unit: 'm³',
+      note: `${screed.gravel} mm of bedding`
     },
     {
-      group: 'Основание',
-      name: 'Песок мытый на выравнивающую подсыпку',
+      group: 'Base',
+      name: 'Washed sand for the levelling bed',
       price: 'sand_washed',
       qty: ((screed.sandBed ?? 0) / 1000) * area * WASTE.sandCompaction,
-      unit: 'м³',
-      note: `${screed.sandBed ?? 0} мм поверх щебня — защита плёнки от острых граней`
+      unit: 'm³',
+      note: `${screed.sandBed ?? 0} mm on top of the crushed stone — protects the film from sharp edges`
     },
     {
-      group: 'Основание',
-      name: 'Гидроизоляция плёночная 200 мкм',
+      group: 'Base',
+      name: 'Waterproofing film 200 µm',
       price: 'film',
       qty: area * WASTE.waterproofing,
-      unit: 'м²',
-      note: 'с перехлёстом и заворотом на стены'
+      unit: 'm²',
+      note: 'with overlaps and turned up onto the walls'
     },
     {
-      group: 'Утепление',
-      name: `ЭППС ${screed.insulation - screed.insulationReused} мм плитами`,
+      group: 'Insulation',
+      name: `XPS ${screed.insulation - screed.insulationReused} mm boards`,
       price: 'xps_field',
       qty: area * WASTE.insulation,
-      unit: 'м²',
-      note: `≈ ${up((area * WASTE.insulation) / RATES.insulationSheet)} плит 1180 × 580`
+      unit: 'm²',
+      note: `≈ ${up((area * WASTE.insulation) / RATES.insulationSheet)} boards 1180 × 580`
     },
     {
-      group: 'Утепление',
-      name: `ЭППС ${levels.edgeInsulation || 80} мм на торец плиты`,
+      group: 'Insulation',
+      name: `XPS ${levels.edgeInsulation || 80} mm on the slab edge`,
       price: 'xps_edge',
       qty: edgeArea || (0.5 * outerPerimeter),
-      unit: 'м²',
-      note: `полоса ${(levels.edgeInsulationDepth - screedBandMm).toFixed(0)} мм ` +
-        `от низа стяжки вниз, по внутренней грани фундамента, ДО засыпки. ` +
-        `Выше — только лента: 100 мм плиты у чистого пола отняли бы полосу комнаты`
+      unit: 'm²',
+      note: `a strip of ${(levels.edgeInsulationDepth - screedBandMm).toFixed(0)} mm ` +
+        `from the screed bottom down, on the inner face of the foundation, BEFORE the fill. ` +
+        `Above — only the strip: 100 mm of board at the finished floor would take a strip off the room`
     },
     {
-      group: 'Утепление',
-      name: 'Клей-пена для ЭППС',
+      group: 'Insulation',
+      name: 'Foam adhesive for XPS',
       price: 'foam_glue',
       qty: Math.max(3, (edgeArea || 11) / 4),
-      unit: 'баллон',
-      note: 'крепление торцевых плит к фундаменту'
+      unit: 'cyl.',
+      note: 'fixing the edge boards to the foundation'
     },
     {
-      group: 'Утепление',
-      name: `Демпферная лента ${levels.edgeStrip ?? 10} мм, высота 100`,
+      group: 'Insulation',
+      name: `Damper strip ${levels.edgeStrip ?? 10} mm, height 100`,
       price: 'damper_tape',
       qty: damperLength * 1.1,
-      unit: 'м',
-      note: 'по периметру и вдоль всех перегородок. Она же — верхняя ступень ' +
-        'торцевого разрыва: подрезается ПОСЛЕ укладки керамогранита, уходит под плинтус'
+      unit: 'm',
+      note: 'around the perimeter and along all partitions. It is also the upper step ' +
+        'of the edge break: trimmed AFTER the porcelain tile is laid, goes under the skirting board'
     },
     {
-      group: 'Тёплый пол',
-      name: `Труба сшитый полиэтилен ${screed.pipeOd} × 2,0`,
+      group: 'Underfloor heating',
+      name: `Cross-linked polyethylene pipe ${screed.pipeOd} × 2.0`,
       price: 'pex16',
       qty: pipeMetres,
-      unit: 'м',
-      note: 'каждая петля — ЦЕЛЬНЫЙ кусок без соединений в стяжке'
+      unit: 'm',
+      note: 'every loop is ONE PIECE with no joints in the screed'
     },
     {
-      group: 'Тёплый пол',
-      name: 'Сетка сварная 100 × 100 × 4',
+      group: 'Underfloor heating',
+      name: 'Welded mesh 100 × 100 × 4',
       price: 'mesh',
       qty: area * WASTE.mesh,
-      unit: 'м²',
-      note: `≈ ${up((area * WASTE.mesh) / RATES.meshSheet)} карт 2 × 3 м. ` +
-        'Ячейка выбрана как армирование, а не под шаг трубы: труба вяжется ' +
-        'к поперечным прутьям и ложится с любым шагом'
+      unit: 'm²',
+      note: `≈ ${up((area * WASTE.mesh) / RATES.meshSheet)} sheets 2 × 3 m. ` +
+        'The cell is chosen as reinforcement, not to suit the pipe pitch: the pipe is tied ' +
+        'to the cross bars and lies at any pitch'
     },
     {
-      group: 'Тёплый пол',
-      name: 'Хомуты нейлоновые 200 мм',
+      group: 'Underfloor heating',
+      name: 'Nylon ties 200 mm',
       price: 'ties',
       qty: pipeMetres * RATES.tiesPerMetre,
-      unit: 'шт',
-      note: 'крепление трубы к сетке, а не гарпунами'
+      unit: 'pcs',
+      note: 'fixing the pipe to the mesh, not with harpoon staples'
     },
     {
-      group: 'Тёплый пол',
-      name: `Коллектор на ${loops.totalLoops} контуров`,
+      group: 'Underfloor heating',
+      name: `Manifold for ${loops.totalLoops} loops`,
       price: 'manifold',
       qty: 1,
-      unit: 'компл.',
-      note: 'с расходомерами и балансировочными клапанами — разбаланс длин велик'
+      unit: 'set',
+      note: 'with flow meters and balancing valves — the length imbalance is large'
     },
     {
-      group: 'Тёплый пол',
-      name: 'Евроконус 16 мм',
+      group: 'Underfloor heating',
+      name: 'Euroconus 16 mm',
       price: 'eurocone',
       qty: loops.totalLoops * 2,
-      unit: 'шт',
-      note: 'подача и обратка на каждый контур'
+      unit: 'pcs',
+      note: 'supply and return for every loop'
     },
     {
-      group: 'Тёплый пол',
-      name: 'Шкаф коллекторный',
+      group: 'Underfloor heating',
+      name: 'Manifold cabinet',
       price: 'manifold_box',
       qty: 1,
-      unit: 'шт',
-      note: 'встроенный, в прихожей'
+      unit: 'pcs',
+      note: 'built-in, in the hall'
     },
     // Циркуляционный насос ИСКЛЮЧЁН: паспортный график насоса котла дал
     // 4,81 м при 345 л/ч, располагаемый 4,21 против требуемых 1,19 —
@@ -711,44 +711,44 @@ export function floorEstimate({
     // Аварийный термостат переехал в группу «Котельная» — он часть цепи
     // защиты котла, а не раскладки петель.
     {
-      group: 'Стяжка',
-      name: 'Цемент М500',
+      group: 'Screed',
+      name: 'Cement M500',
       price: 'cement',
       qty: cementKg,
-      unit: 'кг',
-      note: `≈ ${up(cementKg / RATES.bagCement)} мешков по ${RATES.bagCement} кг`
+      unit: 'kg',
+      note: `≈ ${up(cementKg / RATES.bagCement)} bags of ${RATES.bagCement} kg`
     },
     {
-      group: 'Стяжка',
-      name: 'Песок мытый для раствора',
+      group: 'Screed',
+      name: 'Washed sand for the mortar',
       price: 'sand_washed',
       qty: screedVolume * RATES.sandPerM3,
-      unit: 'м³',
-      note: 'раствор М300'
+      unit: 'm³',
+      note: 'mortar M300'
     },
     {
-      group: 'Стяжка',
-      name: 'Фибра полипропиленовая 12 мм',
+      group: 'Screed',
+      name: 'Polypropylene fibre 12 mm',
       price: 'fibre',
       qty: screedVolume * RATES.fibrePerM3,
-      unit: 'кг',
-      note: 'против усадочных трещин'
+      unit: 'kg',
+      note: 'against shrinkage cracks'
     },
     {
-      group: 'Стяжка',
-      name: 'Пластификатор для тёплого пола',
+      group: 'Screed',
+      name: 'Plasticiser for underfloor heating',
       price: 'plasticiser',
       qty: cementKg * RATES.plasticiserPerCement,
-      unit: 'л',
-      note: 'обязателен: стяжка над трубой'
+      unit: 'l',
+      note: 'mandatory: a screed over a pipe'
     },
     {
-      group: 'Стяжка',
-      name: 'Профиль деформационного шва',
+      group: 'Screed',
+      name: 'Expansion joint profile',
       price: 'joint_profile',
       qty: damperLength * 0.3,
-      unit: 'м',
-      note: 'в проёмах и по границам зон'
+      unit: 'm',
+      note: 'in openings and along zone boundaries'
     }
   ];
 

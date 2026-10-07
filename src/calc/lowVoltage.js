@@ -18,15 +18,15 @@ import { CLEAR_HEIGHT } from '../data/project.js';
 export const LV = {
   // Оптика заходит В ОДНОЙ ТОЧКЕ С ГАЗОВОЙ ТРУБОЙ, под потолком,
   // в промежутке 700 мм между глухим окном и котлом.
-  entry: { x: 0.12, y: 4.45, height: 2.4, note: 'оптика и газ в одном простенке' },
+  entry: { x: 0.12, y: 4.45, height: 2.4, note: 'fibre and gas in the same pier' },
   routerHeight: 2.3,
   // Параллельно газовой трубе электрику ведут не ближе 400 мм.
   // Оптика не проводник и под это не подпадает, а вот питание роутера — да.
   gasClearanceMm: 400,
   cable: 'UTP cat.6 U/UTP 4×2×0,52',
-  conduit: 20, // гофра Ø20: в неё пролезут два UTP разом
+  conduit: 20, // Ø20 conduit: two UTP cables fit in it at once
   waste: 1.15,
-  termination: 2.0 // запас на заводку, кросс и разделку с двух концов
+  termination: 2.0 // allowance for entering, patch panel and termination at both ends
 };
 
 // Ортогональная трасса роутер → точка, поднятая на перекрытие.
@@ -51,49 +51,49 @@ export function lvRoute({ from, to, height = CLEAR_HEIGHT, dropTo, cfg = LV }) {
 export const LV_LINKS = [
   {
     id: 'tv-box',
-    name: 'Роутер → ТВ-приставка',
+    name: 'Router → TV set-top box',
     to: { x: 4.4, y: 2.36 },
     dropTo: 0.8,
     kind: 'utp',
-    why: 'Приставка работает по витой паре и должна висеть у телевизора, ' +
-      'а не у роутера. Это единственная линия, без которой ТВ не включится.'
+    why: 'The set-top box works over twisted pair and must hang by the TV, ' +
+      'not by the router. This is the only link without which the TV will not turn on.'
   },
   {
     id: 'tv-lan',
-    name: 'Роутер → телевизор (вторая пара)',
+    name: 'Router → TV (second pair)',
     to: { x: 4.4, y: 2.36 },
     dropTo: 0.8,
     kind: 'utp',
-    why: 'Телевизор по кабелю вместо Wi-Fi. Тянется в той же гофре — ' +
-      'второй кабель здесь стоит только своей цены.'
+    why: 'The TV on a cable instead of Wi-Fi. Pulled in the same conduit — ' +
+      'the second cable here costs only its own price.'
   },
   {
     id: 'mansard-ap',
-    name: 'Роутер → мансарда, точка доступа',
+    name: 'Router → attic, access point',
     to: { x: 2.75, y: 2.75 },
     dropTo: 2.4,
     kind: 'utp',
-    why: 'Роутер стоит в дальнем углу первого этажа, между ним и спальнями — ' +
-      'деревянное перекрытие и будущий утеплитель. Одна точка доступа наверху ' +
-      'решает вопрос навсегда, но кабель к ней тянется ТОЛЬКО СЕЙЧАС.'
+    why: 'The router stands in the far corner of the ground floor, between it and the bedrooms there is ' +
+      'a wooden floor and the future insulation. One access point upstairs ' +
+      'settles the question for good, but the cable to it can ONLY be pulled NOW.'
   },
   {
     id: 'entrance',
-    name: 'Роутер → входная дверь',
+    name: 'Router → front door',
     to: { x: 4.2, y: 5.42 },
     dropTo: 1.5,
     kind: 'utp',
-    why: 'Видеодомофон или камера на входе. Дом зимой подолгу пустой — ' +
-      'возможность посмотреть, что у двери, стоит одного кабеля.'
+    why: 'A video doorbell or a camera at the entrance. The house stands empty for long periods in winter — ' +
+      'being able to see what is at the door is worth one cable.'
   },
   {
     id: 'reserve-living',
-    name: 'Резерв: пустая гофра в зал',
+    name: 'Spare: empty conduit to the living room',
     to: { x: 2.02, y: 4.3 },
     dropTo: 0.3,
     kind: 'reserve',
-    why: 'Пустая гофра с протяжкой к перегородке прихожей. Самое дешёвое, ' +
-      'что можно заложить: стандарты меняются, а стены вскрывать не захочется.'
+    why: 'An empty conduit with a pull cord to the hall partition. The cheapest thing ' +
+      'you can lay: standards change, and you will not want to open the walls.'
   }
 ];
 

@@ -3,16 +3,16 @@ import { Rnd } from 'react-rnd';
 
 import { pxToWorld } from '../viewport.js';
 
-// Объект на плане: перетаскивается мышкой, тянется за углы, поворачивается за ручку.
-// Паттерн перенесён из landscape-app/src/components/LandscapeObject.jsx —
-// react-rnd работает в пикселях, состояние живёт в метрах, конвертация на границе.
+// Object on the plan: dragged with the mouse, resized by the corners, rotated by the handle.
+// The pattern was carried over from landscape-app/src/components/LandscapeObject.jsx —
+// react-rnd works in pixels, state lives in metres, conversion happens at the boundary.
 //
-// ВАЖНО: на дочерних элементах Rnd НЕЛЬЗЯ вызывать stopPropagation в onMouseDown.
-// react-draggable слушает mousedown на корневом div Rnd, и остановленное
-// в потомке событие до него не доходит — объект перестаёт таскаться.
+// IMPORTANT: do NOT call stopPropagation in onMouseDown on children of Rnd.
+// react-draggable listens for mousedown on the Rnd root div, and an event stopped
+// in a descendant never reaches it — the object stops being draggable.
 
-const SNAP = 0.01; // привязка к 10 мм
-const MIN_SIZE = 0.15; // м, минимальный габарит
+const SNAP = 0.01; // snap to 10 mm
+const MIN_SIZE = 0.15; // m, minimum size
 
 function snap(v) {
   return Math.round(v / SNAP) * SNAP;
@@ -24,8 +24,8 @@ export default function PlanObject({
   label,
   glyph,
   color,
-  // Второй цвет — только у двухклавишного выключателя: по цвету
-  // на клавишу, иначе на плане не видно, какая чем управляет
+  // The second colour is only for the two-gang switch: one colour
+  // per gang, otherwise the plan does not show which controls what
   color2,
   existing,
   confirmed,
@@ -64,7 +64,7 @@ export default function PlanObject({
       let delta = angleOf(ev.clientX, ev.clientY) - startAngle;
       if (delta > 180) delta -= 360;
       if (delta < -180) delta += 360;
-      // Шаг 15° — приборы почти всегда ставятся вдоль стен
+      // 15° step — fixtures are almost always placed along walls
       let next = Math.round((startRotation + delta) / 15) * 15;
       next = ((next % 360) + 360) % 360;
       onRotate(next);
@@ -99,8 +99,8 @@ export default function PlanObject({
       }
       disableDragging={locked}
       bounds="parent"
-      // Ручка поворота лежит внутри Rnd — исключаем её из области захвата,
-      // иначе поворот превращается в перетаскивание.
+      // The rotation handle sits inside Rnd — exclude it from the drag area,
+      // otherwise rotating turns into dragging.
       cancel=".rotate-handle"
       position={{ x: left, y: top }}
       size={{ width: widthPx, height: heightPx }}
@@ -134,13 +134,13 @@ export default function PlanObject({
           height: '100%',
           transform: `rotate(${rotation || 0}deg)`,
           transformOrigin: 'center center',
-          // Двухклавишный выключатель красится двумя цветами по диагонали:
-          // одна половина — одна клавиша со своими лампами.
+          // The two-gang switch is painted in two colours along the diagonal:
+          // one half is one gang with its own lamps.
           //
-          // Синтаксис стопов СТАРЫЙ и многословный намеренно: html2canvas
-          // не разбирает современную запись «цвет 0 50%» с двумя позициями
-          // в одном стопе и валится на ней — а вместе с ним и экспорт
-          // в PNG и PDF, молча, без единого сообщения.
+          // The stop syntax is OLD and verbose on purpose: html2canvas
+          // cannot parse the modern “colour 0 50%” notation with two positions
+          // in one stop and fails on it — and with it the PNG and PDF
+          // export, silently, without a single message.
           background: color2
             ? `linear-gradient(135deg, ${color} 0%, ${color} 50%, ${color2} 50%, ${color2} 100%)`
             : color,
@@ -148,19 +148,19 @@ export default function PlanObject({
           borderColor: selected ? '#2563eb' : isNode ? color : '#64748b'
         }}
         title={label}
-        // Только выбор. Без stopPropagation — иначе ломается перетаскивание.
+        // Selection only. No stopPropagation — otherwise dragging breaks.
         onMouseDown={() => onSelect()}
       >
         {isNode && <span className="node-glyph">{glyph}</span>}
         {kind === 'equipment' && <span className="equipment-label">{label}</span>}
-        {existing && <span className="badge-existing" title="Существующий узел">Е</span>}
+        {existing && <span className="badge-existing" title="Existing node">E</span>}
         {confirmed === false && (
-          <span className="badge-draft" title="Привязка не подтверждена замером">?</span>
+          <span className="badge-draft" title="Position not confirmed by measurement">?</span>
         )}
       </div>
 
       {selected && onRotate && !locked && (
-        <div className="rotate-handle" onMouseDown={handleRotateStart} title="Повернуть (шаг 15°)">
+        <div className="rotate-handle" onMouseDown={handleRotateStart} title="Rotate (15° step)">
           ⟳
         </div>
       )}

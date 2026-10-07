@@ -19,14 +19,14 @@ import { screedStackup } from './geometry.js';
 // читались как одно и то же
 export const PIE_OPACITY = {
   finish: 1,
-  screed: 0.35, // сквозь стяжку должна быть видна труба — это и есть «рентген»
+  screed: 0.35, // the pipe must be visible through the screed — that is the “X-ray”
   insulation: 0.55,
   waterproofing: 0.9,
   sandBed: 0.8,
   gravel: 0.8
 };
 
-export const PIPE_RADIUS = 0.008; // 16 мм наружный
+export const PIPE_RADIUS = 0.008; // 16 mm outer
 export const CABLE_RADIUS = 0.006;
 
 // Отметка оси трубы: она лежит на утеплителе, значит её центр —
@@ -147,7 +147,7 @@ export function pipeRuns(loops, screed) {
     if (!s?.points || s.points.length < 2) return;
     runs.push({
       id: `supply-${i}`,
-      name: 'подводка',
+      name: 'feed',
       points: s.points,
       elev,
       radius: PIPE_RADIUS,
@@ -216,7 +216,7 @@ export function worktopSlab(layout, equipment) {
     bottom: w.bottom,
     top: w.top,
     thickness: w.thickness,
-    color: '#9ca3af', // бетон
+    color: '#9ca3af', // concrete
     layer: 'equipment',
     beneath: w.beneath,
     runM: w.runM,

@@ -10,9 +10,9 @@
 // не входят — она считается по расчётной пятидневке.
 
 export const CLIMATE = {
-  place: 'загородный дом, Липецкая обл.',
-  station: 'Липецк',
-  source: 'СП 131.13330.2020, табл. 3.1',
+  place: 'country house, Lipetsk region',
+  station: 'Lipetsk',
+  source: 'SP 131.13330.2020, table 3.1',
   // Температура наиболее холодной пятидневки, обеспеченность 0,92
   tOutDesign: -27,
   tOut098: -31,
@@ -45,21 +45,21 @@ export function requiredWallR(climate, coef = R_REQ_WALL) {
 // что стены газобетонные и снаружи есть ЭППС под сайдингом.
 export const ENVELOPE = {
   wall: {
-    label: 'Газобетон',
-    thickness: 300, // мм — НЕ ЗАМЕРЕНО, смотреть по оконному откосу
-    lambda: 0.14, // Вт/(м·К), D500 в условиях эксплуатации — уточнить по марке
+    label: 'Aerated concrete',
+    thickness: 300, // mm — NOT MEASURED, check at the window reveal
+    lambda: 0.14, // W/(m·K), D500 in service conditions — to be refined by grade
     confirmed: false
   },
   wallInsulation: {
-    label: 'ЭППС под сайдингом',
-    thickness: 50, // мм — НЕ ЗАМЕРЕНО
+    label: 'XPS under siding',
+    thickness: 50, // mm — NOT MEASURED
     lambda: 0.034,
     confirmed: false
   },
-  wallFinish: 0.2, // суммарное R штукатурки и отделки, м²·К/Вт
-  window: { u: 1.7, confirmed: false }, // двухкамерный стеклопакет — уточнить
+  wallFinish: 0.2, // total R of plaster and finish, m²·K/W
+  window: { u: 1.7, confirmed: false }, // double-chamber glazing unit — to be checked
   door: { u: 1.5, confirmed: false },
-  ventilationAch: 0.5, // кратность воздухообмена, 1/ч
+  ventilationAch: 0.5, // air change rate, 1/h
   // Мансарда в расчёт НЕ ВХОДИТ по решению заказчика: кровля сейчас не утеплена,
   // утепление планируется в следующем году. Считаем первый этаж.
   mansardIncluded: false
@@ -69,22 +69,22 @@ export const ENVELOPE = {
 export const BOILER = {
   model: 'BAXI ECO Life 24F',
   made: '10-2024',
-  heatInputNominal: 26.3, // тепловая производительность номинальная, кВт
-  heatInputMin: 10.6, // минимальная, кВт
-  powerNominal: 24.0, // тепловая мощность номинальная, кВт
-  powerMin: 9.3, // МИНИМАЛЬНАЯ — ключевая цифра для тактования, кВт
-  dhwFlow: 13.7, // л/мин при Δt = 25 °C
-  maxPressure: 3, // бар
+  heatInputNominal: 26.3, // nominal heat input, kW
+  heatInputMin: 10.6, // minimum, kW
+  powerNominal: 24.0, // nominal heat output, kW
+  powerMin: 9.3, // MINIMUM — the key figure for short-cycling, kW
+  dhwFlow: 13.7, // l/min at Δt = 25 °C
+  maxPressure: 3, // bar
   maxTemp: 95, // °C
-  electric: 110, // Вт
-  electricStandby: 3, // Вт, режим ожидания
+  electric: 110, // W
+  electricStandby: 3, // W, standby mode
 
   // --- Из паспорта (руководство по установке, разделы 15.2, 20, 26) ---
-  expansionVesselL: 8, // ёмкость расширительного бака
-  heatingRange: [30, 85], // диапазон регулирования отопления, °C
-  dimensions: { h: 700, w: 400, d: 298 }, // мм — ширина 400 сошлась с замером
+  expansionVesselL: 8, // expansion vessel capacity
+  heatingRange: [30, 85], // heating control range, °C
+  dimensions: { h: 700, w: 400, d: 298 }, // mm — the 400 width matched the measurement
   weightKg: 29,
-  postCirculationMin: 3, // постциркуляция насоса после отключения горелки
+  postCirculationMin: 3, // pump post-circulation after the burner switches off
 
   // F06 = 001 переводит контур отопления в НИЗКОТЕМПЕРАТУРНЫЙ режим:
   // потолок 45 °C, отсечка горелки на 50 °C. Штатная защита стяжки,
@@ -93,7 +93,7 @@ export const BOILER = {
 
   // F11 — задержка розжига в режиме отопления. ЗАВОДСКОЕ значение 010 = 10 минут:
   // встроенная защита от тактования, уже включена.
-  antiCycleParam: { code: 'F11', factory: 10 }, // минут
+  antiCycleParam: { code: 'F11', factory: 10 }, // minutes
 
   // Погодозависимая автоматика: кривая Kt выбирается из 0…90.
   // Для тёплого пола нужна пологая — около 6…8.

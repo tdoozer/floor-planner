@@ -39,7 +39,7 @@ export const STAIR_FAB = {
   // последняя ступень — это сам пол мансарды. Заводить трубу дальше,
   // под перекрытие, некуда и незачем — она там ни на что не опирается.
   topAllowance: 0,
-  topBracket: { w: 160, t: 8, bolts: 4, boltSize: 'М12' },
+  topBracket: { w: 160, t: 8, bolts: 4, boltSize: 'M12' },
   // Пирог перекрытия мансарды. Высота лаги НЕ ЗАМЕРЕНА — от неё зависит
   // высота кронштейна, и только она.
   mansardBoards: 40,
@@ -50,8 +50,8 @@ export const STAIR_FAB = {
 export function stairFabrication(stair, fab = STAIR_FAB) {
   const risers = stair.risers;
   const treads = risers - 1;
-  const rise = (stair.totalRise * 1000) / risers; // подступенок
-  const going = (stair.length * 1000) / treads; // проступь
+  const rise = (stair.totalRise * 1000) / risers; // riser
+  const going = (stair.length * 1000) / treads; // tread
   const slope = Math.atan(rise / going);
   const angleDeg = deg(slope);
 
@@ -60,7 +60,7 @@ export function stairFabrication(stair, fab = STAIR_FAB) {
   // иначе площадка не ляжет горизонтально.
   const faceDrop = fab.treadT + fab.platform.t;
   const run = stair.length * 1000; // 3400
-  const nosingRise = rise * treads; // подъём по линии носков
+  const nosingRise = rise * treads; // rise along the nosing line
 
   // Труба 120 мм по вертикали занимает больше: она наклонена
   const tubeVert = fab.stringer.h / Math.cos(slope);
@@ -165,12 +165,12 @@ export function stairFabrication(stair, fab = STAIR_FAB) {
 // сходятся две боковины шкафов, — там их не видно ни снаружи, ни изнутри.
 export const WORKTOP_FAB = {
   angle: { label: '40×40×4', leg: 40, t: 4, kgPerM: 2.42 },
-  framePitch: 600, // шаг стоек ПО ФРОНТУ: совпадает со стыками секций
+  framePitch: 600, // post pitch ALONG THE FRONT: matches the section joints
   // Сзади шаг вдвое реже. Стойка там ничему не мешает и её не видно,
   // но и часто ставить незачем: прогиб связки уголка с плитой на 1200
   // выходит 0,14 мм — бетон 60 мм несёт себя сам, уголок ему направляющая.
   backPitch: 1200,
-  edgeInset: 50, // отступ продольного уголка от края плиты
+  edgeInset: 50, // offset of the longitudinal angle from the slab edge
   embed: { w: 100, d: 100, t: 5 },
   concreteDensity: 2400
 };
@@ -224,7 +224,7 @@ export function worktopFabrication(worktop, screed, fab = WORKTOP_FAB) {
   const backPosts = Math.ceil(runMm / fab.backPitch) + 1;
   const posts = frontPosts + backPosts;
 
-  const crossLen = worktop.depth * 1000 - 2 * fab.edgeInset; // между осями продольных
+  const crossLen = worktop.depth * 1000 - 2 * fab.edgeInset; // between the axes of the longitudinal ones
   const longitudinalM = (runMm * 2) / 1000;
   // Поперечина ставится там, где есть ЗАДНЯЯ стойка: без неё связывать нечего
   const crossM = (crossLen * backPosts) / 1000;
@@ -276,17 +276,17 @@ export function worktopFabrication(worktop, screed, fab = WORKTOP_FAB) {
 //   3) ПРОСВЕТ ПОД ПЛИТОЙ. Каждые 10 мм толщины — это 10 мм, отнятые
 //      у встроенной техники.
 export const SLAB = {
-  concreteFlexuralMPa: 3.5, // расчётное сопротивление растяжению при изгибе
+  concreteFlexuralMPa: 3.5, // design flexural tensile strength
   safety: 2,
-  coverMm: 15, // защитный слой сверху и снизу
-  fieldSpanMm: 500, // между продольными уголками
-  cutoutStripMm: 75, // перемычка между вырезом и кромкой
-  cutoutSpanMm: 500, // длина выреза
-  leanLoadN: 500, // человек облокотился на перемычку
-  pointLoadN: 1000, // сосредоточенная нагрузка на поле
-  edgeInsetMm: 50, // ось продольного уголка от кромки плиты
+  coverMm: 15, // cover at top and bottom
+  fieldSpanMm: 500, // between the longitudinal angles
+  cutoutStripMm: 75, // bridge between the cut-out and the edge
+  cutoutSpanMm: 500, // length of the cut-out
+  leanLoadN: 500, // a person leans on the bridge
+  pointLoadN: 1000, // concentrated load on the field
+  edgeInsetMm: 50, // axis of the longitudinal angle from the slab edge
   angleLegMm: 40,
-  spreadMm: 300 // на сколько нагрузка расходится по ширине
+  spreadMm: 300 // how far the load spreads across the width
 };
 
 function bendingMPa({ widthMm, tMm, spanMm, pointN, selfW = 0 }) {
@@ -306,7 +306,7 @@ export function slabThicknessOptions({
   const area = worktop?.area ?? 0;
 
   return list.map((t) => {
-    const selfWnPerMm = (2400 * 9.81 * (t / 1000)) / 1000; // Н/мм по 1 мм ширины
+    const selfWnPerMm = (2400 * 9.81 * (t / 1000)) / 1000; // N/mm per 1 mm of width
     const field = bendingMPa({
       widthMm: 1000, tMm: t, spanMm: cfg.fieldSpanMm,
       pointN: cfg.pointLoadN, selfW: selfWnPerMm * 1000 / 1000
@@ -360,12 +360,12 @@ export function slabThicknessOptions({
 // Ключ к решению: считать прогиб надо не у уголка, а у СВЯЗКИ уголка
 // с плитой. Бетон 60 мм сам по себе почти не гнётся, уголок под ним —
 // направляющая, а не балка.
-export const ANGLE_40 = { Ix: 45800, W: 1596 }; // мм⁴ и мм³ для 40×40×4
-export const E_STEEL = 210000; // МПа
+export const ANGLE_40 = { Ix: 45800, W: 1596 }; // mm⁴ and mm³ for 40×40×4
+export const E_STEEL = 210000; // MPa
 export const E_CONCRETE = 25000;
 
 export function backSpanCheck({ lineLoadNPerM, spanMm, slabT = 60, tributaryMm = 300 }) {
-  const w = lineLoadNPerM / 1000; // Н/мм
+  const w = lineLoadNPerM / 1000; // N/mm
   const M = (w * spanMm ** 2) / 8;
   const sigma = M / ANGLE_40.W;
   const defAngle = (5 * w * spanMm ** 4) / (384 * E_STEEL * ANGLE_40.Ix);
@@ -401,17 +401,17 @@ export function backSupportOptions(worktop, screed) {
     frontPosts: f.frames,
     frontPitch: f.framePitch,
     options: [
-      mk('dense', 'Как спереди, через 600', 600,
-         'Максимальный запас, но металл и закладные вдвое'),
-      mk('sparse', 'Через одну, шаг 1200', 1200,
-         'Рекомендуется: сзади стойка ничему не мешает, но и часто её ставить незачем'),
+      mk('dense', 'Like the front, every 600', 600,
+         'Maximum margin, but twice the metal and embeds'),
+      mk('sparse', 'Every other one, pitch 1200', 1200,
+         'Recommended: a post at the back gets in nobody’s way, but there is no point in setting them often'),
       {
         id: 'ledger',
-        name: 'Пристенный уголок вместо стоек',
+        name: 'Wall angle instead of posts',
         pitch: null,
         posts: led.sidePosts,
-        note: 'Больше места в шкафах, но сверлить газобетон и решать ДО штукатурки. ' +
-          'На боковой ветке невозможно: там гипсокартон',
+        note: 'More room in the cabinets, but drilling aerated concrete and deciding BEFORE plastering. ' +
+          'Impossible on the side branch: there is plasterboard',
         ledger: led
       }
     ]
@@ -443,6 +443,6 @@ export function ledgerOption(worktop, screed, pitchMm = LEDGER.pitch) {
     savedPosts,
     postsWithLedger: f.posts - savedPosts,
     ledgerM: topBranchM,
-    note: 'Газобетон уголок держит, гипсокартонная перегородка санузла — нет'
+    note: 'Aerated concrete holds the angle, the bathroom plasterboard partition does not'
   };
 }

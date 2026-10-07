@@ -19,32 +19,32 @@ export const EYE_HEIGHT = 1.55;
 export const VIEWPOINTS = [
   {
     id: 'from-hall',
-    name: 'От двери прихожей',
-    hint: 'первое, что видит входящий',
+    name: 'From the hall door',
+    hint: 'the first thing a visitor sees',
     eye: { x: 2.15, y: 3.9 },
     look: { x: 2.6, y: 0.5 },
     en: 'standing in the doorway looking across the room towards the kitchen run along the far wall'
   },
   {
     id: 'from-sofa',
-    name: 'С дивана',
-    hint: 'проверка вида на телевизор и кухню',
+    name: 'From the sofa',
+    hint: 'checking the view of the TV and the kitchen',
     eye: { x: 2.7, y: 4.2 },
     look: { x: 3.7, y: 1.6 },
     en: 'seated-height view from the sofa towards the wall-mounted TV and the kitchen beyond'
   },
   {
     id: 'from-dining',
-    name: 'От обеденного стола',
-    hint: 'кухонный фронт во всю ширину',
+    name: 'From the dining table',
+    hint: 'the full width of the kitchen front',
     eye: { x: 1.3, y: 2.1 },
     look: { x: 2.0, y: 0.1 },
     en: 'close view of the kitchen run head-on, window above the hob'
   },
   {
     id: 'from-kitchen',
-    name: 'Из кухонного угла в комнату',
-    hint: 'вид на зал и лестницу',
+    name: 'From the kitchen corner into the room',
+    hint: 'view of the living room and the stair',
     eye: { x: 3.3, y: 1.5 },
     look: { x: 1.4, y: 4.6 },
     en: 'from the kitchen corner looking back into the living area, a straight steel staircase boxed in along the right wall'
@@ -59,22 +59,22 @@ export const MAX_NAMED = 7;
 export const STYLES = [
   {
     id: 'warm-minimal',
-    name: 'Тёплый минимализм',
+    name: 'Warm minimalism',
     text: 'warm minimalist interior, off-white walls, natural oak accents, muted palette'
   },
   {
     id: 'scandi',
-    name: 'Сканди',
+    name: 'Scandi',
     text: 'scandinavian interior, white walls, pale wood, linen textiles, uncluttered'
   },
   {
     id: 'industrial',
-    name: 'Лофт',
+    name: 'Loft',
     text: 'soft industrial interior, raw concrete and blackened steel, warm wood, matte black fittings'
   },
   {
     id: 'country',
-    name: 'Загородный',
+    name: 'Country',
     text: 'modern country house interior, painted timber ceiling, natural textures, cosy'
   }
 ];

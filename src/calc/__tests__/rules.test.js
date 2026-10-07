@@ -15,7 +15,7 @@ function ids(warnings) {
   return warnings.map((w) => w.id);
 }
 
-// Запас по уклону для конкретного прибора — вспомогательная функция тестов
+// Slope margin for a specific fixture — a helper for the tests
 function drainMargin(project, catalogId) {
   const riser = project.nodes.find((n) => n.type === 'sewer_riser');
   const item = project.equipment.find((e) => e.catalogId === catalogId);
@@ -32,31 +32,31 @@ function drainMargin(project, catalogId) {
   };
 }
 
-describe('runRules — стартовая планировка', () => {
+describe('runRules — starting layout', () => {
   const project = makeInitialProject();
   const warnings = runRules(project, CLEAR_HEIGHT);
 
-  it('всегда сообщает о неподтверждённых привязках', () => {
+  it('always reports unconfirmed references', () => {
     expect(ids(warnings)).toContain('unconfirmed');
   });
 
-  it('на исходной геометрии сливы помещаются в пирог пола', () => {
+  it('on the original geometry the drains fit in the floor build-up', () => {
     const drainErrors = warnings.filter((w) => w.id.startsWith('drain-') && w.severity === 'error');
     expect(drainErrors).toHaveLength(0);
   });
 
-  it('приборы не накладываются друг на друга', () => {
+  it('fixtures do not overlap each other', () => {
     expect(warnings.filter((w) => w.id.startsWith('overlap-'))).toHaveLength(0);
   });
 
-  it('варочная панель дотягивается до ввода газа', () => {
-    // Ввод замерен в самом углу и перенести его нельзя — он заложен
-    // в проект газоснабжения дома. Панель стоит у правого конца фронта:
-    // 0,56 м при пределе 1,5. В САМ угол её загонять не потребовалось.
+  it('the hob reaches the gas inlet', () => {
+    // The inlet is measured right in the corner and cannot be moved — it is built
+    // into the gas supply design of the house. The hob stands at the right end of the front:
+    // 0.56 m against a limit of 1.5. It did not have to be driven INTO the corner.
     expect(warnings.find((w) => w.id === 'gas-eq-hob')).toBeUndefined();
   });
 
-  it('панель, уехавшая к холодильнику, снова не дотягивается', () => {
+  it('a hob moved to the refrigerator no longer reaches again', () => {
     const project = makeInitialProject();
     project.equipment = project.equipment.map((e) =>
       e.catalogId === 'hob_gas' ? { ...e, x: 1.0 } : e
@@ -67,8 +67,8 @@ describe('runRules — стартовая планировка', () => {
   });
 });
 
-describe('runRules — уклон канализации', () => {
-  it('унитаз, утащенный от стояка, ломает уклон', () => {
+describe('runRules — drain slope', () => {
+  it('a toilet dragged away from the stack breaks the slope', () => {
     const project = makeInitialProject();
     project.equipment = project.equipment.map((e) =>
       e.catalogId === 'wc' ? { ...e, x: 0.3, y: 5.0 } : e
@@ -76,10 +76,10 @@ describe('runRules — уклон канализации', () => {
     const warnings = runRules(project, CLEAR_HEIGHT);
     const err = warnings.find((w) => w.id.startsWith('drain-') && w.severity === 'error');
     expect(err).toBeDefined();
-    expect(err.title).toContain('не помещается');
+    expect(err.title).toContain('does not fit');
   });
 
-  it('утолщение ЭППС само по себе не ломает слив — лимит даёт стяжка', () => {
+  it('thicker XPS by itself does not break a drain — the limit comes from the screed', () => {
     const project = makeInitialProject();
     project.screed = { ...project.screed, insulation: 200 };
     const warnings = runRules(project, CLEAR_HEIGHT);
@@ -87,8 +87,8 @@ describe('runRules — уклон канализации', () => {
   });
 });
 
-describe('runRules — высота под маршем', () => {
-  it('душевая под нижней частью марша получает предупреждение', () => {
+describe('runRules — headroom under the flight', () => {
+  it('a shower under the lower part of the flight gets a warning', () => {
     const project = makeInitialProject();
     project.equipment = project.equipment.map((e) =>
       e.catalogId === 'shower' ? { ...e, x: 4.6, y: 3.4 } : e
@@ -96,42 +96,42 @@ describe('runRules — высота под маршем', () => {
     const warnings = runRules(project, CLEAR_HEIGHT);
     const head = warnings.find((w) => w.id.startsWith('head-'));
     expect(head).toBeDefined();
-    expect(head.title).toContain('мало высоты');
+    expect(head.title).toContain('Not enough headroom');
   });
 
-  it('в исходной расстановке душевая стоит в высокой части', () => {
+  it('in the original placement the shower stands in the high part', () => {
     const project = makeInitialProject();
     const warnings = runRules(project, CLEAR_HEIGHT);
     expect(warnings.find((w) => w.id === 'head-eq-shower')).toBeUndefined();
   });
 });
 
-describe('runRules — сдвиг проёма над санузлом', () => {
-  it('предлагаемый пологий марш требует сдвинуть проём', () => {
+describe('runRules — moving the opening over the bathroom', () => {
+  it('the proposed shallow flight requires moving the opening', () => {
     const project = makeInitialProject();
     const warnings = runRules(project, CLEAR_HEIGHT);
     const w = warnings.find((x) => x.id === 'stair-opening');
     expect(w).toBeDefined();
-    // Проём с 1,80 м до 1,00 м = 800 мм
+    // An opening from 1.80 m to 1.00 m = 800 mm
     expect(w.title).toContain('800');
   });
 
-  it('если марш оставить в границах существующего проёма, сдвиг не нужен', () => {
+  it('if the flight stays within the existing opening, no move is needed', () => {
     const project = makeInitialProject();
     project.stair = { ...project.stair, y: 1.8, length: 2.6 };
     const warnings = runRules(project, CLEAR_HEIGHT);
     expect(warnings.find((x) => x.id === 'stair-opening')).toBeUndefined();
-    // ...зато марш перестаёт помещаться — это и есть нынешняя крутизна
+    // ...but then the flight stops fitting — that is the present steepness
     expect(warnings.find((x) => x.id === 'stair-run')).toBeDefined();
   });
 
-  it('в исходном положении и заход, и площадка не меньше метра', () => {
+  it('in the original position both the approach and the landing are at least a metre', () => {
     const warnings = runRules(makeInitialProject(), CLEAR_HEIGHT);
     expect(warnings.find((x) => x.id === 'stair-approach')).toBeUndefined();
     expect(warnings.find((x) => x.id === 'stair-landing')).toBeUndefined();
   });
 
-  it('удлинение марша вверх съедает площадку на втором этаже', () => {
+  it('lengthening the flight upwards eats the landing on the second floor', () => {
     const project = makeInitialProject();
     project.stair = { ...project.stair, y: 0.6, length: 3.8 };
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'stair-landing');
@@ -140,23 +140,23 @@ describe('runRules — сдвиг проёма над санузлом', () => {
     expect(w.title).toContain('600');
   });
 
-  it('сдвиг марша вниз съедает заход перед нижней ступенью', () => {
+  it('moving the flight down eats the approach in front of the bottom step', () => {
     const project = makeInitialProject();
-    project.stair = { ...project.stair, y: 1.4 }; // низ уезжает на 4,80
+    project.stair = { ...project.stair, y: 1.4 }; // the bottom moves to 4.80
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'stair-approach');
     expect(w).toBeDefined();
     expect(w.severity).toBe('error');
     expect(w.title).toContain('700');
   });
 
-  it('подбор молчит: принятый марш уже проходит все критерии', () => {
-    // 15 подступенков 200 × 243 приняты заказчиком, подсказывать нечего
+  it('the selector stays silent: the accepted flight already passes all criteria', () => {
+    // 15 risers of 200 × 243 were accepted by the owner, nothing to suggest
     const p = makeInitialProject();
     expect(p.stair.risers).toBe(15);
     expect(runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'stair-best')).toBeUndefined();
   });
 
-  it('но на прежних 17 подступенках подбор снова предлагает 15', () => {
+  it('but with the former 17 risers the selector suggests 15 again', () => {
     const p = makeInitialProject();
     p.stair = { ...p.stair, risers: 17, tread: 3.4 / 16 };
     const w = runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'stair-best');
@@ -164,59 +164,59 @@ describe('runRules — сдвиг проёма над санузлом', () => {
     expect(w.title).toContain('15');
   });
 
-  it('после применения подбора подсказка исчезает', () => {
+  it('after applying the selection the hint disappears', () => {
     const project = makeInitialProject();
     project.stair = { ...project.stair, risers: 15, tread: 3.5 / 14, length: 3.5, y: 1.0 };
     expect(runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'stair-best')).toBeUndefined();
-    // ...и заход остаётся ровно метром — минимум соблюдён
+    // ...and the approach stays exactly a metre — the minimum is met
     expect(runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'stair-approach')).toBeUndefined();
   });
 });
 
-describe('runRules — замеренные проёмы против подвижных перегородок', () => {
-  it('в исходной планировке каждый проём в своём помещении', () => {
+describe('runRules — measured openings against movable partitions', () => {
+  it('in the original layout every opening is in its own room', () => {
     const warnings = runRules(makeInitialProject(), CLEAR_HEIGHT);
     expect(warnings.filter((w) => w.id.startsWith('opening-room-'))).toHaveLength(0);
   });
 
-  it('сдвиг перегородки мимо глухого окна ловится', () => {
-    // Окно 1400…2300 от левого нижнего угла привязано замером,
-    // а перегородка прихожей должна идти сразу за ним (3200).
+  it('moving a partition past the fixed window is caught', () => {
+    // The window 1400…2300 from the bottom left corner is fixed by measurement,
+    // and the hall partition must run right after it (3200).
     const project = makeInitialProject();
     project.layout = { ...project.layout, hallY: 4.4 };
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'opening-room-win-w-blind');
     expect(w).toBeDefined();
-    expect(w.detail).toContain('Прихожая-котельная');
+    expect(w.detail).toContain('Hall / boiler room');
   });
 });
 
-describe('Варианты планировки', () => {
-  it.each(VARIANT_IDS)('вариант %s собирается без ошибок уклона', (variantId) => {
+describe('Layout variants', () => {
+  it.each(VARIANT_IDS)('variant %s assembles without slope errors', (variantId) => {
     const project = makeInitialProject(variantId);
     const warnings = runRules(project, CLEAR_HEIGHT);
     expect(warnings.filter((w) => w.id.startsWith('drain-') && w.severity === 'error')).toHaveLength(0);
   });
 
-  it.each(VARIANT_IDS)('в варианте %s приборы не накладываются', (variantId) => {
+  it.each(VARIANT_IDS)('in variant %s fixtures do not overlap', (variantId) => {
     const warnings = runRules(makeInitialProject(variantId), CLEAR_HEIGHT);
     expect(warnings.filter((w) => w.id.startsWith('overlap-'))).toHaveLength(0);
   });
 
-  it.each(VARIANT_IDS)('в варианте %s приборы не вылезают за помещение', (variantId) => {
+  it.each(VARIANT_IDS)('in variant %s fixtures do not stick out of the room', (variantId) => {
     const warnings = runRules(makeInitialProject(variantId), CLEAR_HEIGHT);
     expect(warnings.filter((w) => w.id.startsWith('bounds-'))).toHaveLength(0);
   });
 
-  it('перенос санузла влево заметно удлиняет трассу слива унитаза', () => {
+  it('moving the bathroom to the left noticeably lengthens the toilet drain run', () => {
     const right = drainMargin(makeInitialProject('bathRight'), 'wc');
     const left = drainMargin(makeInitialProject('bathLeft'), 'wc');
-    // Стояк замерен у правого верхнего угла: слева трасса через весь дом
+    // The stack is measured at the top right corner: from the left the run goes across the whole house
     expect(left.routeLength).toBeGreaterThan(right.routeLength + 3);
     expect(left.marginMm).toBeLessThan(right.marginMm);
     expect(left.ok).toBe(true);
   });
 
-  it('в варианте «санузел слева» утолщение стяжки ломает уклон унитаза', () => {
+  it('in the “bathroom on the left” variant a thicker screed breaks the toilet slope', () => {
     const project = makeInitialProject('bathLeft');
     project.screed = { ...project.screed, screedTotal: 130 };
     expect(drainMargin(project, 'wc').ok).toBe(false);
@@ -225,28 +225,28 @@ describe('Варианты планировки', () => {
     expect(warnings.find((w) => w.id.startsWith('drain-') && w.severity === 'error')).toBeDefined();
   });
 
-  it('в варианте «санузел справа» тот же запас стяжки безопасен', () => {
+  it('in the “bathroom on the right” variant the same screed margin is safe', () => {
     const project = makeInitialProject('bathRight');
     project.screed = { ...project.screed, screedTotal: 130 };
     expect(drainMargin(project, 'wc').ok).toBe(true);
   });
 
-  it('мойка в углу у стояка даёт очень короткий слив', () => {
+  it('a sink in the corner by the stack gives a very short drain', () => {
     const left = drainMargin(makeInitialProject('bathLeft'), 'sink');
     expect(left.routeLength).toBeLessThan(1.0);
   });
 });
 
-describe('Кухня под лестницей (вариант bathLeft)', () => {
+describe('Kitchen under the stair (variant bathLeft)', () => {
   const project = makeInitialProject('bathLeft');
   const warnings = runRules(project, CLEAR_HEIGHT);
 
-  it('нижние шкафы под маршем проходят по высоте', () => {
+  it('base cabinets under the flight pass on height', () => {
     expect(warnings.filter((w) => w.id.startsWith('head-eq-wt'))).toHaveLength(0);
     expect(warnings.find((w) => w.id === 'head-eq-oven')).toBeUndefined();
   });
 
-  it('высокий холодильник под марш бы не поместился', () => {
+  it('a tall refrigerator would not fit under the flight', () => {
     const moved = makeInitialProject('bathLeft');
     moved.equipment = moved.equipment.map((e) =>
       e.catalogId === 'fridge' ? { ...e, x: 4.85, y: 2.0 } : e
@@ -255,7 +255,7 @@ describe('Кухня под лестницей (вариант bathLeft)', () =>
     expect(w).toBeDefined();
   });
 
-  it('мойка под низким маршем даёт подсказку по эргономике, а не запрет', () => {
+  it('a sink under the low flight gives an ergonomics hint, not a ban', () => {
     const moved = makeInitialProject('bathLeft');
     moved.equipment = moved.equipment.map((e) =>
       e.catalogId === 'sink' ? { ...e, x: 4.85, y: 2.4 } : e
@@ -266,29 +266,29 @@ describe('Кухня под лестницей (вариант bathLeft)', () =>
   });
 });
 
-describe('runRules — засыпка подполья песком', () => {
-  it('подбор засыпки по умолчанию оставляет пол на месте', () => {
+describe('runRules — sand fill of the sub-floor', () => {
+  it('the default fill selection leaves the floor in place', () => {
     const project = makeInitialProject();
     const lv = floorLevels(project.levels, project.screed);
     expect(Math.abs(lv.floorDelta)).toBeLessThanOrEqual(5);
     expect(lv.floorToFloor).toBeCloseTo(3000, 0);
   });
 
-  it('засыпки почти нет — уплотнять надо СУЩЕСТВУЮЩИЙ песок', () => {
+  it('there is almost no fill — the EXISTING sand has to be compacted', () => {
     const project = makeInitialProject();
     const all = runRules(project, CLEAR_HEIGHT);
     const w = all.find((x) => x.id === 'fill-compaction');
     expect(w).toBeDefined();
-    // Подпол оказался 390, а не 900: досыпка 46 мм — один проход
+    // The sub-floor turned out to be 390, not 900: an extra fill of 46 mm is one pass
     expect(w.title).toContain('1');
 
-    // Зато появилось правило про рыхлое основание — оно теперь главное
+    // But a rule about the loose base appeared — it is now the main one
     const loose = all.find((x) => x.id === 'crawl-compaction');
     expect(loose).toBeDefined();
     expect(loose.severity).toBe('error');
   });
 
-  it('утолщение пирога поднимает пол и режет высоту помещения', () => {
+  it('a thicker build-up raises the floor and cuts the room height', () => {
     const project = makeInitialProject();
     project.screed = { ...project.screed, insulation: 300, gravel: 300 };
     const lv = floorLevels(project.levels, project.screed);
@@ -297,38 +297,38 @@ describe('runRules — засыпка подполья песком', () => {
     expect(lv.floorToFloor).toBeLessThan(3000);
   });
 
-  it('ревизия считается из содержимого, а не проставляется руками', () => {
+  it('the revision is computed from the content, not set by hand', () => {
     const a = makeInitialProject();
     const b = makeInitialProject();
-    // Один и тот же проект — одна и та же ревизия
+    // The same project — the same revision
     expect(a.meta.revision).toBe(b.meta.revision);
     expect(a.meta.revision).toBeGreaterThan(0);
   });
 
-  it('любое изменение стартовых данных даёт новую ревизию', () => {
+  it('any change to the starting data gives a new revision', () => {
     const base = makeInitialProject();
     const { meta, ...content } = base;
 
-    // Толщина утеплителя
+    // Insulation thickness
     expect(contentRevision({ ...content, screed: { ...content.screed, insulation: 200 } }))
       .not.toBe(meta.revision);
-    // Отметка засыпки
+    // Fill level
     expect(contentRevision({ ...content, levels: { ...content.levels, sandFill: 999 } }))
       .not.toBe(meta.revision);
-    // Сдвинутая розетка
+    // A moved socket
     expect(contentRevision({
       ...content,
       equipment: content.equipment.map((e) => (e.id === 'el-tv' ? { ...e, x: 1 } : e))
     })).not.toBe(meta.revision);
-    // Ширина лестницы
+    // Stair width
     expect(contentRevision({ ...content, stair: { ...content.stair, width: 1.1 } }))
       .not.toBe(meta.revision);
   });
 
-  // Мойка теперь линейная, но повёрнутые приборы на кухне остались:
-  // проверка габаритов должна считать их по фактическому контуру, а не
-  // по осевой рамке — иначе духовка на боковой ветке даст ложное наложение.
-  it('повёрнутая духовка не даёт ложных наложений', () => {
+  // The sink is linear now, but rotated fixtures remained in the kitchen:
+  // the footprint check must count them by the actual outline, not
+  // by the axis frame — otherwise an oven on the side branch gives a false overlap.
+  it('a rotated oven gives no false overlaps', () => {
     const p = makeInitialProject();
     const oven = p.equipment.find((e) => e.id === 'eq-oven');
     expect(oven.rotation).toBe(90);
@@ -336,7 +336,7 @@ describe('runRules — засыпка подполья песком', () => {
     expect(bad).toHaveLength(0);
   });
 
-  it('но настоящее наложение всё равно ловится', () => {
+  it('but a real overlap is still caught', () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) =>
       e.id === 'eq-store1' ? { ...e, x: 2.9, y: 0.06 } : e
@@ -345,7 +345,7 @@ describe('runRules — засыпка подполья песком', () => {
     expect(bad.length).toBeGreaterThan(0);
   });
 
-  it('навесные шкафы в проверках пола не участвуют', () => {
+  it('wall cabinets do not take part in the floor checks', () => {
     const p = makeInitialProject();
     const walls = p.equipment.filter((e) => e.id.startsWith('eq-wall'));
     expect(walls.length).toBeGreaterThan(3);
@@ -353,25 +353,25 @@ describe('runRules — засыпка подполья песком', () => {
     expect(bad).toHaveLength(0);
   });
 
-  it('утепление торца заложено — ошибки нет', () => {
+  it('edge insulation is provided — no error', () => {
     const p = makeInitialProject();
-    // 100 мм: та же плита, что в поле. 80 мм в рознице почти не встречается
+    // 100 mm: the same board as in the field. 80 mm is almost never found in retail
     expect(p.levels.edgeInsulation).toBe(100);
     expect(p.levels.edgeInsulationDepth).toBe(500);
     const w = runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'edge-insulation');
     expect(w).toBeUndefined();
   });
 
-  it('без утепления торца — ошибка, а не пожелание', () => {
+  it('without edge insulation — an error, not a wish', () => {
     const p = makeInitialProject();
     p.levels = { ...p.levels, edgeInsulation: 0, edgeInsulationDepth: 0 };
     const w = runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'edge-insulation');
     expect(w).toBeDefined();
     expect(w.severity).toBe('error');
-    expect(w.fix).toContain('ДО засыпки');
+    expect(w.fix).toContain('BEFORE the fill');
   });
 
-  it('с заложенным утеплением торца ошибка снимается', () => {
+  it('with edge insulation provided the error goes away', () => {
     const project = makeInitialProject();
     project.levels = { ...project.levels, edgeInsulation: 100, edgeInsulationDepth: 500, edgeTop: 0 };
     const w = runRules(project, CLEAR_HEIGHT);
@@ -380,9 +380,9 @@ describe('runRules — засыпка подполья песком', () => {
     expect(w.find((x) => x.id === 'edge-depth')).toBeUndefined();
   });
 
-  it('утепление «до низа стяжки» ловится как ошибка', () => {
+  it('insulation “to the screed bottom” is caught as an error', () => {
     const project = makeInitialProject();
-    // Верх утеплителя на уровне низа стяжки: 12 покрытия + 70 стяжки
+    // The top of the insulation at the screed bottom level: 12 finish + 70 screed
     project.levels = {
       ...project.levels,
       edgeInsulation: 80,
@@ -392,11 +392,11 @@ describe('runRules — засыпка подполья песком', () => {
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'edge-top');
     expect(w).toBeDefined();
     expect(w.severity).toBe('error');
-    // Непокрытыми остаются ровно 70 мм стяжки с трубой
+    // Exactly 70 mm of screed with the pipe stay uncovered
     expect(w.detail).toContain('70');
   });
 
-  it('слишком мелкое заглубление торца — предупреждение', () => {
+  it('too shallow an edge depth — a warning', () => {
     const project = makeInitialProject();
     project.levels = { ...project.levels, edgeInsulation: 80, edgeInsulationDepth: 150, edgeTop: 0 };
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'edge-depth');
@@ -404,17 +404,17 @@ describe('runRules — засыпка подполья песком', () => {
     expect(w.fix).toContain('400–600');
   });
 
-  // Профиль торца СТУПЕНЧАТЫЙ: 100 мм плиты нельзя довести до чистого пола,
-  // она отняла бы по 100 мм комнаты с каждой стороны, и керамогранит
-  // пришлось бы обрывать в 100 мм от стены. Наверху работает лента.
-  it('на высоте стяжки разрыв тонкий, а не плита в 100 мм', () => {
+  // The edge profile is STEPPED: 100 mm of board cannot be brought up to the finished floor,
+  // it would take 100 mm of the room on each side, and the porcelain tile
+  // would have to stop 100 mm from the wall. At the top the strip works.
+  it('at screed height the gap is thin, not a 100 mm board', () => {
     const p = makeInitialProject();
     expect(p.levels.edgeStrip).toBe(10);
     expect(p.levels.edgeStrip).toBeLessThan(p.levels.edgeInsulation);
     expect(runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'edge-strip')).toBeUndefined();
   });
 
-  it('край стяжки без ленты — ошибка: и мостик, и расширение', () => {
+  it('a screed edge without a strip is an error: both a bridge and expansion', () => {
     const p = makeInitialProject();
     p.levels = { ...p.levels, edgeStrip: 0 };
     const w = runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'edge-strip');
@@ -422,40 +422,40 @@ describe('runRules — засыпка подполья песком', () => {
     expect(w.severity).toBe('error');
   });
 
-  it('плита торца считается только ниже стяжки', () => {
+  it('the edge board is counted only below the screed', () => {
     const p = makeInitialProject();
     const band = p.screed.screedTotal + p.screed.finishThickness;
     const est = floorEstimate({
       layout: p.layout, screed: p.screed, levels: p.levels,
       loops: { totalPipe: 218, totalLoops: 4 }, coolant: p.coolant
     });
-    const row = est.items.find((i) => i.name.includes('на торец плиты'));
-    // 500 глубины минус 82 мм стяжки с покрытием, а не все 500
+    const row = est.items.find((i) => i.name.includes('on the slab edge'));
+    // 500 of depth minus 82 mm of screed with finish, not all 500
     expect(row.note).toContain(String(p.levels.edgeInsulationDepth - band));
   });
 });
 
-describe('runRules — переиспользование старого ЭППС', () => {
-  it('требует подтвердить марку старых плит', () => {
+describe('runRules — reuse of the old XPS', () => {
+  it('requires confirming the grade of the old boards', () => {
     const w = runRules(makeInitialProject(), CLEAR_HEIGHT).find((x) => x.id === 'reused-strength');
     expect(w).toBeDefined();
-    expect(w.detail).toContain('250 кПа');
+    expect(w.detail).toContain('250 kPa');
   });
 
-  it('подтверждение марки снимает предупреждение', () => {
+  it('confirming the grade removes the warning', () => {
     const project = makeInitialProject();
     project.screed = { ...project.screed, reusedStrengthConfirmed: true };
     expect(runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'reused-strength')).toBeUndefined();
   });
 
-  it('подсказывает порядок слоёв: новый вниз, старый вторым', () => {
+  it('suggests the layer order: new at the bottom, old second', () => {
     const w = runRules(makeInitialProject(), CLEAR_HEIGHT).find((x) => x.id === 'reused-position');
     expect(w).toBeDefined();
-    // 120 общих − 25 старых = 95 новых
+    // 120 total − 25 old = 95 new
     expect(w.detail).toContain('100');
   });
 
-  it('утепление только из старых плит — ошибка', () => {
+  it('insulation made only of old boards is an error', () => {
     const project = makeInitialProject();
     project.screed = { ...project.screed, insulation: 25 };
     const w = runRules(project, CLEAR_HEIGHT).find((x) => x.id === 'reused-only');
@@ -464,18 +464,18 @@ describe('runRules — переиспользование старого ЭПП�
   });
 });
 
-describe('Выбор толщины утеплителя', () => {
-  it('толще утеплитель — меньше поток вниз и меньше песка', () => {
+describe('Choosing the insulation thickness', () => {
+  it('thicker insulation — less downward flux and less sand', () => {
     const project = makeInitialProject();
     const opts = insulationOptions(project.screed, project.levels, 30.25, [75, 125]);
     const [thin, thick] = opts;
     expect(thick.watts).toBeLessThan(thin.watts);
     expect(thick.sandNeeded).toBeLessThan(thin.sandNeeded);
-    // Каждые 50 мм утеплителя — ровно 50 мм песка, который не надо трамбовать
+    // Every 50 mm of insulation is exactly 50 mm of sand that does not have to be compacted
     expect(thin.sandNeeded - thick.sandNeeded).toBeCloseTo(50, 6);
   });
 
-  it('разница между 75 и 125 мм — единицы ватт на весь этаж', () => {
+  it('the difference between 75 and 125 mm is a few watts for the whole floor', () => {
     const project = makeInitialProject();
     const [thin, thick] = insulationOptions(project.screed, project.levels, 30.25, [75, 125]);
     expect(thin.watts - thick.watts).toBeLessThan(60);
@@ -483,58 +483,58 @@ describe('Выбор толщины утеплителя', () => {
   });
 });
 
-describe('runRules — перегородки', () => {
-  it('сдвиг перегородки прихожей не ломает проверки', () => {
+describe('runRules — partitions', () => {
+  it('moving the hall partition does not break the checks', () => {
     const project = makeInitialProject();
     project.layout = { ...project.layout, hallX: 2.4, hallY: 3.2 };
     expect(() => runRules(project, CLEAR_HEIGHT)).not.toThrow();
   });
 });
 
-describe('runRules — стяжка над трубой', () => {
-  it('тонкая стяжка даёт ошибку по защитному слою', () => {
+describe('runRules — screed over the pipe', () => {
+  it('a thin screed gives an error about the cover', () => {
     const project = makeInitialProject();
     project.screed = { ...project.screed, screedTotal: 55 };
     const warnings = runRules(project, CLEAR_HEIGHT);
     expect(ids(warnings)).toContain('screed-cover');
   });
 
-  it('70 мм над трубой Ø16 проходит', () => {
+  it('70 mm over a Ø16 pipe passes', () => {
     const project = makeInitialProject();
     const warnings = runRules(project, CLEAR_HEIGHT);
     expect(ids(warnings)).not.toContain('screed-cover');
   });
 });
 
-describe('runRules — эргономика расстановки', () => {
+describe('runRules — ergonomics of the placement', () => {
   const w = runRules(makeInitialProject(), CLEAR_HEIGHT);
 
-  // Обеденная группа отодвинута: рабочий проход 1000, дверца духовки свободна
-  it('в принятой расстановке проход у кухни в норме', () => {
+  // The dining group is moved away: work aisle 1000, the oven door is free
+  it('in the accepted placement the aisle at the kitchen is fine', () => {
     expect(w.find((x) => x.id === 'kitchen-aisle')).toBeUndefined();
     const ok = w.find((x) => x.id === 'kitchen-aisle-ok');
     expect(ok.severity).toBe('info');
     expect(ok.title).toContain('1000');
   });
 
-  it('дверцы встроенной техники ни во что не упираются', () => {
+  it('the doors of built-in appliances hit nothing', () => {
     expect(w.filter((x) => x.id.startsWith('door-swing-'))).toHaveLength(0);
   });
 
-  // Наложения предметов НЕТ — они разнесены, и проверка габаритов молчит.
-  // Но человеку у плиты нужен метр, и это отдельная проверка.
-  it('придвинутая обратно лавка ловится, хотя пересечений нет', () => {
+  // There is NO overlap of objects — they are spaced apart, and the footprint check is silent.
+  // But a person at the hob needs a metre, and that is a separate check.
+  it('a bench pushed back is caught although there are no intersections', () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) => (e.id === 'eq-bench-n' ? { ...e, y: 0.9 } : e));
     const r = runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'kitchen-aisle');
     expect(r).toBeDefined();
     expect(r.severity).toBe('error');
     expect(r.title).toContain('300');
-    expect(r.detail).toContain('Наложения предметов при этом НЕТ');
-    expect(r.fix).toContain('мышкой');
+    expect(r.detail).toContain('There is NO overlap of objects');
+    expect(r.fix).toContain('mouse');
   });
 
-  it('и тогда же дверца духовки перестаёт открываться', () => {
+  it('and then the oven door stops opening', () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) => {
       if (e.id === 'eq-bench-n') return { ...e, y: 0.9 };
@@ -543,11 +543,11 @@ describe('runRules — эргономика расстановки', () => {
     });
     const r = runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'door-swing-eq-oven');
     expect(r).toBeDefined();
-    expect(r.detail).toContain('противень');
+    expect(r.detail).toContain('tray');
   });
 });
 
-describe('runRules — мойка под окном', () => {
+describe('runRules — sink under the window', () => {
   const withSink = () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) =>
@@ -558,12 +558,12 @@ describe('runRules — мойка под окном', () => {
     return p;
   };
 
-  it('замеренный подоконник 960 попал в модель', () => {
+  it('the measured sill of 960 made it into the model', () => {
     const win = makeInitialProject().openings.find((o) => o.id === 'win-n1');
     expect(win.sill).toBe(0.96);
   });
 
-  it('мойка на 1260 встаёт по центру ГЛУХОЙ створки, а не окна', () => {
+  it('a sink at 1260 stands at the centre of the FIXED sash, not of the window', () => {
     const p = withSink();
     const win = p.openings.find((o) => o.id === 'win-n1');
     const sink = p.equipment.find((e) => e.id === 'eq-sink');
@@ -572,23 +572,23 @@ describe('runRules — мойка под окном', () => {
     expect(sink.x + 0.3).toBeLessThan(win.start + win.len / 2);
   });
 
-  it('створки описаны: левая глухая, правая поворотно-откидная', () => {
+  it('the sashes are described: the left one fixed, the right one tilt-and-turn', () => {
     const win = makeInitialProject().openings.find((o) => o.id === 'win-n1');
     expect(win.sashes).toBe(2);
     expect(win.openingSash).toBe('right');
   });
 
-  // Решает не высота подоконника сама по себе, а какая створка над краном.
-  // Под глухой половиной сносить смеситель нечем — складной не нужен.
-  it('кран под глухой половиной — это справка, а не проблема', () => {
+  // What decides is not the sill height itself but which sash is above the tap.
+  // Under the fixed half there is nothing to knock the mixer off — a folding one is not needed.
+  it('a tap under the fixed half is a note, not a problem', () => {
     const r = runRules(withSink(), CLEAR_HEIGHT).find((x) => x.id === 'sink-under-window');
     expect(r).toBeDefined();
     expect(r.severity).toBe('info');
-    expect(r.detail).toContain('Складной не нужен');
+    expect(r.detail).toContain('A folding one is not needed');
     expect(r.title).toContain('60');
   });
 
-  it('мойка, уехавшая под открывающуюся створку, — предупреждение', () => {
+  it('a sink that moved under the opening sash — a warning', () => {
     const p = makeInitialProject();
     p.equipment = p.equipment.map((e) =>
       e.id === 'eq-sink'
@@ -597,11 +597,11 @@ describe('runRules — мойка под окном', () => {
     );
     const r = runRules(p, CLEAR_HEIGHT).find((x) => x.id === 'sink-under-window');
     expect(r.severity).toBe('warn');
-    expect(r.title).toContain('снесёт');
-    expect(r.fix).toContain('глухую');
+    expect(r.title).toContain('knock it off');
+    expect(r.fix).toContain('fixed');
   });
 
-  it('в принятой расстановке мойка уже под окном и под глухой створкой', () => {
+  it('in the accepted placement the sink is already under the window and under the fixed sash', () => {
     const r = runRules(makeInitialProject(), CLEAR_HEIGHT)
       .find((x) => x.id === 'sink-under-window');
     expect(r).toBeDefined();

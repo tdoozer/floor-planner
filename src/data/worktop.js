@@ -31,7 +31,7 @@ export const WORKTOP = {
   // При 60 мм просвет 840 — прибор не проходил.
   thickness: 0.04,
   depth: 0.6,
-  material: 'бетон по стальному каркасу',
+  material: 'concrete on a steel frame',
   // Приборы выше этого считаются полноростовыми: столешница до них,
   // а не над ними
   tallThreshold: 1.2
